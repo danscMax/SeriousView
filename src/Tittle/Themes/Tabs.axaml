@@ -2,11 +2,10 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     x:CompileBindings="False">
 
-  <!-- Flat, compact VS Code-style document tab. Applied to the tab-strip ListBox via
+  <!-- Quiet rounded workspace tab. Applied to the tab-strip ListBox via
        ItemContainerTheme; replaces FluentAvalonia's large default TabItem look.
        The tab header comes from ListBox.ItemTemplate (DocumentTabViewModel.Header);
-       this theme adds the hover/selected chrome, the close button and the accent
-       underline shown on the active tab. -->
+       this theme adds the hover/selected chrome, close button, and keyboard focus ring. -->
   <ControlTheme x:Key="VsCodeTab" TargetType="ListBoxItem">
     <Setter Property="FontSize" Value="13" />
     <Setter Property="MinHeight" Value="0" />
@@ -18,14 +17,14 @@
     <Setter Property="Template">
       <ControlTemplate>
         <Border x:Name="PART_Bg" Background="{TemplateBinding Background}"
-                BorderBrush="{DynamicResource ChromeBorderBrush}" BorderThickness="0,0,1,0">
+                BorderBrush="Transparent" BorderThickness="1" CornerRadius="6" Margin="2,3">
           <Border.Transitions>
             <!-- Smooth hover/select recolor (= DurFast token). -->
             <Transitions>
               <BrushTransition Property="Background" Duration="0:0:0.12" />
             </Transitions>
           </Border.Transitions>
-          <Grid ColumnDefinitions="*,Auto" Height="34" MinWidth="92">
+          <Grid ColumnDefinitions="*,Auto" Height="30" MinWidth="92">
             <ContentPresenter Grid.Column="0"
                               Content="{TemplateBinding Content}"
                               ContentTemplate="{TemplateBinding ContentTemplate}"
@@ -47,17 +46,13 @@
                 </Transitions>
               </Button.Transitions>
             </Button>
-            <!-- Thin accent line under the active tab. -->
-            <Border x:Name="PART_Accent" Grid.ColumnSpan="2" Height="2"
-                    VerticalAlignment="Bottom" IsVisible="False"
-                    Background="{DynamicResource AccentBrush}" />
           </Grid>
         </Border>
       </ControlTemplate>
     </Setter>
 
     <Style Selector="^:pointerover /template/ Border#PART_Bg">
-      <Setter Property="Background" Value="{DynamicResource ChromeOverlayBrush}" />
+      <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}" />
     </Style>
     <Style Selector="^:pointerover /template/ Button#PART_Close">
       <Setter Property="Opacity" Value="1" />
@@ -67,14 +62,11 @@
       <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}" />
     </Style>
     <Style Selector="^:selected /template/ Border#PART_Bg">
-      <!-- A gentle lift (TabActiveBgBrush), rounded top, no right divider — reads as a raised active
-           tab instead of the old near-black EditorSurface box. -->
       <Setter Property="Background" Value="{DynamicResource TabActiveBgBrush}" />
-      <Setter Property="CornerRadius" Value="6,6,0,0" />
-      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="BorderBrush" Value="{DynamicResource WorkspaceSeparatorBrush}" />
     </Style>
-    <Style Selector="^:selected /template/ Border#PART_Accent">
-      <Setter Property="IsVisible" Value="True" />
+    <Style Selector="^:focus-visible /template/ Border#PART_Bg">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
     </Style>
     <Style Selector="^:selected /template/ Button#PART_Close">
       <Setter Property="Opacity" Value="1" />

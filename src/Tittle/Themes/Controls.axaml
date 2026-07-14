@@ -30,9 +30,79 @@
        (statusbtn, segment, findbtn, crumb, chrome-menu, link). Each of those classes keeps only its
        own padding/font/foreground; this grouped selector holds what they all share, so the base lives
        once instead of being repeated in four files. -->
-  <Style Selector="Button.statusbtn, Button.segment, Button.findbtn, Button.crumb, Button.chrome-menu, Button.link">
+  <Style Selector="Button.statusbtn, Button.segment, Button.findbtn, Button.crumb, Button.chrome-menu, Button.link, Button.workspace-action, Button.header-action">
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+
+  <!-- Workspace actions: compact, quiet, and fully keyboard-visible. The active rail section is a
+       soft accent-tinted tile rather than a bright icon floating on an empty strip. -->
+  <Style Selector="Button.workspace-action">
+    <Setter Property="Width" Value="36"/>
+    <Setter Property="Height" Value="36"/>
+    <Setter Property="Padding" Value="9"/>
+    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
+  </Style>
+  <Style Selector="Button.workspace-action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+  </Style>
+  <Style Selector="Button.workspace-action.active">
+    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+  </Style>
+  <Style Selector="Button.workspace-action.active /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceSelectedBrush}"/>
+  </Style>
+  <Style Selector="Button.workspace-action:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+
+  <Style Selector="Button.header-action">
+    <Setter Property="MinWidth" Value="0"/>
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="Padding" Value="7,5"/>
+    <Setter Property="CornerRadius" Value="5"/>
+    <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
+  </Style>
+  <Style Selector="Button.header-action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+  </Style>
+  <Style Selector="Button.header-action:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+
+  <!-- Shared compact segmented control. Existing view-mode buttons use `seg-on`; keeping the active
+       state semantic here also makes the style reusable outside the shell's local style scope. -->
+  <Style Selector="Border.segmented">
+    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource WorkspaceSeparatorBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHeaderBackgroundBrush}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="ClipToBounds" Value="True"/>
+  </Style>
+  <Style Selector="Button.segment">
+    <Setter Property="CornerRadius" Value="0"/>
+    <Setter Property="MinWidth" Value="0"/>
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="Padding" Value="8,3"/>
+    <Setter Property="FontSize" Value="11.5"/>
+    <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
+  </Style>
+  <Style Selector="Button.segment:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+  </Style>
+  <Style Selector="Button.segment.seg-on">
+    <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}"/>
+  </Style>
+  <Style Selector="Button.segment.seg-on /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceSelectedBrush}"/>
+  </Style>
+  <Style Selector="Button.segment:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
   </Style>
 
   <!-- Premium accent button. FluentAvalonia's built-in `accent` class paints from the generic

@@ -7,15 +7,19 @@
     <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F7F7FB" />
     <SolidColorBrush x:Key="EditorSurfaceBrush" Color="#FFFFFF" />
     <!-- Opaque outline-sidebar surface (see Dark.axaml). -->
-    <SolidColorBrush x:Key="SidebarSurfaceBrush" Color="#F1F1F7" />
+    <SolidColorBrush x:Key="SidebarSurfaceBrush" Color="#F0EFF4" />
 
-    <!-- Chrome (subtle vertical gradient for depth) -->
-    <LinearGradientBrush x:Key="ChromeBackgroundBrush" StartPoint="0%,0%" EndPoint="0%,100%">
-        <GradientStop Color="#FFFFFF" Offset="0" />
-        <GradientStop Color="#EDEDF3" Offset="1" />
-    </LinearGradientBrush>
-    <SolidColorBrush x:Key="ChromeOverlayBrush" Color="#F4F4F9" Opacity="0.72" />
-    <SolidColorBrush x:Key="ChromeBorderBrush" Color="#D9D9E2" />
+    <SolidColorBrush x:Key="WorkspaceRailBackgroundBrush" Color="#E9E8EE" />
+    <SolidColorBrush x:Key="WorkspaceSidebarBackgroundBrush" Color="#F0EFF4" />
+    <SolidColorBrush x:Key="WorkspaceHeaderBackgroundBrush" Color="#F4F3F7" />
+    <SolidColorBrush x:Key="WorkspaceHoverBrush" Color="#E5E2ED" />
+    <SolidColorBrush x:Key="WorkspaceSelectedBrush" Color="#DED8F2" />
+    <SolidColorBrush x:Key="WorkspaceSeparatorBrush" Color="#D8D6DE" />
+
+    <!-- Flat chrome: hierarchy comes from semantic surfaces, not glossy gradients. -->
+    <SolidColorBrush x:Key="ChromeBackgroundBrush" Color="#F0EFF4" />
+    <SolidColorBrush x:Key="ChromeOverlayBrush" Color="#F0EFF4" Opacity="0.94" />
+    <SolidColorBrush x:Key="ChromeBorderBrush" Color="#D8D6DE" />
     <SolidColorBrush x:Key="ChromeForegroundBrush" Color="#1B1B24" />
   <!-- Color twin for properties typed as Color, not IBrush (MathView.TextColor, M11). -->
   <Color x:Key="ChromeForegroundColor">#1B1B24</Color>
@@ -35,12 +39,11 @@
     </RadialGradientBrush>
 
     <!-- Accent -->
-    <SolidColorBrush x:Key="AccentBrush" Color="#2D6CF6" />
-    <SolidColorBrush x:Key="AccentHoverBrush" Color="#1F5AE8" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#6C50D9" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#5C40C8" />
     <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF" />
 
-    <!-- Active document tab: a crisp white LIFT over the greyish tab strip (not a dark box). Marked
-         further by the accent underline + strong text. -->
+    <!-- Active document tab: a quiet filled tile over the strip, without an underline. -->
     <SolidColorBrush x:Key="TabActiveBgBrush" Color="#FFFFFF" />
 
     <!-- Preview tables (override Markdown.Avalonia's pale grey header): a faint accent-tinted header,
@@ -57,8 +60,8 @@
     <SolidColorBrush x:Key="SearchMatchBrush" Color="#F5B301" Opacity="0.42" />
 
     <!-- Status bar — muted chrome tone (sits with the title bar, not a screaming accent). -->
-    <SolidColorBrush x:Key="StatusBarBackgroundBrush" Color="#ECECF2" />
-    <SolidColorBrush x:Key="StatusBarForegroundBrush" Color="#54546A" />
+    <SolidColorBrush x:Key="StatusBarBackgroundBrush" Color="#F0EFF4" />
+    <SolidColorBrush x:Key="StatusBarForegroundBrush" Color="#575360" />
 
     <!-- Admonitions / GitHub alerts (light): accent stripe (full colour) + subtle tint. -->
     <SolidColorBrush x:Key="AdmonitionNoteBrush" Color="#0969DA" />

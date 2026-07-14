@@ -11,19 +11,25 @@
     <SolidColorBrush x:Key="EditorSurfaceBrush" Color="#1B1B22" />
     <!-- Opaque outline-sidebar surface (reproduces the old ChromeOverlay-over-window look, now solid so
          the single body reading-glow stays continuous across the sidebar/content seam). -->
-    <SolidColorBrush x:Key="SidebarSurfaceBrush" Color="#212129" />
+    <SolidColorBrush x:Key="SidebarSurfaceBrush" Color="#1B1B1F" />
 
-    <!-- Chrome (subtle vertical gradient for depth) -->
-    <LinearGradientBrush x:Key="ChromeBackgroundBrush" StartPoint="0%,0%" EndPoint="0%,100%">
-        <GradientStop Color="#2B2B36" Offset="0" />
-        <GradientStop Color="#212129" Offset="1" />
-    </LinearGradientBrush>
-    <SolidColorBrush x:Key="ChromeOverlayBrush" Color="#26262F" Opacity="0.72" />
-    <SolidColorBrush x:Key="ChromeBorderBrush" Color="#393944" />
-    <SolidColorBrush x:Key="ChromeForegroundBrush" Color="#E7E7EF" />
+    <!-- Obsidian-inspired workspace hierarchy. These are semantic shell roles, kept separate from
+         document surfaces so the shell can be redesigned without retinting the reader. -->
+    <SolidColorBrush x:Key="WorkspaceRailBackgroundBrush" Color="#121216" />
+    <SolidColorBrush x:Key="WorkspaceSidebarBackgroundBrush" Color="#1B1B1F" />
+    <SolidColorBrush x:Key="WorkspaceHeaderBackgroundBrush" Color="#18181C" />
+    <SolidColorBrush x:Key="WorkspaceHoverBrush" Color="#29282F" />
+    <SolidColorBrush x:Key="WorkspaceSelectedBrush" Color="#35303F" />
+    <SolidColorBrush x:Key="WorkspaceSeparatorBrush" Color="#303036" />
+
+    <!-- Flat chrome: hierarchy comes from semantic surfaces, not glossy gradients. -->
+    <SolidColorBrush x:Key="ChromeBackgroundBrush" Color="#1B1B1F" />
+    <SolidColorBrush x:Key="ChromeOverlayBrush" Color="#1B1B1F" Opacity="0.94" />
+    <SolidColorBrush x:Key="ChromeBorderBrush" Color="#303036" />
+    <SolidColorBrush x:Key="ChromeForegroundBrush" Color="#E8E7EC" />
   <!-- Color twin for properties typed as Color, not IBrush (MathView.TextColor, M11). -->
-  <Color x:Key="ChromeForegroundColor">#E7E7EF</Color>
-    <SolidColorBrush x:Key="ChromeForegroundMutedBrush" Color="#9A9AA8" />
+  <Color x:Key="ChromeForegroundColor">#E8E7EC</Color>
+    <SolidColorBrush x:Key="ChromeForegroundMutedBrush" Color="#AAA8B2" />
 
     <!-- Subtle hover overlay for outline (TOC) items (reads on the chrome sidebar). -->
     <SolidColorBrush x:Key="OutlineItemHoverBrush" Color="#FFFFFF" Opacity="0.07" />
@@ -39,13 +45,12 @@
     </RadialGradientBrush>
 
     <!-- Accent -->
-    <SolidColorBrush x:Key="AccentBrush" Color="#5A8DFF" />
-    <SolidColorBrush x:Key="AccentHoverBrush" Color="#74A0FF" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#8B79F7" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#A18FFF" />
     <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF" />
 
-    <!-- Active document tab: a gentle LIFT over the tab strip (not the near-black editor surface, which
-         read as an ugly black box). Marked further by the accent underline + bright text. -->
-    <SolidColorBrush x:Key="TabActiveBgBrush" Color="#2E2E3C" />
+    <!-- Active document tab: a quiet filled tile over the strip, without an underline. -->
+    <SolidColorBrush x:Key="TabActiveBgBrush" Color="#35303F" />
 
     <!-- Preview tables (override Markdown.Avalonia's pale grey header): a faint accent-tinted header,
          a barely-there zebra alt row, and a subtle grid line. Custom dark themes inherit these. -->
@@ -61,8 +66,8 @@
     <SolidColorBrush x:Key="SearchMatchBrush" Color="#E2B341" Opacity="0.33" />
 
     <!-- Status bar — muted chrome tone (sits with the title bar, not a screaming accent). -->
-    <SolidColorBrush x:Key="StatusBarBackgroundBrush" Color="#20202A" />
-    <SolidColorBrush x:Key="StatusBarForegroundBrush" Color="#B7B7C5" />
+    <SolidColorBrush x:Key="StatusBarBackgroundBrush" Color="#18181C" />
+    <SolidColorBrush x:Key="StatusBarForegroundBrush" Color="#BDBAC5" />
 
     <!-- Admonitions / GitHub alerts (dark): accent stripe (full colour) + subtle tint. -->
     <SolidColorBrush x:Key="AdmonitionNoteBrush" Color="#4493F8" />
