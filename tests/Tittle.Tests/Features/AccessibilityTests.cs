@@ -41,6 +41,17 @@ public class AccessibilityTests
         Assert.Contains("Открыть файл", names);     // omnibar 📂
         Assert.Contains("Палитра команд", names);   // omnibar ⌘
         Assert.Contains("Номер строки", names);     // go-to-line box
+
+        var segmented = window.GetLogicalDescendants()
+            .OfType<Border>()
+            .Single(b => b.Classes.Contains("segmented"));
+        var segments = window.GetLogicalDescendants()
+            .OfType<Button>()
+            .Where(b => b.Classes.Contains("segment"))
+            .ToList();
+        Assert.Equal(new Thickness(1), segmented.BorderThickness);
+        Assert.NotEmpty(segments);
+        Assert.All(segments, button => Assert.Equal(new Thickness(10, 6), button.Padding));
     }
 
     [AvaloniaFact]
@@ -101,4 +112,74 @@ public class AccessibilityTests
             }
         }
     }
+
+    [AvaloniaFact]
+    public void ActiveWorkspaceControls_HaveNonColorCues()
+    {
+        var workspace = new Button { Content = "workspace" };
+        workspace.Classes.Add("workspace-action");
+        workspace.Classes.Add("active");
+        var segment = new Button { Content = "segment" };
+        segment.Classes.Add("segment");
+        segment.Classes.Add("seg-on");
+        var window = new Window
+        {
+            Content = new StackPanel { Children = { workspace, segment } },
+            Width = 200,
+            Height = 120,
+        };
+
+        try
+        {
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+
+            var workspacePresenter = workspace.GetVisualDescendants()
+                .OfType<ContentPresenter>()
+                .First(p => p.Name == "PART_ContentPresenter");
+            Assert.True(workspacePresenter.BorderThickness.Left > workspacePresenter.BorderThickness.Right,
+                "Active workspace action has no structural marker");
+            Assert.Equal(FontWeight.SemiBold, segment.FontWeight);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaFact]
+    public void WorkspaceActions_FollowSixTenFourteenRhythm()
+    {
+        var workspace = new Button();
+        workspace.Classes.Add("workspace-action");
+        var header = new Button();
+        header.Classes.Add("header-action");
+        var segment = new Button();
+        segment.Classes.Add("segment");
+        var window = new Window
+        {
+            Content = new StackPanel { Children = { workspace, header, segment } },
+            Width = 200,
+            Height = 160,
+        };
+
+        try
+        {
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+
+            Assert.Equal(new Thickness(10), workspace.Padding);
+            Assert.Equal(36, workspace.Width);
+            Assert.Equal(36, workspace.Height);
+            Assert.Equal(new CornerRadius(6), workspace.CornerRadius);
+            Assert.Equal(new Thickness(10, 6), header.Padding);
+            Assert.Equal(new CornerRadius(6), header.CornerRadius);
+            Assert.Equal(new Thickness(10, 6), segment.Padding);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
 }

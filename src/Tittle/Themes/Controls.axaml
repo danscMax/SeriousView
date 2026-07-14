@@ -40,7 +40,7 @@
   <Style Selector="Button.workspace-action">
     <Setter Property="Width" Value="36"/>
     <Setter Property="Height" Value="36"/>
-    <Setter Property="Padding" Value="9"/>
+    <Setter Property="Padding" Value="10"/>
     <Setter Property="CornerRadius" Value="6"/>
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
   </Style>
@@ -49,20 +49,27 @@
   </Style>
   <Style Selector="Button.workspace-action.active">
     <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
   </Style>
   <Style Selector="Button.workspace-action.active /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource WorkspaceSelectedBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="BorderThickness" Value="2,0,0,0"/>
   </Style>
   <Style Selector="Button.workspace-action:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
   </Style>
+  <Style Selector="Button.workspace-action.active:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="BorderThickness" Value="2,1,1,1"/>
+  </Style>
 
   <Style Selector="Button.header-action">
     <Setter Property="MinWidth" Value="0"/>
     <Setter Property="MinHeight" Value="0"/>
-    <Setter Property="Padding" Value="7,5"/>
-    <Setter Property="CornerRadius" Value="5"/>
+    <Setter Property="Padding" Value="10,6"/>
+    <Setter Property="CornerRadius" Value="6"/>
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
   </Style>
   <Style Selector="Button.header-action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
@@ -87,7 +94,7 @@
     <Setter Property="CornerRadius" Value="0"/>
     <Setter Property="MinWidth" Value="0"/>
     <Setter Property="MinHeight" Value="0"/>
-    <Setter Property="Padding" Value="8,3"/>
+    <Setter Property="Padding" Value="10,6"/>
     <Setter Property="FontSize" Value="11.5"/>
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
   </Style>
@@ -96,6 +103,7 @@
   </Style>
   <Style Selector="Button.segment.seg-on">
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
   </Style>
   <Style Selector="Button.segment.seg-on /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource WorkspaceSelectedBrush}"/>

@@ -23,7 +23,7 @@ public sealed record ThemeInfo(
 /// <see cref="ThemeModeExtensions.IsDark"/> answer. Pure (no Avalonia) so both the Core and the
 /// platform/UI layers share one list — the swatch hexes here mirror the corresponding
 /// <c>Themes/Colors/*.axaml</c> palette per the per-field convention on <see cref="ThemeInfo"/>
-/// (guarded by ThemeServiceTests.AllSwatches_MatchTheirAxamlSurfaces).</summary>
+/// (guarded by ThemeServiceTests.AllSwatches_MatchTheirAxamlPalette).</summary>
 public static class ThemeCatalog
 {
     /// <summary>Dark family first, then the light family, then Auto — this order is the keyboard
@@ -31,7 +31,7 @@ public static class ThemeCatalog
     public static IReadOnlyList<ThemeInfo> All { get; } = new ThemeInfo[]
     {
         // Dark family
-        new(ThemeMode.Dark, "Тёмная", true, "#15151A", "#1B1B22", "#5A8DFF", "#E7E7EF"),
+        new(ThemeMode.Dark, "Тёмная", true, "#15151A", "#1B1B22", "#8B79F7", "#E7E7EF"),
         new(ThemeMode.Midnight, "Полночь", true, "#0A0A0E", "#0F0F14", "#7AA2F7", "#DEDEE9"),
         new(ThemeMode.Ocean, "Океан", true, "#0A0D12", "#0D1116", "#2EC8BE", "#DCE7EF"),
         new(ThemeMode.DeepBlue, "Глубокий синий", true, "#10131C", "#14161C", "#7AA2F7", "#C8D3F5"),
@@ -42,12 +42,12 @@ public static class ThemeCatalog
         new(ThemeMode.GruvboxDark, "Gruvbox Dark", true, "#282828", "#32302F", "#FABD2F", "#EBDBB2"),
         new(ThemeMode.HighContrast, "Контраст", true, "#000000", "#0A0A0A", "#FFFF00", "#FFFFFF"),
         // Light family
-        new(ThemeMode.Light, "Светлая", false, "#F7F7FB", "#FFFFFF", "#2D6CF6", "#1B1B24"),
+        new(ThemeMode.Light, "Светлая", false, "#F7F7FB", "#FFFFFF", "#6C50D9", "#1B1B24"),
         new(ThemeMode.Sepia, "Сепия", false, "#F7F1E1", "#EFE6D0", "#8B4513", "#5B4636"),
         new(ThemeMode.SolarizedLight, "Solarized Light", false, "#FDF6E3", "#EEE8D5", "#268BD2", "#657B83"),
         new(ThemeMode.GruvboxLight, "Gruvbox Light", false, "#FBF1C7", "#F2E5BC", "#AF3A03", "#3C3836"),
         // Follow the OS — neutral split swatch, never counted as dark.
-        new(ThemeMode.Auto, "Авто (как в системе)", false, "#15151A", "#F7F7FB", "#5A8DFF", "#9A9AA8"),
+        new(ThemeMode.Auto, "Авто (как в системе)", false, "#15151A", "#F7F7FB", "#8B79F7", "#9A9AA8"),
     };
 
     /// <summary>The catalog entry for <paramref name="mode"/> (falls back to the first entry for an

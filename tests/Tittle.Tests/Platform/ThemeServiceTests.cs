@@ -195,7 +195,7 @@ public class ThemeServiceTests
     // surfaces" catches a stale swatch (the F-11 surface tweak left a value matching neither) without
     // over-constraining which representative surface each theme picked.
     [AvaloniaFact]
-    public void AllSwatches_MatchTheirAxamlSurfaces()
+    public void AllSwatches_MatchTheirAxamlPalette()
     {
         var app = Application.Current!;
         var service = NewService();
@@ -216,7 +216,11 @@ public class ThemeServiceTests
             var swatch = Color.Parse(info.Surface);
             Assert.True(swatch == editor || swatch == sidebar,
                 $"{info.Mode}: surface swatch {info.Surface} matches neither EditorSurface ({editor}) nor SidebarSurface ({sidebar})");
+
+            Assert.Equal(Color.Parse(info.Accent), Resolve(app, "AccentBrush", variant));
         }
+
+        Assert.Equal(ThemeCatalog.For(ThemeMode.Dark).Accent, ThemeCatalog.For(ThemeMode.Auto).Accent);
     }
 
     // Accessibility floor: muted chrome text (on the sidebar) and status-bar text (on its own bar)
