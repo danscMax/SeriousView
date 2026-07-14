@@ -22,6 +22,22 @@ public partial class LayoutOptions : ObservableObject
     private bool _showOmnibar = true;
 
     [ObservableProperty]
+    private bool _isWorkspaceSidebarOpen = true;
+
+    [ObservableProperty]
+    private WorkspaceSection _workspaceSection = WorkspaceSection.Files;
+
+    partial void OnWorkspaceSectionChanged(WorkspaceSection value)
+    {
+        var normalized = NormalizeWorkspaceSection(value);
+        if (normalized != value)
+            WorkspaceSection = normalized;
+    }
+
+    public static WorkspaceSection NormalizeWorkspaceSection(WorkspaceSection value) =>
+        Enum.IsDefined(value) ? value : WorkspaceSection.Files;
+
+    [ObservableProperty]
     private ReadingWidth _readingWidth = ReadingWidth.Comfort;
 
     [ObservableProperty]
@@ -71,6 +87,8 @@ public partial class LayoutOptions : ObservableObject
         MenuPlacement = MenuPlacement,
         ToolbarMode = ToolbarMode,
         ShowOmnibar = ShowOmnibar,
+        IsWorkspaceSidebarOpen = IsWorkspaceSidebarOpen,
+        WorkspaceSection = WorkspaceSection,
         OutlineWidth = OutlineWidth,
         ReadingWidth = ReadingWidth,
         ReadingDensity = ReadingDensity,
@@ -86,6 +104,8 @@ public partial class LayoutOptions : ObservableObject
             MenuPlacement = s.MenuPlacement,
             ToolbarMode = s.ToolbarMode,
             ShowOmnibar = s.ShowOmnibar,
+            IsWorkspaceSidebarOpen = s.IsWorkspaceSidebarOpen,
+            WorkspaceSection = NormalizeWorkspaceSection(s.WorkspaceSection),
             OutlineWidth = s.OutlineWidth,
             ReadingWidth = s.ReadingWidth,
             ReadingDensity = s.ReadingDensity,

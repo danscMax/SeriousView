@@ -320,15 +320,61 @@ public class MainWindowViewModelTests
     }
 
     [AvaloniaFact]
-    public void ToggleOutline_FlipsVisibility()
+    public void WorkspaceSidebar_DefaultsToFilesAndOpen()
     {
         var vm = CreateVm();
 
-        Assert.True(vm.IsOutlineVisible);
+        Assert.True(vm.IsWorkspaceSidebarVisible);
+        Assert.True(vm.IsFilesPaneVisible);
+        Assert.False(vm.IsOutlinePaneVisible);
+        Assert.False(vm.IsBookmarksPaneVisible);
+    }
+
+    [AvaloniaFact]
+    public void OpenWorkspaceSection_SelectsSection_AndSecondPressClosesIt()
+    {
+        var vm = CreateVm(content: "# Heading\n\nbody", args: new[] { "/doc.md" });
+
+        vm.OpenWorkspaceSectionCommand.Execute(WorkspaceSection.Outline);
+
+        Assert.True(vm.IsWorkspaceSidebarVisible);
+        Assert.True(vm.IsOutlinePaneVisible);
+        Assert.False(vm.IsFilesPaneVisible);
+
+        vm.OpenWorkspaceSectionCommand.Execute(WorkspaceSection.Outline);
+
+        Assert.False(vm.IsWorkspaceSidebarVisible);
+        Assert.False(vm.IsOutlinePaneVisible);
+    }
+
+    [AvaloniaFact]
+    public void OpenWorkspaceSection_SwitchesAClosedSidebarToTheRequestedSection()
+    {
+        var vm = CreateVm();
+
+        vm.OpenWorkspaceSectionCommand.Execute(WorkspaceSection.Files); // active section -> close
+        Assert.False(vm.IsWorkspaceSidebarVisible);
+
+        vm.OpenWorkspaceSectionCommand.Execute(WorkspaceSection.Bookmarks);
+
+        Assert.True(vm.IsWorkspaceSidebarVisible);
+        Assert.True(vm.IsBookmarksPaneVisible);
+        Assert.False(vm.IsFilesPaneVisible);
+    }
+
+    [AvaloniaFact]
+    public void ToggleOutline_UsesWorkspaceOutlineSection()
+    {
+        var vm = CreateVm(content: "# Heading\n\nbody", args: new[] { "/doc.md" });
+
         vm.ToggleOutlineCommand.Execute(null);
-        Assert.False(vm.IsOutlineVisible);
+
+        Assert.Equal(WorkspaceSection.Outline, vm.Layout.WorkspaceSection);
+        Assert.True(vm.IsOutlinePaneVisible);
+
         vm.ToggleOutlineCommand.Execute(null);
-        Assert.True(vm.IsOutlineVisible);
+
+        Assert.False(vm.IsWorkspaceSidebarVisible);
     }
 
     [AvaloniaFact]
@@ -336,10 +382,11 @@ public class MainWindowViewModelTests
     {
         var vm = CreateVm(content: "# Heading\n\nbody", args: new[] { "/doc.md" });
 
-        Assert.True(vm.IsOutlinePaneVisible);          // markdown + heading + enabled
+        vm.OpenWorkspaceSectionCommand.Execute(WorkspaceSection.Outline);
+        Assert.True(vm.IsOutlinePaneVisible);          // outline selected + markdown with heading
 
         vm.ToggleOutlineCommand.Execute(null);
-        Assert.False(vm.IsOutlinePaneVisible);         // disabled → hidden
+        Assert.False(vm.IsOutlinePaneVisible);         // second press closes the sidebar
     }
 
     [AvaloniaFact]
@@ -347,8 +394,10 @@ public class MainWindowViewModelTests
     {
         var vm = CreateVm(content: "var x = 1;", args: new[] { "/a.cs" });
 
-        Assert.True(vm.IsOutlineVisible);              // enabled by default…
-        Assert.False(vm.IsOutlinePaneVisible);         // …but no headings → hidden
+        vm.OpenWorkspaceSectionCommand.Execute(WorkspaceSection.Outline);
+
+        Assert.True(vm.IsWorkspaceSidebarVisible);     // the pane remains available…
+        Assert.False(vm.IsOutlinePaneVisible);         // …but there is no outline control to show
     }
 
     [AvaloniaFact]
@@ -359,6 +408,7 @@ public class MainWindowViewModelTests
         var files = new Dictionary<string, string> { ["/a.md"] = "# H\n\nbody", ["/b.cs"] = "var x = 1;" };
         var vm = CreateVm(fileReader: new FakeFileReader(files));
         await vm.OpenPathAsync("/a.md");
+        vm.OpenWorkspaceSectionCommand.Execute(WorkspaceSection.Outline);
         await vm.OpenPathAsync("/b.cs"); // code tab selected → no outline
         Assert.False(vm.IsOutlinePaneVisible);
 

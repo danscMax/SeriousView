@@ -305,6 +305,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         Layout.MenuPlacement = layout.MenuPlacement;
         Layout.ToolbarMode = layout.ToolbarMode;
         Layout.ShowOmnibar = layout.ShowOmnibar;
+        Layout.IsWorkspaceSidebarOpen = layout.IsWorkspaceSidebarOpen;
+        Layout.WorkspaceSection = layout.WorkspaceSection;
         Layout.OutlineWidth = layout.OutlineWidth;
         Layout.ReadingWidth = layout.ReadingWidth;
         Layout.ReadingDensity = layout.ReadingDensity;
@@ -546,16 +548,41 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     /// The Velopack call exits this process. Safe on a disposed VM — the service holds the pending info.</summary>
     internal void ApplyUpdateAndRestart() => _updateService?.ApplyAndRestart();
 
-    /// <summary>Whether the user has the outline pane turned on (per-window, persists across tabs).</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsOutlinePaneVisible))]
-    private bool _isOutlineVisible = true;
+    /// <summary>Whether the contextual workspace sidebar currently occupies space.</summary>
+    public bool IsWorkspaceSidebarVisible => Layout.IsWorkspaceSidebarOpen;
 
-    /// <summary>The outline pane is shown only when enabled AND the active tab has headings.</summary>
-    public bool IsOutlinePaneVisible => IsOutlineVisible && (SelectedTab?.HasOutline ?? false);
+    public bool IsFilesPaneVisible =>
+        IsWorkspaceSidebarVisible && Layout.WorkspaceSection == WorkspaceSection.Files;
 
+    /// <summary>The outline control is shown only for the Outline section and a document with headings.
+    /// The sidebar itself stays open for an empty-state message when there is no outline.</summary>
+    public bool IsOutlinePaneVisible =>
+        IsWorkspaceSidebarVisible
+        && Layout.WorkspaceSection == WorkspaceSection.Outline
+        && (SelectedTab?.HasOutline ?? false);
+
+    public bool IsBookmarksPaneVisible =>
+        IsWorkspaceSidebarVisible && Layout.WorkspaceSection == WorkspaceSection.Bookmarks;
+
+    /// <summary>Select a workspace section, or collapse the sidebar when its active rail button is
+    /// pressed again. A closed sidebar always opens on the requested section.</summary>
     [RelayCommand]
-    private void ToggleOutline() => IsOutlineVisible = !IsOutlineVisible;
+    private void OpenWorkspaceSection(WorkspaceSection section)
+    {
+        section = LayoutOptions.NormalizeWorkspaceSection(section);
+        if (Layout.IsWorkspaceSidebarOpen && Layout.WorkspaceSection == section)
+        {
+            Layout.IsWorkspaceSidebarOpen = false;
+            return;
+        }
+
+        Layout.WorkspaceSection = section;
+        Layout.IsWorkspaceSidebarOpen = true;
+    }
+
+    /// <summary>Compatibility command used by the palette and Ctrl/toolbar paths.</summary>
+    [RelayCommand]
+    private void ToggleOutline() => OpenWorkspaceSection(WorkspaceSection.Outline);
 
     /// <summary>Editor display options shared by every tab's source editor (font zoom, wrap,
     /// line numbers). Bound by <c>DocumentView</c>; persisted whenever it changes.</summary>
@@ -723,8 +750,18 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         _editorSaveTimer.Start();
     }
 
-    private void OnLayoutPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) =>
+    private void OnLayoutPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
         _settings.Update(_settings.Current with { Layout = Layout.ToSettings() });
+        if (e.PropertyName is nameof(LayoutOptions.IsWorkspaceSidebarOpen)
+            or nameof(LayoutOptions.WorkspaceSection))
+        {
+            OnPropertyChanged(nameof(IsWorkspaceSidebarVisible));
+            OnPropertyChanged(nameof(IsFilesPaneVisible));
+            OnPropertyChanged(nameof(IsOutlinePaneVisible));
+            OnPropertyChanged(nameof(IsBookmarksPaneVisible));
+        }
+    }
 
     private void OnDiagramsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) =>
         _settings.Update(_settings.Current with { Diagram = Diagrams.ToSettings() });

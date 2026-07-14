@@ -26,6 +26,19 @@ public enum ToolbarMode
     Fixed,
 }
 
+/// <summary>The contextual pane selected in the workspace sidebar.</summary>
+public enum WorkspaceSection
+{
+    /// <summary>Open and recent files.</summary>
+    Files,
+
+    /// <summary>The active document's heading/symbol outline.</summary>
+    Outline,
+
+    /// <summary>Bookmarked headings in the active document.</summary>
+    Bookmarks,
+}
+
 /// <summary>Reading-column width preset for the markdown preview (ported reading presets).</summary>
 public enum ReadingWidth
 {
@@ -81,6 +94,12 @@ public sealed record LayoutSettings
 
     /// <summary>Show the omnibar (path · 📂 · ⌘). Default: on.</summary>
     public bool ShowOmnibar { get; init; } = true;
+
+    /// <summary>Whether the contextual workspace sidebar is expanded. Default: open.</summary>
+    public bool IsWorkspaceSidebarOpen { get; init; } = true;
+
+    /// <summary>The section shown in the contextual workspace sidebar. Default: files.</summary>
+    public WorkspaceSection WorkspaceSection { get; init; } = WorkspaceSection.Files;
 
     /// <summary>Width of the outline/TOC sidebar in pixels (user-resizable via a splitter).
     /// Default: 240.</summary>
