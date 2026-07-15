@@ -82,6 +82,15 @@ public class AccessibilityTests
         var compactStatus = window.FindControl<Border>("WorkspaceStatusStrip");
         Assert.NotNull(compactStatus);
         Assert.Contains("compact-status", compactStatus!.Classes);
+        var body = window.FindControl<Grid>("BodyGrid");
+        Assert.NotNull(body);
+        Assert.Contains("compact-workspace", body!.Classes);
+        Assert.True(MainWindow.IsCompactWorkspaceWidth(560));
+        Assert.False(MainWindow.IsCompactWorkspaceWidth(760));
+
+        window.ApplyResponsiveHeaderForTest(1100);
+        Assert.DoesNotContain("compact-status", compactStatus.Classes);
+        Assert.DoesNotContain("compact-workspace", body.Classes);
     }
 
     [AvaloniaFact]

@@ -40,6 +40,12 @@
                      Border.compact-status Border.status-optional">
       <Setter Property="IsVisible" Value="False"/>
     </Style>
+    <!-- Below the compact workspace threshold the rail stays as the navigation anchor, while the
+         contextual pane collapses to give the document a usable reading canvas. The user's chosen
+         section/width is retained and returns when the window grows again. -->
+    <Style Selector="Grid.compact-workspace GridSplitter">
+      <Setter Property="IsVisible" Value="False"/>
+    </Style>
     <!-- Omnibar address field: a borderless TextBox that blends into the omnibar pill (the outer Border
          already draws the box). Editable + selectable so the path can be copied or replaced (Enter opens
          it; see code-behind). We flatten the FluentAvalonia template's PART_BorderElement across all
@@ -101,7 +107,7 @@
               Classes="chrome-menu" Margin="6,0,2,0" VerticalAlignment="Center"
               wnd:AppWindow.AllowInteractionInTitleBar="True"
               IsVisible="{Binding Layout.MenuPlacement, Converter={x:Static conv:EnumToBoolConverter.Instance}, ConverterParameter=Hidden}">
-        <TextBlock Text="&#x2630;" FontSize="16"/>
+        <PathIcon Data="{StaticResource IconMenu}" Width="17" Height="17"/>
         <Button.Flyout>
           <MenuFlyout Placement="BottomEdgeAlignedLeft">
             <MenuItem Header="Файл">
@@ -252,12 +258,12 @@
           <Button DockPanel.Dock="Left" Classes="chrome-menu" ToolTip.Tip="Открыть файл (Ctrl+O)"
                   AutomationProperties.Name="Открыть файл"
                   Command="{Binding OpenFileCommand}" Padding="6,3">
-            <TextBlock Text="📂" FontSize="14"/>
+            <PathIcon Data="{StaticResource IconFolderOpen}" Width="16" Height="16"/>
           </Button>
           <Button DockPanel.Dock="Right" Classes="chrome-menu" ToolTip.Tip="Команды (Ctrl+K · Ctrl+Shift+P)"
-                  AutomationProperties.Name="Палитра команд"
-                  Click="OnPaletteButtonClick" Padding="8,3">
-            <TextBlock Text="⌘" FontSize="14"/>
+                   AutomationProperties.Name="Палитра команд"
+                   Click="OnPaletteButtonClick" Padding="8,3">
+            <PathIcon Data="{StaticResource IconCommand}" Width="16" Height="16"/>
           </Button>
           <!-- Editable address field: shows the active document's path (selectable → copy), and opening
                another path is just typing it and pressing Enter (Esc reverts). Enter/Esc are handled in

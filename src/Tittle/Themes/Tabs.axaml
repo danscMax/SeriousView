@@ -21,7 +21,8 @@
           <Border.Transitions>
             <!-- Smooth hover/select recolor (= DurFast token). -->
             <Transitions>
-              <BrushTransition Property="Background" Duration="0:0:0.12" />
+              <BrushTransition Property="Background" Duration="{DynamicResource DurFast}" />
+              <BrushTransition Property="BorderBrush" Duration="{DynamicResource DurFast}" />
             </Transitions>
           </Border.Transitions>
           <Grid ColumnDefinitions="*,Auto" Height="30" MinWidth="92">
@@ -30,7 +31,7 @@
                               ContentTemplate="{TemplateBinding ContentTemplate}"
                               VerticalAlignment="Center" Margin="12,0,4,0" />
             <!-- Close (✕): hidden until the tab is hovered or selected. -->
-            <Button x:Name="PART_Close" Grid.Column="1" Content="&#x2715;"
+            <Button x:Name="PART_Close" Grid.Column="1"
                     FontSize="10" Width="18" Height="18" Padding="0" Margin="2,0,8,0"
                     VerticalAlignment="Center" Opacity="0"
                     ToolTip.Tip="Закрыть вкладку (Ctrl+W)"
@@ -39,6 +40,7 @@
                     Background="Transparent" BorderThickness="0"
                     Command="{Binding $parent[ListBox].DataContext.CloseTabCommand}"
                     CommandParameter="{Binding}">
+              <PathIcon Data="{StaticResource IconClose}" Width="9" Height="9"/>
               <Button.Transitions>
                 <!-- Fade the ✕ in/out on hover (= DurFast token). -->
                 <Transitions>

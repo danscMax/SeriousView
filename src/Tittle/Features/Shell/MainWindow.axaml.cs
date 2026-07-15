@@ -55,6 +55,8 @@ public partial class MainWindow : AppWindow
     private bool _dragging;
     private const double DragThreshold = 5;
     private const double NarrowHeaderThreshold = 640;
+    private const double CompactWorkspaceThreshold = 760;
+    private bool _compactWorkspace;
 
     // The contextual sidebar is column [1] of the workspace grid. A named ColumnDefinition gets no generated
     // code-behind field (it isn't a control), so reach it through the named grid instead.
@@ -542,10 +544,11 @@ public partial class MainWindow : AppWindow
     // Shown → pixel width within [min,max]; hidden → collapse to 0 (no reserved gutter, no splitter).
     private void ApplyWorkspaceSidebarColumn(bool visible)
     {
-        WorkspaceSidebarColumn.MinWidth = visible ? LayoutOptions.MinOutlineWidth : 0;
-        WorkspaceSidebarColumn.MaxWidth = visible ? LayoutOptions.MaxOutlineWidth : double.PositiveInfinity;
+        var shown = visible && !_compactWorkspace;
+        WorkspaceSidebarColumn.MinWidth = shown ? LayoutOptions.MinOutlineWidth : 0;
+        WorkspaceSidebarColumn.MaxWidth = shown ? LayoutOptions.MaxOutlineWidth : double.PositiveInfinity;
         WorkspaceSidebarColumn.Width = new GridLength(
-            visible ? LayoutOptions.ClampOutlineWidth(_outlineWidth) : 0, GridUnitType.Pixel);
+            shown ? LayoutOptions.ClampOutlineWidth(_outlineWidth) : 0, GridUnitType.Pixel);
     }
 
     /// <summary>Hide only the editable path text at narrow widths; the open and palette actions stay
@@ -559,6 +562,20 @@ public partial class MainWindow : AppWindow
         var (pathVisible, minWidth) = ResponsiveHeaderLayout(width);
         OmnibarBox.IsVisible = pathVisible;
         Omnibar.MinWidth = minWidth;
+        var compactWorkspace = IsCompactWorkspaceWidth(width);
+        if (_compactWorkspace != compactWorkspace)
+        {
+            _compactWorkspace = compactWorkspace;
+            if (DataContext is MainWindowViewModel vm)
+                ApplyWorkspaceSidebarColumn(vm.IsWorkspaceSidebarVisible);
+            if (BodyGrid is not null)
+            {
+                if (compactWorkspace)
+                    BodyGrid.Classes.Add("compact-workspace");
+                else
+                    BodyGrid.Classes.Remove("compact-workspace");
+            }
+        }
         if (WorkspaceStatusStrip is not null)
         {
             if (!pathVisible)
@@ -581,6 +598,8 @@ public partial class MainWindow : AppWindow
         var compact = width > 0 && width < NarrowHeaderThreshold;
         return (!compact, compact ? 0 : 340);
     }
+
+    internal static bool IsCompactWorkspaceWidth(double width) => width > 0 && width < CompactWorkspaceThreshold;
 
     // NOTE: Avalonia 11.3 marks DragEventArgs.Data / DataFormats.Files obsolete in favour of the
     // newer DataTransfer API. The classic API still works; migrating to DataTransfer is follow-up.

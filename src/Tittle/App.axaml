@@ -9,8 +9,8 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://Tittle/Themes/Tokens.axaml" />
-                <ResourceInclude Source="avares://Tittle/Themes/Tabs.axaml" />
                 <ResourceInclude Source="avares://Tittle/Themes/Icons.axaml" />
+                <ResourceInclude Source="avares://Tittle/Themes/Tabs.axaml" />
             </ResourceDictionary.MergedDictionaries>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceInclude x:Key="Light" Source="avares://Tittle/Themes/Colors/Light.axaml" />

@@ -3,69 +3,81 @@
         xmlns:shared="using:Tittle.Shared"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="320"
+        mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="320"
         x:Class="Tittle.Features.Settings.LayoutSettingsWindow"
         x:DataType="shared:LayoutOptions"
         Title="Раскладка"
-        Width="400" SizeToContent="Height" CanResize="False">
+        Width="460" SizeToContent="Height" MaxHeight="720" CanResize="False">
   <!-- Bound to the shared LayoutOptions, so every toggle persists and re-renders the chrome live. Stays
        open (no click-away close) so the user can watch the changes; Esc / Готово close it.
        Chrome = ModalWindow + Border.modalcard (the card also sets the default text colour). -->
-  <Border Classes="modalcard" Padding="20">
+  <Border Classes="modalcard" Padding="22">
     <!-- Default text colour comes from Border.modalcard; CheckBox/RadioButton from the scoped styles in
          Controls.axaml. Only the muted section labels set an explicit (muted) Foreground. -->
-    <StackPanel Spacing="16">
-      <TextBlock Text="Раскладка интерфейса" FontSize="16" FontWeight="SemiBold"/>
+    <ScrollViewer MaxHeight="660" VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Spacing="14">
+      <StackPanel Spacing="4">
+        <TextBlock Text="Раскладка интерфейса" FontSize="18" FontWeight="SemiBold"/>
+        <TextBlock Text="Соберите рабочее пространство под свой ритм чтения и редактирования."
+                   TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+      </StackPanel>
 
-      <CheckBox IsChecked="{Binding ShowOmnibar, Mode=TwoWay}"
-                Content="Омнибар (путь · открыть · палитра)"/>
+      <Border Classes="settings-group">
+        <CheckBox IsChecked="{Binding ShowOmnibar, Mode=TwoWay}"
+                  Content="Омнибар (путь · открыть · палитра)"/>
+      </Border>
 
-      <StackPanel Spacing="6">
-        <TextBlock Text="Панель инструментов" FontSize="12.5"
-                   Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+      <Border Classes="settings-group">
+        <StackPanel Spacing="4">
+        <TextBlock Text="Панель инструментов" Classes="settings-section"/>
         <RadioButton GroupName="Toolbar" Content="Контекстная (в режиме «Исходник»)"
                      IsChecked="{Binding ToolbarMode, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Contextual}"/>
         <RadioButton GroupName="Toolbar" Content="Всегда показывать"
                      IsChecked="{Binding ToolbarMode, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Fixed}"/>
         <RadioButton GroupName="Toolbar" Content="Выключена"
                      IsChecked="{Binding ToolbarMode, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Off}"/>
-      </StackPanel>
+        </StackPanel>
+      </Border>
 
-      <StackPanel Spacing="6">
-        <TextBlock Text="Ширина колонки чтения" FontSize="12.5"
-                   Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+      <Border Classes="settings-group">
+        <StackPanel Spacing="4">
+        <TextBlock Text="Ширина колонки чтения" Classes="settings-section"/>
         <RadioButton GroupName="ReadingWidth" Content="Полная"
                      IsChecked="{Binding ReadingWidth, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Full}"/>
         <RadioButton GroupName="ReadingWidth" Content="Средняя (760 px)"
                      IsChecked="{Binding ReadingWidth, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Comfort}"/>
         <RadioButton GroupName="ReadingWidth" Content="Узкая (620 px)"
                      IsChecked="{Binding ReadingWidth, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Narrow}"/>
-      </StackPanel>
+        </StackPanel>
+      </Border>
 
-      <StackPanel Spacing="6">
-        <TextBlock Text="Разреженность текста" FontSize="12.5"
-                   Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+      <Border Classes="settings-group">
+        <StackPanel Spacing="4">
+        <TextBlock Text="Разреженность текста" Classes="settings-section"/>
         <RadioButton GroupName="ReadingDensity" Content="Плотно"
                      IsChecked="{Binding ReadingDensity, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Compact}"/>
         <RadioButton GroupName="ReadingDensity" Content="Обычно"
                      IsChecked="{Binding ReadingDensity, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Normal}"/>
         <RadioButton GroupName="ReadingDensity" Content="Просторно"
                      IsChecked="{Binding ReadingDensity, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Relaxed}"/>
-      </StackPanel>
+        </StackPanel>
+      </Border>
 
-      <StackPanel Spacing="6">
-        <TextBlock Text="Ориентация разделённого вида" FontSize="12.5"
-                   Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+      <Border Classes="settings-group">
+        <StackPanel Spacing="4">
+        <TextBlock Text="Ориентация разделённого вида" Classes="settings-section"/>
         <RadioButton GroupName="SplitOrientation" Content="Горизонтальная (рядом)"
                      IsChecked="{Binding SplitOrientation, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Horizontal}"/>
         <RadioButton GroupName="SplitOrientation" Content="Вертикальная (друг над другом)"
                      IsChecked="{Binding SplitOrientation, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Vertical}"/>
-      </StackPanel>
+        </StackPanel>
+      </Border>
 
       <!-- Diagrams (M12). DataContext is the shared DiagramOptions, assigned in code-behind. -->
-      <StackPanel x:Name="DiagramSection" x:DataType="shared:DiagramOptions" Spacing="6">
-        <TextBlock Text="Диаграммы" FontSize="12.5"
-                   Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+      <Border Classes="settings-group">
+        <StackPanel x:Name="DiagramSection" x:DataType="shared:DiagramOptions" Spacing="6">
+        <TextBlock Text="Диаграммы" Classes="settings-section"/>
         <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay}"
                   Content="Рендерить диаграммы через Kroki"/>
         <TextBox Text="{Binding KrokiUrl, Mode=TwoWay}" IsEnabled="{Binding Enabled}"
@@ -73,10 +85,12 @@
         <TextBlock TextWrapping="Wrap" FontSize="11.5"
                    Foreground="{DynamicResource ChromeForegroundMutedBrush}"
                    Text="Текст диаграммы (```mermaid, ```plantuml, ```dot …) отправляется на указанный сервер. По умолчанию выключено; можно указать свой self-hosted Kroki."/>
-      </StackPanel>
+        </StackPanel>
+      </Border>
 
       <Button Content="Готово" HorizontalAlignment="Right" Classes="accent"
               AutomationProperties.Name="Закрыть настройки" Click="OnCloseClick"/>
     </StackPanel>
+    </ScrollViewer>
   </Border>
 </shared:ModalWindow>

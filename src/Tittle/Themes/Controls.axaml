@@ -8,12 +8,56 @@
        (their own Foreground wins over the inherited default), so no per-control Foreground is needed. -->
   <Style Selector="Border.modalcard">
     <Setter Property="Background" Value="{DynamicResource EditorSurfaceBrush}"/>
-    <Setter Property="CornerRadius" Value="10"/>
+    <Setter Property="CornerRadius" Value="14"/>
     <Setter Property="BorderBrush" Value="{DynamicResource ChromeBorderBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="BoxShadow" Value="{DynamicResource ChromeShadow}"/>
-    <Setter Property="Margin" Value="14"/>
+    <Setter Property="Margin" Value="12"/>
     <Setter Property="TextElement.Foreground" Value="{DynamicResource ChromeForegroundBrush}"/>
+  </Style>
+  <!-- Modal fields deliberately use the same quiet inset surface as the omnibar. This gives settings,
+       palette and other dialogs a shared tactile vocabulary instead of each falling back to Fluent's
+       high-contrast default field. -->
+  <Style Selector="Border.modalcard TextBox">
+    <Setter Property="MinHeight" Value="34"/>
+    <Setter Property="Padding" Value="10,6"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}"/>
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHeaderBackgroundBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource WorkspaceSeparatorBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
+        <BrushTransition Property="BorderBrush" Duration="{DynamicResource DurFast}"/>
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Border.modalcard TextBox:pointerover">
+    <Setter Property="BorderBrush" Value="{DynamicResource ChromeBorderBrush}"/>
+  </Style>
+  <Style Selector="Border.modalcard TextBox:focus /template/ Border#PART_BorderElement">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+  <Style Selector="Border.modalcard CheckBox, Border.modalcard RadioButton">
+    <Setter Property="MinHeight" Value="30"/>
+    <Setter Property="FontSize" Value="13"/>
+  </Style>
+  <Style Selector="Border.modalcard Button">
+    <Setter Property="MinHeight" Value="32"/>
+    <Setter Property="Padding" Value="12,6"/>
+  </Style>
+  <Style Selector="Border.settings-group">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHeaderBackgroundBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource WorkspaceSeparatorBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource PanelCornerRadius}"/>
+    <Setter Property="Padding" Value="12"/>
+  </Style>
+  <Style Selector="TextBlock.settings-section">
+    <Setter Property="FontSize" Value="11.5"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
   </Style>
   <!-- CheckBox/RadioButton resolve their label colour from their own Foreground property (the Fluent
        theme default wins over an inherited TextElement.Foreground), so set it explicitly for the ones
@@ -34,6 +78,13 @@
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="0"/>
   </Style>
+  <Style Selector="Button.statusbtn">
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Foreground" Duration="{DynamicResource DurFast}"/>
+      </Transitions>
+    </Setter>
+  </Style>
 
   <!-- Workspace actions: compact, quiet, and fully keyboard-visible. The active rail section is a
        soft accent-tinted tile rather than a bright icon floating on an empty strip. -->
@@ -43,9 +94,29 @@
     <Setter Property="Padding" Value="10"/>
     <Setter Property="CornerRadius" Value="6"/>
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
+    <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Foreground" Duration="{DynamicResource DurFast}"/>
+        <DoubleTransition Property="Opacity" Duration="{DynamicResource DurFast}"/>
+        <TransformOperationsTransition Property="RenderTransform" Duration="{DynamicResource DurFast}"/>
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.workspace-action:pointerover">
+    <Setter Property="RenderTransform" Value="scale(1.04)"/>
+  </Style>
+  <Style Selector="Button.workspace-action:pressed">
+    <Setter Property="RenderTransform" Value="scale(0.96)"/>
   </Style>
   <Style Selector="Button.workspace-action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
+        <BrushTransition Property="BorderBrush" Duration="{DynamicResource DurFast}"/>
+      </Transitions>
+    </Setter>
   </Style>
   <Style Selector="Button.workspace-action.active">
     <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
@@ -71,9 +142,27 @@
     <Setter Property="Padding" Value="10,6"/>
     <Setter Property="CornerRadius" Value="6"/>
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
+    <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Foreground" Duration="{DynamicResource DurFast}"/>
+        <TransformOperationsTransition Property="RenderTransform" Duration="{DynamicResource DurFast}"/>
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.header-action:pointerover">
+    <Setter Property="RenderTransform" Value="scale(1.03)"/>
+  </Style>
+  <Style Selector="Button.header-action:pressed">
+    <Setter Property="RenderTransform" Value="scale(0.97)"/>
   </Style>
   <Style Selector="Button.header-action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
+      </Transitions>
+    </Setter>
   </Style>
   <Style Selector="Button.header-action:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
@@ -97,9 +186,27 @@
     <Setter Property="Padding" Value="10,6"/>
     <Setter Property="FontSize" Value="11.5"/>
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
+    <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Foreground" Duration="{DynamicResource DurFast}"/>
+        <TransformOperationsTransition Property="RenderTransform" Duration="{DynamicResource DurFast}"/>
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.segment:pointerover">
+    <Setter Property="RenderTransform" Value="scale(1.02)"/>
+  </Style>
+  <Style Selector="Button.segment:pressed">
+    <Setter Property="RenderTransform" Value="scale(0.98)"/>
   </Style>
   <Style Selector="Button.segment:pointerover /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
+      </Transitions>
+    </Setter>
   </Style>
   <Style Selector="Button.segment.seg-on">
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}"/>
@@ -149,6 +256,10 @@
   <Style Selector="Button.accent:pressed">
     <Setter Property="RenderTransform" Value="scale(0.97)" />
   </Style>
+  <Style Selector="Button.sidebar-open">
+    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+    <Setter Property="FontSize" Value="12.5"/>
+  </Style>
 
   <!-- Recent-file entries (welcome) and outline (TOC) entries share a custom minimal template
        (Border + ContentPresenter). FluentAvalonia's stock Button template flashed its own light
@@ -161,6 +272,12 @@
         <Border x:Name="PART_Bg" Background="Transparent" Padding="{TemplateBinding Padding}"
                 BorderThickness="1" BorderBrush="Transparent"
                 CornerRadius="{DynamicResource ControlCornerRadius}">
+          <Border.Transitions>
+            <Transitions>
+              <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
+              <BrushTransition Property="BorderBrush" Duration="{DynamicResource DurFast}"/>
+            </Transitions>
+          </Border.Transitions>
           <ContentPresenter Content="{TemplateBinding Content}"
                             HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                             VerticalAlignment="Center" />
@@ -184,6 +301,12 @@
     <Setter Property="Template">
       <ControlTemplate>
         <Border x:Name="PART_Bg" Background="Transparent" Padding="{TemplateBinding Padding}" BorderThickness="1" BorderBrush="Transparent" CornerRadius="4">
+          <Border.Transitions>
+            <Transitions>
+              <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
+              <BrushTransition Property="BorderBrush" Duration="{DynamicResource DurFast}"/>
+            </Transitions>
+          </Border.Transitions>
           <ContentPresenter Content="{TemplateBinding Content}"
                             Foreground="{TemplateBinding Foreground}"
                             FontSize="{TemplateBinding FontSize}"

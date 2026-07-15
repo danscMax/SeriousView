@@ -10,7 +10,7 @@ namespace Tittle.Shared;
 /// TOC item ↔ per-file view state (ported unread marks + bookmarks). Values are
 /// [heading ordinal, active tab, view-state version] — the version is bound only to force a
 /// recompute on every visited/bookmark mutation. Parameter "unread" yields the unread-dot
-/// visibility; "glyph" yields the bookmark glyph (★ when bookmarked, ☆ otherwise).
+/// visibility; "bookmarked" / "unbookmarked" yield the matching icon visibility; "glyph" remains for compatibility.
 /// </summary>
 public sealed class OutlineViewStateConverter : IMultiValueConverter
 {
@@ -22,9 +22,12 @@ public sealed class OutlineViewStateConverter : IMultiValueConverter
             || values[1] is not DocumentTabViewModel tab)
             return string.Equals(parameter as string, "glyph", StringComparison.Ordinal) ? "☆" : false;
 
+        var bookmarked = tab.IsHeadingBookmarked(ordinal);
         return (parameter as string) switch
         {
-            "glyph" => tab.IsHeadingBookmarked(ordinal) ? "★" : "☆",
+            "glyph" => bookmarked ? "★" : "☆",
+            "bookmarked" => bookmarked,
+            "unbookmarked" => !bookmarked,
             _ => !tab.IsHeadingVisited(ordinal),
         };
     }

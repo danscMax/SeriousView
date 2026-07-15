@@ -43,14 +43,14 @@
                 CommandParameter="{x:Static settings:WorkspaceSection.Bookmarks}"
                 ToolTip.Tip="Закладки"
                 AutomationProperties.Name="Закладки">
-          <TextBlock Text="★" FontSize="16" FontWeight="SemiBold"/>
+          <PathIcon Data="{StaticResource IconBookmark}" Width="17" Height="17"/>
         </Button>
         <Button Classes="workspace-action"
                 TabIndex="4"
                 Click="OnCommandPaletteClick"
                 ToolTip.Tip="Командная палитра (Ctrl+K)"
                 AutomationProperties.Name="Командная палитра">
-          <TextBlock Text="⌘" FontSize="17" FontWeight="SemiBold"/>
+          <PathIcon Data="{StaticResource IconCommand}" Width="17" Height="17"/>
         </Button>
       </StackPanel>
 
@@ -67,7 +67,7 @@
                 Command="{Binding ShowHelpCommand}"
                 ToolTip.Tip="Справка (F1)"
                 AutomationProperties.Name="Справка">
-          <TextBlock Text="?" FontSize="17" FontWeight="SemiBold"/>
+          <PathIcon Data="{StaticResource IconHelp}" Width="17" Height="17"/>
         </Button>
       </StackPanel>
     </Grid>

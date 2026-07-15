@@ -9,6 +9,12 @@
     <Style Selector="Button.bookmark-toggle">
       <Setter Property="Opacity" Value="0.35"/>
       <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="{DynamicResource DurFast}"/>
+          <BrushTransition Property="Foreground" Duration="{DynamicResource DurFast}"/>
+        </Transitions>
+      </Setter>
     </Style>
     <Style Selector="Button.bookmark-toggle:pointerover">
       <Setter Property="Opacity" Value="1"/>
@@ -87,18 +93,30 @@
             </Ellipse>
             <Button Grid.Column="3" Classes="bookmark-toggle"
                     Background="Transparent" BorderThickness="0" Padding="2,2"
-                    FontSize="11" VerticalAlignment="Center"
+                    Width="24" Height="24" VerticalAlignment="Center"
                     ToolTip.Tip="Закладка" AutomationProperties.Name="Закладка"
                     Command="{Binding $parent[ItemsControl].DataContext.SelectedTab.ToggleBookmarkCommand}"
                     CommandParameter="{Binding}">
-              <Button.Content>
-                <MultiBinding Converter="{x:Static conv:OutlineViewStateConverter.Instance}" ConverterParameter="glyph">
-                  <Binding Path="Ordinal"/>
-                  <Binding Path="$parent[ItemsControl].DataContext.SelectedTab"/>
-                  <Binding Path="$parent[ItemsControl].DataContext.SelectedTab.ViewStateVersion"
-                           FallbackValue="0"/>
-                </MultiBinding>
-              </Button.Content>
+              <Panel>
+                <PathIcon Data="{StaticResource IconBookmark}" Width="13" Height="13">
+                  <PathIcon.IsVisible>
+                    <MultiBinding Converter="{x:Static conv:OutlineViewStateConverter.Instance}" ConverterParameter="bookmarked">
+                      <Binding Path="Ordinal"/>
+                      <Binding Path="$parent[ItemsControl].DataContext.SelectedTab"/>
+                      <Binding Path="$parent[ItemsControl].DataContext.SelectedTab.ViewStateVersion" FallbackValue="0"/>
+                    </MultiBinding>
+                  </PathIcon.IsVisible>
+                </PathIcon>
+                <PathIcon Data="{StaticResource IconBookmarkOutline}" Width="13" Height="13">
+                  <PathIcon.IsVisible>
+                    <MultiBinding Converter="{x:Static conv:OutlineViewStateConverter.Instance}" ConverterParameter="unbookmarked">
+                      <Binding Path="Ordinal"/>
+                      <Binding Path="$parent[ItemsControl].DataContext.SelectedTab"/>
+                      <Binding Path="$parent[ItemsControl].DataContext.SelectedTab.ViewStateVersion" FallbackValue="0"/>
+                    </MultiBinding>
+                  </PathIcon.IsVisible>
+                </PathIcon>
+              </Panel>
             </Button>
           </Grid>
         </DataTemplate>

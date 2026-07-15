@@ -10,24 +10,28 @@
           BorderThickness="0,0,1,0">
     <Grid RowDefinitions="40,*"
           KeyboardNavigation.TabNavigation="Continue">
-      <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="10,0,6,0">
-        <TextBlock Text="Файлы" IsVisible="{Binding IsFilesSectionActive}"
+      <Grid Grid.Row="0" ColumnDefinitions="3,*,Auto" Margin="10,0,6,0">
+        <Border Width="3" Height="18" CornerRadius="1.5"
+                Background="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+        <TextBlock Grid.Column="1" Text="Файлы" IsVisible="{Binding IsFilesSectionActive}"
                    VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12.5"/>
-        <TextBlock Text="Оглавление" IsVisible="{Binding IsOutlineSectionActive}"
+        <TextBlock Grid.Column="1" Text="Оглавление" IsVisible="{Binding IsOutlineSectionActive}"
                    VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12.5"/>
-        <TextBlock Text="Закладки" IsVisible="{Binding IsBookmarksSectionActive}"
+        <TextBlock Grid.Column="1" Text="Закладки" IsVisible="{Binding IsBookmarksSectionActive}"
                    VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12.5"/>
-        <Button Grid.Column="1" Classes="header-action" Content="×"
+        <Button Grid.Column="2" Classes="header-action"
                 TabIndex="0"
                 Command="{Binding OpenWorkspaceSectionCommand}"
                 CommandParameter="{Binding Layout.WorkspaceSection}"
                 ToolTip.Tip="Скрыть боковую панель"
-                AutomationProperties.Name="Скрыть боковую панель"/>
+                AutomationProperties.Name="Скрыть боковую панель">
+          <PathIcon Data="{StaticResource IconClose}" Width="11" Height="11"/>
+        </Button>
       </Grid>
 
       <Grid Grid.Row="1">
         <Grid IsVisible="{Binding IsFilesSectionActive}" RowDefinitions="Auto,*">
-          <Button Grid.Row="0" Margin="10,8,10,6" Padding="10,6"
+          <Button Grid.Row="0" Classes="accent sidebar-open" Margin="10,10,10,8" Padding="10,8"
                   TabIndex="1"
                   HorizontalAlignment="Stretch"
                   Command="{Binding OpenFileCommand}"
@@ -45,7 +49,7 @@
                           Margin="6,4">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:RecentFileItem">
-                  <Button Command="{Binding OpenCommand}" ToolTip.Tip="{Binding Path}"
+                  <Button Classes="recent" Command="{Binding OpenCommand}" ToolTip.Tip="{Binding Path}"
                           AutomationProperties.Name="{Binding Name}"
                           Background="Transparent" BorderThickness="0"
                           HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"

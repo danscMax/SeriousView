@@ -20,6 +20,24 @@
       <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
+    <Style Selector="ListBox.palette-list ListBoxItem">
+      <Setter Property="Padding" Value="10,8"/>
+      <Setter Property="Margin" Value="2,1"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}"/>
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
+          <BrushTransition Property="Foreground" Duration="{DynamicResource DurFast}"/>
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="ListBox.palette-list ListBoxItem:pointerover">
+      <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+    </Style>
+    <Style Selector="ListBox.palette-list ListBoxItem:selected">
+      <Setter Property="Background" Value="{DynamicResource WorkspaceSelectedBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}"/>
+    </Style>
   </shared:ModalWindow.Styles>
 
   <!-- Chrome = ModalWindow + Border.modalcard (opaque EditorSurfaceBrush: a standalone top-level window
@@ -30,7 +48,7 @@
                AutomationProperties.Name="Поиск команды"
                Watermark="Команда…   ↑↓ выбрать · Enter выполнить · Esc закрыть"
                BorderThickness="0" Background="Transparent" FontSize="15" Padding="6,4" Margin="2,2,2,6"/>
-      <ListBox x:Name="ResultsList" ItemsSource="{Binding Results}"
+      <ListBox x:Name="ResultsList" Classes="palette-list" ItemsSource="{Binding Results}"
                SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
                Background="Transparent" BorderThickness="0" MaxHeight="400"
                ScrollViewer.HorizontalScrollBarVisibility="Disabled">

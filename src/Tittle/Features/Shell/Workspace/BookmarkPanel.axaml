@@ -32,8 +32,9 @@
         <DataTemplate x:CompileBindings="False">
           <Grid ColumnDefinitions="18,*,Auto"
                 Margin="{Binding Level, Converter={x:Static conv:LevelToIndentConverter.Instance}}">
-            <TextBlock Text="★" VerticalAlignment="Center" HorizontalAlignment="Center"
-                       FontSize="10" Foreground="{DynamicResource AccentBrush}"/>
+            <PathIcon Data="{StaticResource IconBookmark}" Width="12" Height="12"
+                      VerticalAlignment="Center" HorizontalAlignment="Center"
+                      Foreground="{DynamicResource AccentBrush}"/>
             <Button Grid.Column="1" Content="{Binding Text}"
                     AutomationProperties.Name="{Binding Text}"
                     Command="{Binding $parent[ItemsControl].DataContext.SelectedTab.NavigateToHeadingCommand}"
@@ -41,11 +42,13 @@
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                     Background="Transparent" BorderThickness="0" Padding="8,5"
                     FontSize="12.5"/>
-            <Button Grid.Column="2" Content="×" Classes="header-action"
+            <Button Grid.Column="2" Classes="header-action"
                     Command="{Binding $parent[ItemsControl].DataContext.SelectedTab.ToggleBookmarkCommand}"
                     CommandParameter="{Binding}"
                     ToolTip.Tip="Убрать закладку"
-                    AutomationProperties.Name="Убрать закладку"/>
+                    AutomationProperties.Name="Убрать закладку">
+              <PathIcon Data="{StaticResource IconClose}" Width="10" Height="10"/>
+            </Button>
           </Grid>
         </DataTemplate>
       </ItemsControl.ItemTemplate>

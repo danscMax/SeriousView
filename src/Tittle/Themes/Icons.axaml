@@ -22,6 +22,60 @@
   <!-- The chrome icons below replace FluentAvalonia font SymbolIcons (Find / Code / per-tab type):
        PathIcons are geometry, immune to the Symbols-font load race that left them as .notdef boxes. -->
 
+  <!-- Menu / "three rails": the title-bar entry point. Keeping it as geometry means its stroke
+       weight follows the rest of the shell instead of depending on a platform font glyph. -->
+  <GeometryGroup x:Key="IconMenu">
+    <RectangleGeometry Rect="3,5,18,1.8" RadiusX="0.9" RadiusY="0.9"/>
+    <RectangleGeometry Rect="3,11.1,18,1.8" RadiusX="0.9" RadiusY="0.9"/>
+    <RectangleGeometry Rect="3,17.2,18,1.8" RadiusX="0.9" RadiusY="0.9"/>
+  </GeometryGroup>
+
+  <!-- Open folder: broad and quiet at 16px, so the primary action reads as a file operation without
+       the emoji colour/fallback differences seen in the old chrome. -->
+  <GeometryGroup x:Key="IconFolderOpen">
+    <PathGeometry Figures="M3,6 C3,4.9 3.9,4 5,4 L10,4 L12,6 L19,6 C20.1,6 21,6.9 21,8 L19.8,18 C19.7,19.1 18.8,20 17.7,20 L4.6,20 C3.5,20 2.6,19 2.8,17.9 Z"/>
+    <PathGeometry Figures="M3.5,9 L20.4,9 L18.7,18 L4.5,18 Z"/>
+  </GeometryGroup>
+
+  <!-- Command palette: four soft nodes joined by a compact cross, more legible than the platform
+       command symbol in narrow title bars. -->
+  <GeometryGroup x:Key="IconCommand">
+    <EllipseGeometry Center="7,7" RadiusX="2.4" RadiusY="2.4"/>
+    <EllipseGeometry Center="17,7" RadiusX="2.4" RadiusY="2.4"/>
+    <EllipseGeometry Center="7,17" RadiusX="2.4" RadiusY="2.4"/>
+    <EllipseGeometry Center="17,17" RadiusX="2.4" RadiusY="2.4"/>
+    <RectangleGeometry Rect="9,6.1,6,1.8" RadiusX="0.9" RadiusY="0.9"/>
+    <RectangleGeometry Rect="9,16.1,6,1.8" RadiusX="0.9" RadiusY="0.9"/>
+    <RectangleGeometry Rect="6.1,9,1.8,6" RadiusX="0.9" RadiusY="0.9"/>
+    <RectangleGeometry Rect="16.1,9,1.8,6" RadiusX="0.9" RadiusY="0.9"/>
+  </GeometryGroup>
+
+  <!-- Help / question: an outlined circle with a simple question mark. -->
+  <GeometryGroup x:Key="IconHelp" FillRule="EvenOdd">
+    <EllipseGeometry Center="12,12" RadiusX="9" RadiusY="9"/>
+    <EllipseGeometry Center="12,12" RadiusX="7" RadiusY="7"/>
+    <PathGeometry Figures="M9.2,9.3 C9.2,7.5 10.5,6.3 12.3,6.3 C14.2,6.3 15.5,7.5 15.5,9.2 C15.5,10.8 14.7,11.6 13.3,12.6 C12.5,13.2 12.2,13.7 12.2,14.6 L10.1,14.6 C10.1,13 10.7,12.1 12,11.1 C13,10.4 13.4,9.9 13.4,9.2 C13.4,8.5 12.9,8.1 12.2,8.1 C11.5,8.1 11,8.6 11,9.5 Z"/>
+    <EllipseGeometry Center="11.2,17.2" RadiusX="1.2" RadiusY="1.2"/>
+  </GeometryGroup>
+
+  <!-- Bookmark ribbon: filled and outline variants are paired so the same control can communicate
+       saved/unsaved state without relying on a star text glyph. -->
+  <GeometryGroup x:Key="IconBookmark">
+    <PathGeometry Figures="M6,3.2 C6,2.5 6.5,2 7.2,2 L16.8,2 C17.5,2 18,2.5 18,3.2 L18,21 L12,17.2 L6,21 Z"/>
+  </GeometryGroup>
+  <GeometryGroup x:Key="IconBookmarkOutline" FillRule="EvenOdd">
+    <PathGeometry Figures="M6,3.2 C6,2.5 6.5,2 7.2,2 L16.8,2 C17.5,2 18,2.5 18,3.2 L18,21 L12,17.2 L6,21 Z"/>
+    <PathGeometry Figures="M8,4 L16,4 L16,17.4 L12,14.9 L8,17.4 Z"/>
+  </GeometryGroup>
+
+  <!-- Close and open-out affordances used in tabs, panels and recent-file rows. -->
+  <GeometryGroup x:Key="IconClose">
+    <PathGeometry Figures="M5.1,6.4 L6.4,5.1 L12,10.7 L17.6,5.1 L18.9,6.4 L13.3,12 L18.9,17.6 L17.6,18.9 L12,13.3 L6.4,18.9 L5.1,17.6 L10.7,12 Z"/>
+  </GeometryGroup>
+  <GeometryGroup x:Key="IconArrowUpRight">
+    <PathGeometry Figures="M6,5 L17.2,5 L17.2,16.2 L15.2,16.2 L15.2,8.4 L7.4,16.2 L6,14.8 L13.8,7 L6,7 Z"/>
+  </GeometryGroup>
+
   <!-- Search / "magnifier": a ring (EvenOdd outer minus inner ellipse) plus a diagonal handle. -->
   <GeometryGroup x:Key="IconSearch" FillRule="EvenOdd">
     <EllipseGeometry Center="10,10" RadiusX="6.6" RadiusY="6.6"/>

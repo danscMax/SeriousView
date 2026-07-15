@@ -46,7 +46,7 @@
           <ItemsControl ItemsSource="{Binding RecentItems}">
             <ItemsControl.ItemTemplate>
               <DataTemplate x:DataType="vm:RecentFileItem">
-                <Button Command="{Binding OpenCommand}" ToolTip.Tip="{Binding Path}"
+                <Button Classes="recent" Command="{Binding OpenCommand}" ToolTip.Tip="{Binding Path}"
                         Background="Transparent" BorderThickness="0" CornerRadius="6"
                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                         Padding="10,6">
@@ -59,9 +59,10 @@
                                  TextTrimming="CharacterEllipsis"
                                  Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
                     </StackPanel>
-                    <TextBlock Grid.Column="1" Text="↗" Margin="10,0,0,0"
-                               VerticalAlignment="Center"
-                               Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+                    <PathIcon Grid.Column="1" Data="{StaticResource IconArrowUpRight}"
+                              Width="13" Height="13" Margin="10,0,0,0"
+                              VerticalAlignment="Center"
+                              Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
                   </Grid>
                 </Button>
               </DataTemplate>
