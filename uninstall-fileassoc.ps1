@@ -29,7 +29,12 @@ foreach ($ext in $Extensions) {
     $keyExt = "HKCU:\SOFTWARE\Classes\$ext"
     $current = (Get-ItemProperty -Path $keyExt -Name '(Default)' -ErrorAction SilentlyContinue).'(Default)'
     if ($current -eq $progId) { Remove-Item -Path $keyExt -Recurse -Force }
-    Remove-Item -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext\UserChoice" -Force
+
+    # UserChoice is protected and may belong to a different app selected after Tittle was installed.
+    # Remove it only when Windows still records our own ProgId; never erase a later user decision.
+    $userChoice = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext\UserChoice"
+    $chosen = (Get-ItemProperty -Path $userChoice -Name 'ProgId' -ErrorAction SilentlyContinue).ProgId
+    if ($chosen -eq $progId) { Remove-Item -Path $userChoice -Recurse -Force }
 }
 
 # Refresh Explorer's association cache.
