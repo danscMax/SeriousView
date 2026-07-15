@@ -189,12 +189,13 @@
     </Setter>
   </Style>
   <Style Selector="Button.welcome-secondary /template/ ContentPresenter#PART_ContentPresenter">
-    <!-- Rest background is ours (transparent over the welcome card), not FA's — see modal-dismiss. -->
+    <!-- Rest background is ours (transparent over the welcome card), not FA's — see modal-dismiss.
+         Background only: a BorderBrush transition faded the keyboard-focus ring in from FA's gradient
+         border instead of snapping, and the hover never recolours the border. -->
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="Transitions">
       <Transitions>
         <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
-        <BrushTransition Property="BorderBrush" Duration="{DynamicResource DurFast}"/>
       </Transitions>
     </Setter>
   </Style>

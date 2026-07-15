@@ -121,10 +121,15 @@ public class AccessibilityTests
         }
     }
 
+    /// <summary>Every flat chrome button must SNAP a solid accent focus ring. Covering all of them also
+    /// guards the hover-flash fix: the ring is only solid-on-arrival while the base style transitions
+    /// Background alone — add a BorderBrush transition and it fades in from FA's gradient border, which
+    /// this assert catches as an ImmutableLinearGradientBrush.</summary>
     [AvaloniaFact]
-    public void WorkspaceActions_ShowVisibleKeyboardFocus()
+    public void FlatChromeButtons_ShowVisibleKeyboardFocus()
     {
-        foreach (var styleClass in new[] { "workspace-action", "header-action", "segment" })
+        foreach (var styleClass in new[]
+                 { "workspace-action", "header-action", "segment", "statusbtn", "modal-dismiss", "welcome-secondary" })
         {
             var button = new Button { Content = styleClass };
             button.Classes.Add(styleClass);
