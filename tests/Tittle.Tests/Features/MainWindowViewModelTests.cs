@@ -325,8 +325,11 @@ public class MainWindowViewModelTests
         var vm = CreateVm();
 
         Assert.True(vm.IsWorkspaceSidebarVisible);
+        Assert.True(vm.IsFilesSectionActive);
         Assert.True(vm.IsFilesPaneVisible);
+        Assert.False(vm.IsOutlineSectionActive);
         Assert.False(vm.IsOutlinePaneVisible);
+        Assert.False(vm.IsBookmarksSectionActive);
         Assert.False(vm.IsBookmarksPaneVisible);
     }
 
@@ -338,6 +341,7 @@ public class MainWindowViewModelTests
         vm.OpenWorkspaceSectionCommand.Execute(WorkspaceSection.Outline);
 
         Assert.True(vm.IsWorkspaceSidebarVisible);
+        Assert.True(vm.IsOutlineSectionActive);
         Assert.True(vm.IsOutlinePaneVisible);
         Assert.False(vm.IsFilesPaneVisible);
 
@@ -358,6 +362,7 @@ public class MainWindowViewModelTests
         vm.OpenWorkspaceSectionCommand.Execute(WorkspaceSection.Bookmarks);
 
         Assert.True(vm.IsWorkspaceSidebarVisible);
+        Assert.True(vm.IsBookmarksSectionActive);
         Assert.True(vm.IsBookmarksPaneVisible);
         Assert.False(vm.IsFilesPaneVisible);
     }

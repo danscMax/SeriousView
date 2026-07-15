@@ -1,6 +1,7 @@
 <wnd:AppWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Tittle.Features.Shell"
+        xmlns:workspace="using:Tittle.Features.Shell.Workspace"
         xmlns:controls="using:Tittle.Features.Viewer"
         xmlns:views="using:Tittle.Features.Welcome"
         xmlns:conv="using:Tittle.Shared"
@@ -55,27 +56,24 @@
       <Setter Property="BorderThickness" Value="0"/>
     </Style>
   </wnd:AppWindow.Styles>
-  <!-- AppWindow draws our content into the title-bar area (ExtendsContentIntoTitleBar, set in
-       code-behind). The single top strip = brand + tab strip + buttons, painted with the
-       semi-transparent ChromeOverlayBrush so it picks up the app colour AND lets the OS
-       backdrop (Mica/Acrylic) show through. System min/max/close buttons are drawn on top at
-       the right; the empty Col3 reserves room for them (TitleBar.RightInset). The editor stays
-       solid (EditorSurfaceBrush) for readability; solid fallback in code-behind when no blur. -->
-  <DockPanel LastChildFill="True">
+  <!-- One 40px window header above a three-region workspace: rail, contextual sidebar, document.
+       The system caption buttons occupy the reserved right header column. -->
+  <Grid x:Name="ShellGrid" RowDefinitions="40,*">
 
     <!-- Title strip wrapped in a Border so it casts a soft shadow onto the body below
          (ZIndex keeps the shadow above the editor/welcome content). -->
-    <Border DockPanel.Dock="Top" ZIndex="1" BoxShadow="{DynamicResource ChromeShadow}">
+    <Border Grid.Row="0" ZIndex="1" BoxShadow="{DynamicResource ChromeShadow}">
     <Panel>
     <!-- Chrome fill on a hit-test-invisible layer so the empty title-bar zones still drag the
          window — a non-null Background on the Grid itself swallows the AppWindow drag. -->
-    <Border Background="{DynamicResource ChromeOverlayBrush}" IsHitTestVisible="False"/>
+    <Border Background="{DynamicResource WorkspaceHeaderBackgroundBrush}" IsHitTestVisible="False"/>
     <!-- Col3 reserves the system caption-button band. Its Width is set on the COLUMN (not on a child
          Border) in code-behind from TitleBar.RightInset: an Auto column fed by a child's late-set
          Width does not re-distribute the star omnibar column, leaving the reserve at 0 and the
          right-hand cluster sliding under min/max/close. Sizing the ColumnDefinition directly is the
          canonical WinUI/FluentAvalonia padding-column pattern and always reflows correctly. -->
-    <Grid x:Name="TitleGrid" MinHeight="40">
+    <Grid x:Name="TitleGrid" MinHeight="40"
+          AutomationProperties.AutomationId="WorkspaceHeader">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="Auto"/>
         <ColumnDefinition Width="*"/>
@@ -88,7 +86,8 @@
            shown only for the Hidden placement (Bar / TitleBar presets arrive with Settings → Layout).
            AllowInteractionInTitleBar so the click opens the flyout instead of dragging the window.
            Standard Avalonia MenuFlyout/MenuItem — FluentAvalonia themes them to match the chrome. -->
-      <Button Grid.Column="0" AutomationProperties.AutomationId="MenuButton" ToolTip.Tip="Меню"
+      <Button Grid.Column="0" AutomationProperties.AutomationId="MenuButton"
+              AutomationProperties.Name="Меню" ToolTip.Tip="Меню"
               Classes="chrome-menu" Margin="6,0,2,0" VerticalAlignment="Center"
               wnd:AppWindow.AllowInteractionInTitleBar="True"
               IsVisible="{Binding Layout.MenuPlacement, Converter={x:Static conv:EnumToBoolConverter.Instance}, ConverterParameter=Hidden}">
@@ -260,32 +259,42 @@
         </DockPanel>
       </Border>
 
-      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6"
-                  VerticalAlignment="Center" Margin="10,0"
-                  wnd:AppWindow.AllowInteractionInTitleBar="True">
-        <!-- Per-document quick toggles kept next to the tabs. Open / Theme live in the ☰ menu;
-             the preview/source toggle lives in the status bar; wrap / numbers / zoom are there too. -->
-        <!-- Outline (TOC) sidebar toggle — shown only for markdown tabs. -->
-        <Button AutomationProperties.AutomationId="OutlineButton" ToolTip.Tip="Оглавление"
-                IsVisible="{Binding SelectedTab.IsMarkdown, FallbackValue=False}"
-                Command="{Binding ToggleOutlineCommand}" Padding="8,3">
-          <PathIcon Data="{StaticResource IconSidebar}" Width="16" Height="16"/>
-        </Button>
-      </StackPanel>
-
     </Grid>
     </Panel>
     </Border>
 
-    <!-- Tab strip — moved out of the caption row (the etalon puts the omnibar there). Shown only when
-         tabs are open; the VsCodeTab theme draws the active-tab accent line meeting the body below. -->
+    <Grid x:Name="BodyGrid" Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="44"/>
+        <!-- [1] persisted contextual-sidebar width; code-behind collapses it to zero. -->
+        <ColumnDefinition Width="240" MinWidth="180" MaxWidth="480"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+
+      <workspace:WorkspaceRail Grid.Column="0"
+                               AutomationProperties.AutomationId="WorkspaceRail"
+                               CommandPaletteRequested="OnWorkspaceCommandPaletteRequested"/>
+      <workspace:WorkspaceSidebar Grid.Column="1"
+                                  AutomationProperties.AutomationId="WorkspaceSidebar"
+                                  IsVisible="{Binding IsWorkspaceSidebarVisible}"/>
+      <GridSplitter Grid.Column="2" AutomationProperties.AutomationId="WorkspaceSplitter"
+                    ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
+                    Width="5" Background="Transparent" Cursor="SizeWestEast"
+                    IsVisible="{Binding IsWorkspaceSidebarVisible}"/>
+
+      <DockPanel Grid.Column="3" LastChildFill="True">
+
+    <!-- Tabs and contextual document actions share one compact header: no extra toolbar band. -->
     <Border DockPanel.Dock="Top" IsVisible="{Binding HasTabs}"
-            Background="{DynamicResource ChromeOverlayBrush}"
-            BorderBrush="{DynamicResource ChromeBorderBrush}" BorderThickness="0,0,0,1">
-      <ListBox x:Name="TabStrip" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}"
+            AutomationProperties.AutomationId="DocumentHeader"
+            Background="{DynamicResource WorkspaceHeaderBackgroundBrush}"
+            BorderBrush="{DynamicResource WorkspaceSeparatorBrush}" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="*,Auto">
+        <ListBox x:Name="TabStrip" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}"
                ItemContainerTheme="{StaticResource VsCodeTab}"
                Background="Transparent" BorderThickness="0" Padding="0"
-               HorizontalAlignment="Left" VerticalAlignment="Bottom"
+               HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
                ScrollViewer.HorizontalScrollBarVisibility="Auto"
                ScrollViewer.VerticalScrollBarVisibility="Disabled"
                ScrollViewer.AllowAutoHide="True">
@@ -334,33 +343,55 @@
             </StackPanel>
           </DataTemplate>
         </ListBox.ItemTemplate>
-      </ListBox>
-    </Border>
+        </ListBox>
 
-    <!-- Contextual editor toolbar (M7.5 ф6): a thin source-mode row under the tabs. Shown per ToolbarMode
-         (Off never · Contextual in Source · Fixed always) via ToolbarVisibilityConverter; hosts Find + wrap +
-         numbers (zoom stays in the status bar). When ToolbarMode is Off the wrap/numbers fall back to the
-         status bar — never duplicated (the converter keeps them in exactly one place). -->
-    <Border DockPanel.Dock="Top" Background="{DynamicResource ChromeOverlayBrush}"
-            BorderBrush="{DynamicResource ChromeBorderBrush}" BorderThickness="0,0,0,1" Padding="8,3">
-      <Border.IsVisible>
-        <MultiBinding Converter="{x:Static conv:ToolbarVisibilityConverter.Instance}" ConverterParameter="toolbar">
-          <Binding Path="Layout.ToolbarMode"/>
-          <Binding Path="SelectedTab.ShowSource" FallbackValue="False"/>
-          <Binding Path="HasTabs"/>
-        </MultiBinding>
-      </Border.IsVisible>
-      <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
-        <Button Command="{Binding OpenSearchCommand}" ToolTip.Tip="Найти (Ctrl+F)"
-                AutomationProperties.Name="Найти" Classes="statusbtn">
-          <PathIcon Data="{StaticResource IconSearch}" Width="15" Height="15"/>
-        </Button>
-        <Border Width="1" Margin="6,2" Background="{DynamicResource StatusBarForegroundBrush}" Opacity="0.3"/>
-        <vm:EditorToggleCluster/>
-        <Button Command="{Binding SelectedTab.TogglePrettyPrintCommand}" ToolTip.Tip="Форматировать (JSON / XML / NDJSON)"
-                AutomationProperties.Name="Форматировать" Content="{}" Classes="statusbtn"
-                IsVisible="{Binding SelectedTab.IsPrettyPrintable, FallbackValue=False}"/>
-      </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4"
+                    VerticalAlignment="Center" Margin="6,2,8,2">
+          <!-- Source-only tools occupy the same row as tabs. Off mode keeps wrap/numbers in status. -->
+          <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+            <StackPanel.IsVisible>
+              <MultiBinding Converter="{x:Static conv:ToolbarVisibilityConverter.Instance}" ConverterParameter="toolbar">
+                <Binding Path="Layout.ToolbarMode"/>
+                <Binding Path="SelectedTab.ShowSource" FallbackValue="False"/>
+                <Binding Path="HasTabs"/>
+              </MultiBinding>
+            </StackPanel.IsVisible>
+            <Button Command="{Binding OpenSearchCommand}" ToolTip.Tip="Найти (Ctrl+F)"
+                    AutomationProperties.Name="Найти" Classes="header-action">
+              <PathIcon Data="{StaticResource IconSearch}" Width="15" Height="15"/>
+            </Button>
+            <vm:EditorToggleCluster/>
+            <Button Command="{Binding SelectedTab.TogglePrettyPrintCommand}"
+                    ToolTip.Tip="Форматировать (JSON / XML / NDJSON)"
+                    AutomationProperties.Name="Форматировать" Content="{}" Classes="header-action"
+                    IsVisible="{Binding SelectedTab.IsPrettyPrintable, FallbackValue=False}"/>
+            <Border Width="1" Margin="4,3" Background="{DynamicResource WorkspaceSeparatorBrush}"
+                    IsVisible="{Binding SelectedTab.IsMarkdown, FallbackValue=False}"/>
+          </StackPanel>
+
+          <!-- One labelled three-way mode control: Reading / Source / Split. -->
+          <Border Classes="segmented" AutomationProperties.AutomationId="ViewModeSwitch"
+                  IsVisible="{Binding SelectedTab.IsMarkdown, FallbackValue=False}">
+            <StackPanel Orientation="Horizontal">
+              <Button Classes="segment" Content="Чтение"
+                      AutomationProperties.AutomationId="ViewModePreview"
+                      AutomationProperties.Name="Режим чтения"
+                      Classes.seg-on="{Binding SelectedTab.ShowPreview, FallbackValue=False}"
+                      Command="{Binding SelectedTab.ShowPreviewModeCommand}"/>
+              <Button Classes="segment" Content="Исходник"
+                      AutomationProperties.AutomationId="ViewModeSource"
+                      AutomationProperties.Name="Режим исходника"
+                      Classes.seg-on="{Binding SelectedTab.ShowSource, FallbackValue=False}"
+                      Command="{Binding SelectedTab.ShowSourceModeCommand}"/>
+              <Button Classes="segment" Content="Разделённый"
+                      AutomationProperties.AutomationId="ViewModeSplit"
+                      AutomationProperties.Name="Разделённый вид"
+                      Classes.seg-on="{Binding SelectedTab.ShowSplit, FallbackValue=False}"
+                      Command="{Binding SelectedTab.ToggleSplitCommand}"/>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Grid>
     </Border>
 
     <!-- Open-error InfoBar (#28): a prominent strip above the content — the status-bar message
@@ -382,21 +413,11 @@
       </ui:InfoBar.ActionButton>
     </ui:InfoBar>
 
-    <!-- Segmented status bar: left = messages (idle / read errors), right = active-tab metrics
-         (lines · chars · language), divided by a thin separator. -->
-    <Border DockPanel.Dock="Bottom" Classes="chrome" MinHeight="30"
+    <!-- 24px document-state strip: messages, position, encoding/metrics, zoom and format actions. -->
+    <Border DockPanel.Dock="Bottom" Classes="chrome" Height="24"
+            AutomationProperties.AutomationId="WorkspaceStatusStrip"
             Background="{DynamicResource StatusBarBackgroundBrush}" Padding="{DynamicResource StatusBarPadding}">
       <DockPanel>
-        <!-- Поддержать автора (♥) — far-left status-bar action; opens the donation modal (also in
-             ☰ ▸ Справка and the Ctrl+K palette). Accent-tinted vector heart, always visible; the
-             status bar renders reliably (no caption-button interaction like the title strip). -->
-        <Button DockPanel.Dock="Left" Classes="statusbtn" Margin="0,0,8,0"
-                AutomationProperties.AutomationId="DonateButton"
-                ToolTip.Tip="Поддержать автора" AutomationProperties.Name="Поддержать автора"
-                Command="{Binding ShowDonateCommand}">
-          <PathIcon Data="{StaticResource IconHeart}" Width="14" Height="14"
-                    Foreground="{DynamicResource AccentBrush}"/>
-        </Button>
         <TextBlock DockPanel.Dock="Right" Text="{Binding SelectedTab.StatusText}"
                    IsVisible="{Binding HasTabs}"
                    Foreground="{DynamicResource StatusBarForegroundBrush}" FontSize="11.5"
@@ -464,31 +485,6 @@
                 Command="{Binding SelectedTab.ToggleImageFitCommand}"
                 ToolTip.Tip="Вписать / 100%" AutomationProperties.Name="Масштаб изображения"
                 Content="⤢" IsVisible="{Binding SelectedTab.ShowImage, FallbackValue=False}"/>
-        <!-- Preview/source switch (markdown only) — a clearly-labelled segmented toggle replacing the
-             ambiguous eye icon; the active mode fills with the accent. Each segment SETS its mode
-             (ToggleViewModeCommand still backs the palette/keyboard). -->
-        <Border DockPanel.Dock="Right" Classes="segmented" Margin="0,0,6,0"
-                AutomationProperties.AutomationId="ViewModeSwitch"
-                IsVisible="{Binding SelectedTab.IsMarkdown, FallbackValue=False}">
-          <StackPanel Orientation="Horizontal">
-            <Button Classes="segment" Content="Предпросмотр"
-                    AutomationProperties.AutomationId="ViewModePreview"
-                    Classes.seg-on="{Binding SelectedTab.ShowPreview, FallbackValue=False}"
-                    Command="{Binding SelectedTab.ShowPreviewModeCommand}"/>
-            <Button Classes="segment" Content="Исходник"
-                    AutomationProperties.AutomationId="ViewModeSource"
-                    Classes.seg-on="{Binding SelectedTab.ShowSource, FallbackValue=False}"
-                    Command="{Binding SelectedTab.ShowSourceModeCommand}"/>
-          </StackPanel>
-        </Border>
-        <!-- Split toggle (markdown only): source + preview side by side with live mutual scroll.
-             A separate toggle beside the segmented pair; on → Split, off → Preview. -->
-        <Button DockPanel.Dock="Right" Classes="statusbtn" Margin="0,0,6,0"
-                AutomationProperties.AutomationId="ViewModeSplit"
-                Command="{Binding SelectedTab.ToggleSplitCommand}"
-                ToolTip.Tip="Разделённый вид (Ctrl+\)" AutomationProperties.Name="Разделённый вид"
-                Content="&#x25EB;"
-                IsVisible="{Binding SelectedTab.IsMarkdown, FallbackValue=False}"/>
         <Border DockPanel.Dock="Right" Width="1" Margin="10,1" IsVisible="{Binding HasTabs}"
                 Background="{DynamicResource StatusBarForegroundBrush}" Opacity="0.3"/>
         <!-- Left segment: status messages, replaced by the go-to-line input (Ctrl+G) while open.
@@ -514,34 +510,8 @@
       </DockPanel>
     </Border>
 
-    <!-- Outline sidebar (col 0, user-resizable via the splitter; code-behind collapses it to 0 when
-         hidden) + drag handle (col 1) + document body (col 2). The pixel width of OutlineColumn is
-         restored/persisted in code-behind (a ColumnDefinition has no DataContext to bind through). -->
-    <Grid x:Name="BodyGrid">
-      <Grid.ColumnDefinitions>
-        <!-- [0] outline sidebar — width restored / persisted / collapsed from code-behind. -->
-        <ColumnDefinition Width="240" MinWidth="180" MaxWidth="480"/>
-        <ColumnDefinition Width="Auto"/>
-        <ColumnDefinition Width="*"/>
-      </Grid.ColumnDefinitions>
-
-      <!-- Body surfaces: a flat opaque base across the whole body (editor surface) and an opaque
-           sidebar surface over col 0. Flat by design — there is NO decorative reading glow: a radial
-           gradient over the reading column read as a "smudge" inconsistent with the flat sidebar and
-           chrome, and it bled through the transparent splitter column (col 1) as a lit seam at the
-           sidebar edge. The welcome screen keeps its own glow (WelcomeView.axaml). Order: later
-           children paint on top. -->
-      <Border Grid.Column="0" Grid.ColumnSpan="3" Background="{DynamicResource EditorSurfaceBrush}"/>
-      <Border Grid.Column="0" Background="{DynamicResource SidebarSurfaceBrush}"
-              IsVisible="{Binding IsOutlinePaneVisible}"/>
-
-      <controls:OutlinePanel Grid.Column="0" IsVisible="{Binding IsOutlinePaneVisible}"/>
-      <GridSplitter Grid.Column="1" AutomationProperties.AutomationId="OutlineSplitter"
-                    ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
-                    Width="5" Background="Transparent" Cursor="SizeWestEast"
-                    IsVisible="{Binding IsOutlinePaneVisible}"/>
-
-      <Panel Grid.Column="2">
+        <Panel x:Name="DocumentHost" AutomationProperties.AutomationId="DocumentHost">
+          <Border Background="{DynamicResource EditorSurfaceBrush}" IsHitTestVisible="False"/>
         <!-- Welcome view shown when no tabs are open. -->
         <views:WelcomeView IsVisible="{Binding !HasTabs}"/>
         <!-- Every open tab's DocumentView stays realized (overlapping in a Panel); only the active tab's
@@ -560,8 +530,9 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-      </Panel>
-    </Grid>
+        </Panel>
 
-  </DockPanel>
+      </DockPanel>
+    </Grid>
+  </Grid>
 </wnd:AppWindow>

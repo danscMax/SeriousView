@@ -13,6 +13,7 @@ using Tittle.Core.Abstractions;
 using Tittle.Core.Services;
 using Tittle.Core.Settings;
 using Tittle.Features.Shell;
+using Tittle.Features.Shell.Workspace;
 using Tittle.Platform;
 using Xunit;
 
@@ -41,6 +42,28 @@ public class AccessibilityTests
         Assert.Contains("Открыть файл", names);     // omnibar 📂
         Assert.Contains("Палитра команд", names);   // omnibar ⌘
         Assert.Contains("Номер строки", names);     // go-to-line box
+
+        var automationIds = window.GetLogicalDescendants()
+            .OfType<Control>()
+            .Select(AutomationProperties.GetAutomationId)
+            .Where(id => !string.IsNullOrEmpty(id))
+            .ToHashSet();
+        Assert.Contains("WorkspaceHeader", automationIds);
+        Assert.Contains("WorkspaceRail", automationIds);
+        Assert.Contains("WorkspaceSidebar", automationIds);
+        Assert.Contains("DocumentHeader", automationIds);
+        Assert.Contains("DocumentHost", automationIds);
+        Assert.Contains("WorkspaceStatusStrip", automationIds);
+        Assert.Contains("WorkspaceSplitter", automationIds);
+        Assert.Single(window.GetLogicalDescendants().OfType<WorkspaceRail>());
+        Assert.Single(window.GetLogicalDescendants().OfType<WorkspaceSidebar>());
+
+        var titleGrid = window.FindControl<Grid>("TitleGrid");
+        Assert.NotNull(titleGrid);
+        Assert.Equal(40, titleGrid!.MinHeight);
+        var statusStrip = window.GetLogicalDescendants().OfType<Border>()
+            .Single(border => AutomationProperties.GetAutomationId(border) == "WorkspaceStatusStrip");
+        Assert.Equal(24, statusStrip.Height);
 
         var segmented = window.GetLogicalDescendants()
             .OfType<Border>()

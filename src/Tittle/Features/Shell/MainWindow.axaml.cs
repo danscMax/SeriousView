@@ -42,8 +42,8 @@ public partial class MainWindow : AppWindow
     private bool _offsetMeasured;
     private bool _opened;                // gate: ignore property changes during InitializeComponent/restore
 
-    // Outline sidebar width. The GridSplitter drives OutlineColumn live; we mirror the latest shown
-    // width here and commit it to the (persisted) LayoutOptions once on close — routing every drag
+    // Contextual workspace-sidebar width. The splitter drives the column live; we mirror the latest
+    // shown width and commit it to the existing persisted OutlineWidth compatibility field on close — routing every drag
     // pixel through Layout.PropertyChanged would rewrite settings.json continuously.
     private double _outlineWidth = LayoutOptions.DefaultOutlineWidth;
 
@@ -55,9 +55,9 @@ public partial class MainWindow : AppWindow
     private bool _dragging;
     private const double DragThreshold = 5;
 
-    // The outline sidebar is column [0] of the body grid. A named ColumnDefinition gets no generated
+    // The contextual sidebar is column [1] of the workspace grid. A named ColumnDefinition gets no generated
     // code-behind field (it isn't a control), so reach it through the named grid instead.
-    private ColumnDefinition OutlineColumn => BodyGrid.ColumnDefinitions[0];
+    private ColumnDefinition WorkspaceSidebarColumn => BodyGrid.ColumnDefinitions[1];
 
     // Parameterless ctor for the XAML designer.
     public MainWindow()
@@ -274,6 +274,12 @@ public partial class MainWindow : AppWindow
             OpenCommandPalette(vm);
     }
 
+    private void OnWorkspaceCommandPaletteRequested(object? sender, EventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm)
+            OpenCommandPalette(vm);
+    }
+
     // Layout settings window (☰ ▸ Раскладка / palette). A single instance, kept open while the user toggles
     // knobs and watches the chrome update live; reactivated rather than re-created.
     private LayoutSettingsWindow? _layoutSettings;
@@ -476,7 +482,7 @@ public partial class MainWindow : AppWindow
         _settings = settings;
         DataContext = viewModel;
         RestoreWindow();
-        WireOutlineSidebar(viewModel);
+        WireWorkspaceSidebar(viewModel);
         // Named handlers (not lambdas) so SaveOnClose can detach them before disposing the VM —
         // harmless today (both are app-lifetime singletons) but a leak if the window ever recycles.
         viewModel.LayoutSettingsRequested += OpenLayoutSettings;
@@ -504,30 +510,30 @@ public partial class MainWindow : AppWindow
         e.Handled = true;
     }
 
-    // Restore the persisted outline width, follow live drags into a field, and expand/collapse the
-    // column with the pane's visibility (a hidden pane must not leave a dead 240px gutter).
-    private void WireOutlineSidebar(MainWindowViewModel vm)
+    // Restore the persisted sidebar width, follow live drags into a field, and expand/collapse the
+    // column with the workspace pane's visibility (a hidden pane must not leave a dead gutter).
+    private void WireWorkspaceSidebar(MainWindowViewModel vm)
     {
         _outlineWidth = LayoutOptions.ClampOutlineWidth(vm.Layout.OutlineWidth);
-        OutlineColumn.GetObservable(ColumnDefinition.WidthProperty).Subscribe(new AnonymousObserver<GridLength>(w =>
+        WorkspaceSidebarColumn.GetObservable(ColumnDefinition.WidthProperty).Subscribe(new AnonymousObserver<GridLength>(w =>
         {
-            if (vm.IsOutlinePaneVisible && w.IsAbsolute && w.Value >= 1)
+            if (vm.IsWorkspaceSidebarVisible && w.IsAbsolute && w.Value >= 1)
                 _outlineWidth = w.Value;
         }));
         vm.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName == nameof(MainWindowViewModel.IsOutlinePaneVisible))
-                ApplyOutlineColumn(vm.IsOutlinePaneVisible);
+            if (e.PropertyName == nameof(MainWindowViewModel.IsWorkspaceSidebarVisible))
+                ApplyWorkspaceSidebarColumn(vm.IsWorkspaceSidebarVisible);
         };
-        ApplyOutlineColumn(vm.IsOutlinePaneVisible);
+        ApplyWorkspaceSidebarColumn(vm.IsWorkspaceSidebarVisible);
     }
 
     // Shown → pixel width within [min,max]; hidden → collapse to 0 (no reserved gutter, no splitter).
-    private void ApplyOutlineColumn(bool visible)
+    private void ApplyWorkspaceSidebarColumn(bool visible)
     {
-        OutlineColumn.MinWidth = visible ? LayoutOptions.MinOutlineWidth : 0;
-        OutlineColumn.MaxWidth = visible ? LayoutOptions.MaxOutlineWidth : double.PositiveInfinity;
-        OutlineColumn.Width = new GridLength(
+        WorkspaceSidebarColumn.MinWidth = visible ? LayoutOptions.MinOutlineWidth : 0;
+        WorkspaceSidebarColumn.MaxWidth = visible ? LayoutOptions.MaxOutlineWidth : double.PositiveInfinity;
+        WorkspaceSidebarColumn.Width = new GridLength(
             visible ? LayoutOptions.ClampOutlineWidth(_outlineWidth) : 0, GridUnitType.Pixel);
     }
 
@@ -564,7 +570,7 @@ public partial class MainWindow : AppWindow
     // Size Col3 to the exact system caption-button width (DIPs). Sizing the ColumnDefinition (not a
     // child Border's Width) is what makes the star omnibar column reflow and keep the right-hand
     // cluster clear of min/max/close. (x:Name on a ColumnDefinition does not generate a field, so we
-    // reach it by index on the named grid — same pattern as OutlineColumn.)
+    // reach it by index on the named grid — same pattern as WorkspaceSidebarColumn.)
     private ColumnDefinition CaptionReserveColumn => TitleGrid.ColumnDefinitions[3];
 
     private void ApplyCaptionReserve() =>
