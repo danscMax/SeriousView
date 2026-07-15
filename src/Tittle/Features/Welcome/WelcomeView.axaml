@@ -3,52 +3,72 @@
              xmlns:vm="using:Tittle.Features.Shell"
              x:Class="Tittle.Features.Welcome.WelcomeView"
              x:DataType="vm:MainWindowViewModel">
-  <Panel>
-    <!-- Soft accent glows for depth (shared with the reading column via Themes/Colors/*). -->
-    <Border IsHitTestVisible="False" Background="{DynamicResource ReaderGlowABrush}"/>
-    <Border IsHitTestVisible="False" Background="{DynamicResource ReaderGlowBBrush}"/>
+  <Grid Background="{DynamicResource EditorSurfaceBrush}">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                  Spacing="14" MaxWidth="520" Margin="24,40">
+        <TextBlock Text="Начните с документа" FontSize="22" FontWeight="SemiBold"
+                   Foreground="{DynamicResource ChromeForegroundBrush}"/>
+        <TextBlock Text="Откройте Markdown, код, таблицу, PDF или изображение."
+                   FontSize="13" TextWrapping="Wrap"
+                   Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
 
-    <ScrollViewer>
-    <StackPanel Classes="welcome-enter"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                Spacing="14" MaxWidth="460" Margin="24,40">
+        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0">
+          <Button Content="Открыть файл…" Command="{Binding OpenFileCommand}"
+                  Classes="accent" Padding="14,10"
+                  AutomationProperties.Name="Открыть файл"/>
+          <Button Content="Открыть пример" Command="{Binding OpenSampleCommand}"
+                  Classes="header-action"
+                  AutomationProperties.AutomationId="OpenSampleButton"
+                  AutomationProperties.Name="Открыть пример"/>
+        </StackPanel>
 
-      <TextBlock Text="Tittle" FontSize="34" FontWeight="Bold"
-                 Foreground="{DynamicResource ChromeForegroundBrush}" HorizontalAlignment="Center"/>
-      <TextBlock Text="Нативный просмотрщик markdown и кода"
-                 Foreground="{DynamicResource ChromeForegroundMutedBrush}"
-                 FontSize="14" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+        <!-- MainWindow owns DragDrop; this calm slot explains that whole-window affordance. -->
+        <Border Padding="14" CornerRadius="6" Margin="0,4,0,0"
+                BorderBrush="{DynamicResource WorkspaceSeparatorBrush}" BorderThickness="1"
+                Background="{DynamicResource WorkspaceHoverBrush}"
+                AutomationProperties.Name="Область перетаскивания файла">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <PathIcon Data="{StaticResource IconDocument}" Width="18" Height="18"
+                      Foreground="{DynamicResource AccentBrush}"/>
+            <TextBlock Text="Перетащите файл сюда" VerticalAlignment="Center"
+                       Foreground="{DynamicResource ChromeForegroundBrush}"/>
+          </StackPanel>
+        </Border>
 
-      <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
-        <Button Content="Открыть файл…" Command="{Binding OpenFileCommand}"
-                Classes="accent" Padding="18,9"/>
-        <Button Content="Открыть пример" Command="{Binding OpenSampleCommand}"
-                AutomationProperties.AutomationId="OpenSampleButton" Padding="18,9"/>
+        <TextBlock Text="Ctrl+O — открыть · Ctrl+K — команды"
+                   FontSize="11.5" Margin="0,-2,0,2"
+                   Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+
+        <StackPanel IsVisible="{Binding HasRecent}" Spacing="4" Margin="0,6,0,0">
+          <TextBlock Text="Недавние" FontWeight="SemiBold" FontSize="12"
+                     Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+          <ItemsControl ItemsSource="{Binding RecentItems}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:RecentFileItem">
+                <Button Command="{Binding OpenCommand}" ToolTip.Tip="{Binding Path}"
+                        Background="Transparent" BorderThickness="0" CornerRadius="6"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Padding="10,6">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="1">
+                      <TextBlock Text="{Binding Name}" FontSize="12.5"
+                                 TextTrimming="CharacterEllipsis"
+                                 Foreground="{DynamicResource ChromeForegroundBrush}"/>
+                      <TextBlock Text="{Binding Folder}" FontSize="10.5"
+                                 TextTrimming="CharacterEllipsis"
+                                 Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="↗" Margin="10,0,0,0"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+                  </Grid>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
       </StackPanel>
-
-      <StackPanel IsVisible="{Binding HasRecent}" Spacing="2" Margin="0,18,0,0">
-        <TextBlock Text="Недавние" FontWeight="SemiBold" FontSize="12"
-                   Foreground="{DynamicResource ChromeForegroundMutedBrush}" Margin="6,0,0,4"/>
-        <ItemsControl ItemsSource="{Binding RecentItems}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate x:DataType="vm:RecentFileItem">
-              <Button Command="{Binding OpenCommand}" ToolTip.Tip="{Binding Path}" Classes="recent"
-                      Background="Transparent" BorderThickness="0"
-                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                      Padding="8,5">
-                <StackPanel Spacing="1">
-                  <TextBlock Text="{Binding Name}" FontSize="13"
-                             Foreground="{DynamicResource ChromeForegroundBrush}"/>
-                  <TextBlock Text="{Binding Folder}" FontSize="11" TextTrimming="CharacterEllipsis"
-                             Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
-                </StackPanel>
-              </Button>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </StackPanel>
-
-    </StackPanel>
     </ScrollViewer>
-  </Panel>
+  </Grid>
 </UserControl>

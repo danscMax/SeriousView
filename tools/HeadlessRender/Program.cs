@@ -4,8 +4,14 @@ using Avalonia.Headless;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Tittle;
+using Tittle.Core.Abstractions;
+using Tittle.Core.Documents;
+using Tittle.Core.Services;
+using Tittle.Core.Settings;
+using Tittle.Core.Text;
 using Tittle.Features.Shell;
 using Tittle.Features.Viewer;
+using Tittle.Features.Welcome;
 using Tittle.Platform;
 
 // Layer-1 render oracle: render leaf controls to PNG in every theme (the cheap, deterministic
@@ -51,6 +57,17 @@ var sampleMd = File.ReadAllText(Path.Combine(outDir, "..", "..", "ux-audit", "ri
 var screens = new (string Name, Func<Control> Build)[]
 {
     ("docview", () => new DocumentView { DataContext = DocumentTabViewModel.FromFile(sampleMd, @"E:\docs\rich.md") }),
+    ("welcome", () => new WelcomeView { DataContext = BuildWelcomeVm() }),
+    ("notice", () => new DocumentView
+    {
+        DataContext = DocumentTabViewModel.FromLoad(FileLoadResult.Binary(2048), @"E:\docs\archive.bin"),
+    }),
+    ("csv", () =>
+    {
+        var tab = DocumentTabViewModel.FromFile("Name,Value\nAlpha,10\nBeta,20", @"E:\docs\table.csv");
+        tab.CsvAsTableEnabled = true;
+        return new DocumentView { DataContext = tab };
+    }),
 };
 
 int ok = 0, total = 0;
@@ -85,3 +102,67 @@ Dispatcher.UIThread.Invoke(() =>
 
 Console.WriteLine($"{ok}/{total} rendered -> {outDir}");
 return ok == total ? 0 : 1;
+
+static MainWindowViewModel BuildWelcomeVm()
+{
+    var recent = new RenderRecentFilesStore([@"E:\docs\readme.md", @"E:\notes\ideas.txt"]);
+    return new MainWindowViewModel(
+        new RenderFileDialog(), new RenderFileReader(), new RenderThemeService(), recent,
+        new AppSettingsService(new RenderSettingsStore()), new RenderClipboard(), new RenderShell(), []);
+}
+
+sealed class RenderFileDialog : IFileDialogService
+{
+    public Task<IReadOnlyList<string>> PickFilesAsync() => Task.FromResult<IReadOnlyList<string>>([]);
+    public Task<string?> SaveFileAsync(string suggestedFileName) => Task.FromResult<string?>(null);
+}
+
+sealed class RenderFileReader : IFileReader
+{
+    public Task<FileLoadResult> LoadAsync(string path, CancellationToken cancellationToken = default) =>
+        Task.FromResult(FileLoadResult.ForText("", "UTF-8", "", 0));
+
+    public Task<string> ReloadTextAsync(string path, string encodingName,
+        CancellationToken cancellationToken = default) => Task.FromResult("");
+}
+
+sealed class RenderThemeService : IThemeService
+{
+    public ThemeMode Mode => ThemeMode.Dark;
+    public event EventHandler? Changed;
+    public void SetMode(ThemeMode mode) => Changed?.Invoke(this, EventArgs.Empty);
+    public void Cycle() { }
+    public void ApplyCurrent() { }
+}
+
+sealed class RenderRecentFilesStore(IEnumerable<string> items) : IRecentFilesStore
+{
+    private readonly List<string> _items = items.ToList();
+    public IReadOnlyList<string> Items => _items;
+    public event EventHandler? Changed;
+    public void Add(string path)
+    {
+        _items.Remove(path);
+        _items.Insert(0, path);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+}
+
+sealed class RenderSettingsStore : ISettingsStore
+{
+    private readonly Dictionary<string, object?> _values = new();
+    public T? Load<T>(string key) => _values.TryGetValue(key, out var value) ? (T?)value : default;
+    public void Save<T>(string key, T value) => _values[key] = value;
+}
+
+sealed class RenderClipboard : IClipboardService
+{
+    public Task SetTextAsync(string text) => Task.CompletedTask;
+    public Task SetHtmlAsync(string html, string plainText) => Task.CompletedTask;
+}
+
+sealed class RenderShell : IShellService
+{
+    public void RevealInExplorer(string filePath) { }
+    public void OpenWithDefaultApp(string filePath) { }
+}

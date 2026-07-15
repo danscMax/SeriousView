@@ -348,7 +348,7 @@
          sharing one horizontal scroller so they pan together; rows are virtualized. -->
     <ScrollViewer IsVisible="{Binding ShowCsvTable}" Background="{DynamicResource EditorSurfaceBrush}"
                   HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
-                  Padding="12,8">
+                  Padding="14,10">
       <DockPanel>
         <ItemsControl DockPanel.Dock="Top" ItemsSource="{Binding CsvTable.Columns}">
           <ItemsControl.ItemsPanel>
@@ -402,7 +402,8 @@
 
     <!-- Notice overlay: binary / too-large / empty files (no editor, no preview).
          Text-only (no SymbolIcon) so it renders without the FluentAvalonia Symbols font. -->
-    <Border IsVisible="{Binding ShowNotice}" Background="{DynamicResource EditorSurfaceBrush}">
+    <Border IsVisible="{Binding ShowNotice}" Background="{DynamicResource EditorSurfaceBrush}"
+            Padding="14" AutomationProperties.AutomationId="DocumentNotice">
       <TextBlock Text="{Binding NoticeText}" TextWrapping="Wrap" TextAlignment="Center"
                  MaxWidth="420" FontSize="15"
                  HorizontalAlignment="Center" VerticalAlignment="Center"

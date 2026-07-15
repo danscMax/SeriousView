@@ -7,7 +7,7 @@
        is shown at its natural pixels (Stretch=None); a LayoutTransform applies rotation × the
        effective scale (fit-to-window or a free/100% zoom), the ScrollViewer pans when zoomed. -->
   <Panel x:Name="Root">
-    <ScrollViewer x:Name="ImageScroll" Background="Transparent" Padding="16"
+    <ScrollViewer x:Name="ImageScroll" Background="Transparent" Padding="14"
                   HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                   IsVisible="{Binding ImageSource, Converter={x:Static ObjectConverters.IsNotNull}}">
       <Panel x:Name="CenterPanel" HorizontalAlignment="Stretch" Background="Transparent">
@@ -19,7 +19,7 @@
 
     <!-- Fallback: the file couldn't be decoded. Offer the OS viewer. -->
     <Border IsVisible="{Binding ImageSource, Converter={x:Static ObjectConverters.IsNull}}"
-            Background="{DynamicResource EditorSurfaceBrush}">
+            Background="{DynamicResource EditorSurfaceBrush}" Padding="14">
       <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="14" MaxWidth="440">
         <TextBlock Text="Не удалось открыть изображение"
                    TextWrapping="Wrap" TextAlignment="Center" FontSize="15"
