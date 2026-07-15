@@ -251,13 +251,21 @@
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="4"/>
   </Style>
-  <Style Selector="Button.statusbtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+  <!-- Own the rest background + its transition here (same pattern as Button.accent below). FA's stock
+       template otherwise paints ButtonBackground at rest and animates to its own light
+       ButtonBackgroundPointerOver on hover before our darker overlay lands — the documented
+       "first light, then dark" double flash. Pinning rest transparent makes our hover brush the only
+       colour that ever shows, so the hover is a single clean fade. -->
+  <Style Selector="Button.statusbtn /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
     <Setter Property="Transitions">
       <Transitions>
         <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
       </Transitions>
     </Setter>
+  </Style>
+  <Style Selector="Button.statusbtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
   </Style>
   <Style Selector="Button.link:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
