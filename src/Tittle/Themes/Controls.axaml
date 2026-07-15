@@ -92,14 +92,23 @@
       </Transitions>
     </Setter>
   </Style>
-  <Style Selector="Button.modal-dismiss:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+  <!-- Own the REST background + its transitions, and do it BEFORE the state styles: Avalonia resolves
+       competing setters by document order, not specificity. A class that overrides only :pointerover
+       leaves FA's stock template painting its own ButtonBackground at rest and animating through the
+       light ButtonBackgroundPointerOver on hover — the first-light-then-dark double flash. Every flat
+       chrome button below follows this base-then-states shape (as Button.accent already did). -->
+  <Style Selector="Button.modal-dismiss /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
+    <!-- Background only — a BorderBrush transition would fade the keyboard-focus ring in from FA's
+         gradient border instead of snapping, and the hover never touches the border. -->
     <Setter Property="Transitions">
       <Transitions>
         <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
-        <BrushTransition Property="BorderBrush" Duration="{DynamicResource DurFast}"/>
       </Transitions>
     </Setter>
+  </Style>
+  <Style Selector="Button.modal-dismiss:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
   </Style>
   <Style Selector="Button.modal-dismiss:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
@@ -180,6 +189,8 @@
     </Setter>
   </Style>
   <Style Selector="Button.welcome-secondary /template/ ContentPresenter#PART_ContentPresenter">
+    <!-- Rest background is ours (transparent over the welcome card), not FA's — see modal-dismiss. -->
+    <Setter Property="Background" Value="Transparent"/>
     <Setter Property="Transitions">
       <Transitions>
         <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
@@ -296,14 +307,21 @@
   <Style Selector="Button.workspace-action:pressed">
     <Setter Property="RenderTransform" Value="scale(0.96)"/>
   </Style>
-  <Style Selector="Button.workspace-action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+  <!-- Rest background + transitions are ours, ahead of the states (see modal-dismiss). The .active tile
+       below still wins over the hover because it comes later in document order — unchanged. -->
+  <Style Selector="Button.workspace-action /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
+    <!-- Background only: a BorderBrush transition here would make the keyboard-focus ring FADE IN from
+         FA's gradient ControlElevationBorderBrush instead of snapping (AccessibilityTests catches it),
+         and nothing hovers the border anyway. -->
     <Setter Property="Transitions">
       <Transitions>
         <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
-        <BrushTransition Property="BorderBrush" Duration="{DynamicResource DurFast}"/>
       </Transitions>
     </Setter>
+  </Style>
+  <Style Selector="Button.workspace-action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
   </Style>
   <Style Selector="Button.workspace-action.active">
     <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
@@ -343,13 +361,17 @@
   <Style Selector="Button.header-action:pressed">
     <Setter Property="RenderTransform" Value="scale(0.97)"/>
   </Style>
-  <Style Selector="Button.header-action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+  <!-- Rest background + transition are ours, ahead of the states (see modal-dismiss). -->
+  <Style Selector="Button.header-action /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
     <Setter Property="Transitions">
       <Transitions>
         <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
       </Transitions>
     </Setter>
+  </Style>
+  <Style Selector="Button.header-action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
   </Style>
   <Style Selector="Button.header-action:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
@@ -387,13 +409,18 @@
   <Style Selector="Button.segment:pressed">
     <Setter Property="RenderTransform" Value="scale(0.98)"/>
   </Style>
-  <Style Selector="Button.segment:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+  <!-- Rest background + transition are ours, ahead of the states (see modal-dismiss). The seg-on tab
+       below still wins over the hover because it comes later in document order — unchanged. -->
+  <Style Selector="Button.segment /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
     <Setter Property="Transitions">
       <Transitions>
         <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
       </Transitions>
     </Setter>
+  </Style>
+  <Style Selector="Button.segment:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
   </Style>
   <Style Selector="Button.segment.seg-on">
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}"/>
