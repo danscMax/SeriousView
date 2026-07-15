@@ -35,6 +35,7 @@
 #   .\build.ps1 -NoReadyToRun   # skip R2R (smaller, slower first render)
 #   .\build.ps1 -NoTrim         # skip trimming (bigger ~171MB, zero trim risk)
 #   .\build.ps1 -Compress       # re-enable single-file compression (smaller, slower start)
+#   .\build.ps1 -PublishTimeoutSeconds 1800  # fail cleanly if publish stalls
 #   .\build.ps1 -NoOpen         # don't open Explorer when finished
 #   .\build.ps1 -OutDir dist\win-x64   # alternate output dir (build_all puts each RID
 #                                       in its own subfolder so phases don't clobber)
@@ -46,6 +47,8 @@ param(
     [switch]$NoTrim,         # opt OUT of trimming (trimming is on by default, partial mode)
     [switch]$Compress,       # opt IN to single-file compression (smaller file, slower start)
     [switch]$NoOpen,
+    [ValidateRange(60, 7200)]
+    [int]$PublishTimeoutSeconds = 1800,
     [string]$OutDir = 'dist'
 )
 
@@ -81,11 +84,92 @@ $publishArgs = @(
 )
 
 Write-Info 'Publishing (first run restores the runtime pack -- can take a minute)...'
-dotnet publish $project @publishArgs
-if ($LASTEXITCODE -ne 0) {
+
+# Invoke publish as a tracked child process. A direct PowerShell invocation cannot
+# be timed out safely: if crossgen2 or the linker stalls, the shell remains blocked
+# and a later retry leaves orphaned dotnet workers behind. Redirecting to temporary
+# files keeps the console responsive without risking a pipe deadlock; diagnostics are
+# replayed after publish (or immediately when it fails/times out).
+function ConvertTo-ProcessArgument {
+    param([Parameter(Mandatory)][string]$Value)
+    if ($Value -match '[\s"]') {
+        return '"' + $Value.Replace('"', '\"') + '"'
+    }
+    return $Value
+}
+
+function Stop-ProcessTree {
+    param([Parameter(Mandatory)][int]$ProcessId)
+
+    if ($env:OS -eq 'Windows_NT') {
+        & taskkill.exe /PID $ProcessId /T /F 2>$null | Out-Null
+    } else {
+        Stop-Process -Id $ProcessId -Force -ErrorAction SilentlyContinue
+    }
+}
+
+$dotnetCommand = Get-Command dotnet -CommandType Application -ErrorAction Stop |
+    Select-Object -First 1
+$dotnetPath = if ($dotnetCommand.Path) { $dotnetCommand.Path } else { $dotnetCommand.Source }
+$argumentLine = ((@('publish', $project) + $publishArgs) |
+    ForEach-Object { ConvertTo-ProcessArgument $_ }) -join ' '
+$stdoutLog = [System.IO.Path]::GetTempFileName()
+$stderrLog = [System.IO.Path]::GetTempFileName()
+$publishProcess = $null
+$publishTimedOut = $false
+$publishExitCode = 1
+
+try {
+    $publishProcess = Start-Process -FilePath $dotnetPath -ArgumentList $argumentLine `
+        -RedirectStandardOutput $stdoutLog -RedirectStandardError $stderrLog -PassThru
+    $publishDeadline = (Get-Date).AddSeconds($PublishTimeoutSeconds)
+    $lastHeartbeat = Get-Date
+
+    while (-not $publishProcess.HasExited) {
+        if ((Get-Date) -ge $publishDeadline) {
+            $publishTimedOut = $true
+            Write-Warn "Publish exceeded the $PublishTimeoutSeconds-second limit; stopping the process tree..."
+            Stop-ProcessTree -ProcessId $publishProcess.Id
+            break
+        }
+
+        if (((Get-Date) - $lastHeartbeat).TotalSeconds -ge 30) {
+            $elapsedMinutes = '{0:0.0}' -f ((Get-Date) - $start).TotalMinutes
+            Write-Info "Still publishing... ${elapsedMinutes} min elapsed"
+            $lastHeartbeat = Get-Date
+        }
+        Start-Sleep -Milliseconds 500
+        $publishProcess.Refresh()
+    }
+
+    if (-not $publishTimedOut) {
+        $publishProcess.WaitForExit()
+        $publishProcess.Refresh()
+        $publishExitCode = $publishProcess.ExitCode
+    }
+}
+finally {
+    if (Test-Path -LiteralPath $stdoutLog) {
+        Get-Content -LiteralPath $stdoutLog -Encoding UTF8 -ErrorAction SilentlyContinue |
+            ForEach-Object { Write-Host $_ }
+    }
+    if (Test-Path -LiteralPath $stderrLog) {
+        Get-Content -LiteralPath $stderrLog -Encoding UTF8 -ErrorAction SilentlyContinue |
+            ForEach-Object { Write-Host $_ -ForegroundColor DarkYellow }
+    }
+    Remove-Item -LiteralPath $stdoutLog, $stderrLog -Force -ErrorAction SilentlyContinue
+}
+
+if ($publishTimedOut) {
+    Write-Fail "BUILD TIMED OUT after $PublishTimeoutSeconds seconds. Try -NoReadyToRun -NoTrim for a faster diagnostic build."
+    Show-Notification -Title 'Tittle build' -Body 'Publish timed out' -IsError
+    exit 124
+}
+
+if ($publishExitCode -ne 0) {
     Write-Fail 'BUILD FAILED'
     Show-Notification -Title 'Tittle build' -Body 'Publish failed' -IsError
-    exit $LASTEXITCODE
+    exit $publishExitCode
 }
 
 # Drop any stray .pdb the single-file bundler may have left behind.

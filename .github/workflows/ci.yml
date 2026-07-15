@@ -45,6 +45,35 @@ jobs:
       - name: Test
         run: dotnet test Tittle.sln --no-build -c Release --verbosity normal
 
+      # Exercise the same script developers use locally. The fast untrimmed/no-R2R profile is
+      # intentional here: this gate verifies single-file bundling, process startup and artifact
+      # shape on every main/PR build; tag releases separately exercise the optimized profile.
+      - name: Portable single-file startup smoke
+        if: runner.os == 'Windows'
+        shell: pwsh
+        timeout-minutes: 20
+        run: |
+          ./build.ps1 -NoOpen -NoReadyToRun -NoTrim `
+            -PublishTimeoutSeconds 900 -OutDir dist/ci-portable
+
+          $files = @(Get-ChildItem dist/ci-portable -File)
+          if ($files.Count -ne 1 -or $files[0].Name -ne 'Tittle.exe') {
+            throw "Expected exactly one Tittle.exe; found: $($files.Name -join ', ')"
+          }
+
+          $process = Start-Process -FilePath $files[0].FullName -WindowStyle Hidden -PassThru
+          try {
+            Start-Sleep -Seconds 8
+            if ($process.HasExited) {
+              throw "Portable executable exited during startup (code $($process.ExitCode))."
+            }
+          }
+          finally {
+            if (-not $process.HasExited) {
+              Stop-Process -Id $process.Id -Force
+            }
+          }
+
   format:
     name: Format check
     runs-on: ubuntu-latest
