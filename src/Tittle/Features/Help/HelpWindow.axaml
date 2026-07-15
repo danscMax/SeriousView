@@ -3,7 +3,7 @@
         xmlns:shared="using:Tittle.Shared"
         x:Class="Tittle.Features.Help.HelpWindow"
         Title="Справка"
-        Width="430" SizeToContent="Height" CanResize="False">
+        Width="500" SizeToContent="Height" CanResize="False">
   <!-- Shortcuts reference (ported help modal). Esc / Закрыть dismisses. Chrome = ModalWindow + Border.modalcard. -->
   <Border Classes="modalcard" Padding="22">
     <StackPanel Spacing="12">
