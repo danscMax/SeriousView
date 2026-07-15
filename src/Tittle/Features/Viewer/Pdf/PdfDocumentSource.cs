@@ -103,7 +103,7 @@ public sealed class PdfDocumentSource
                     BackgroundColor = SKColors.White,
                 };
 
-                using var sk = Conversion.ToImage(_bytes, page: page, options: options);
+                using var sk = Conversion.ToImage(_bytes, page: (Index)page, options: options);
                 using var data = sk.Encode(SKEncodedImageFormat.Png, 90);
                 using var ms = new MemoryStream(data.ToArray());
                 return new Bitmap(ms);
