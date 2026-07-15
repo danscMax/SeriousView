@@ -512,31 +512,38 @@
         <!-- Table/source toggle for delimited files (ported csv-as-table) — in the status bar,
              which stays visible in both views (the contextual toolbar hides with the editor). -->
         <Panel DockPanel.Dock="Right" Classes="status-optional">
-          <Button Classes="statusbtn" Margin="0,0,6,0"
+            <Button Classes="statusbtn" Margin="0,0,6,0"
                   Command="{Binding SelectedTab.ToggleCsvViewCommand}"
                   ToolTip.Tip="Таблица / исходник" AutomationProperties.Name="Таблица или исходник"
-                  Content="▦"
-                  IsVisible="{Binding SelectedTab.CsvTable, FallbackValue=False, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                  IsVisible="{Binding SelectedTab.CsvTable, FallbackValue=False, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <PathIcon Data="{StaticResource IconTable}" Width="14" Height="14"/>
+          </Button>
         </Panel>
         <!-- PDF fit-to-width ⟷ actual size (100%) toggle. -->
         <Panel DockPanel.Dock="Right" Classes="status-optional">
-          <Button Classes="statusbtn" Margin="0,0,6,0"
+            <Button Classes="statusbtn" Margin="0,0,6,0"
                   Command="{Binding SelectedTab.TogglePdfFitCommand}"
                   ToolTip.Tip="По ширине / 100%" AutomationProperties.Name="Масштаб PDF"
-                  Content="⤢" IsVisible="{Binding SelectedTab.ShowPdf, FallbackValue=False}"/>
+                  IsVisible="{Binding SelectedTab.ShowPdf, FallbackValue=False}">
+            <PathIcon Data="{StaticResource IconFit}" Width="14" Height="14"/>
+          </Button>
         </Panel>
         <!-- Image: rotate 90° + fit/100% toggle. -->
         <Panel DockPanel.Dock="Right" Classes="status-optional">
-          <Button Classes="statusbtn" Margin="0,0,6,0"
+            <Button Classes="statusbtn" Margin="0,0,6,0"
                   Command="{Binding SelectedTab.RotateImageCommand}"
                   ToolTip.Tip="Повернуть на 90°" AutomationProperties.Name="Повернуть изображение"
-                  Content="↻" IsVisible="{Binding SelectedTab.ShowImage, FallbackValue=False}"/>
+                  IsVisible="{Binding SelectedTab.ShowImage, FallbackValue=False}">
+            <PathIcon Data="{StaticResource IconRotate}" Width="14" Height="14"/>
+          </Button>
         </Panel>
         <Panel DockPanel.Dock="Right" Classes="status-optional">
-          <Button Classes="statusbtn" Margin="0,0,6,0"
+            <Button Classes="statusbtn" Margin="0,0,6,0"
                   Command="{Binding SelectedTab.ToggleImageFitCommand}"
                   ToolTip.Tip="Вписать / 100%" AutomationProperties.Name="Масштаб изображения"
-                  Content="⤢" IsVisible="{Binding SelectedTab.ShowImage, FallbackValue=False}"/>
+                  IsVisible="{Binding SelectedTab.ShowImage, FallbackValue=False}">
+            <PathIcon Data="{StaticResource IconFit}" Width="14" Height="14"/>
+          </Button>
         </Panel>
         <Panel DockPanel.Dock="Right" Classes="status-optional">
           <Border Width="1" Margin="10,1" IsVisible="{Binding HasTabs}"
