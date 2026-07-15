@@ -301,6 +301,30 @@
         <TransformOperationsTransition Property="RenderTransform" Duration="{DynamicResource DurFast}"/>
       </Transitions>
     </Setter>
+    <!-- ESCAPE FluentAvalonia's stock template (the cure already proven on .recent / .outline-item).
+         Overriding only our own state colours was NOT enough: FA still owns its template's rest/hover
+         setters and paints its light ButtonBackgroundPointerOver before our overlay lands — the white
+         flash on the rail icons. With our own template FA has no surface to paint at all: PART_Bg is
+         the single background, and every state below recolours it. Size/padding/radius still come from
+         the setters above via TemplateBinding, so the rail is unchanged geometrically. -->
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border x:Name="PART_Bg" Background="Transparent"
+                BorderBrush="Transparent" BorderThickness="0"
+                CornerRadius="{TemplateBinding CornerRadius}">
+          <Border.Transitions>
+            <Transitions>
+              <!-- Background only: a BorderBrush transition would fade the keyboard-focus ring in
+                   instead of snapping it (AccessibilityTests catches that). -->
+              <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
+            </Transitions>
+          </Border.Transitions>
+          <ContentPresenter Content="{TemplateBinding Content}"
+                            Margin="{TemplateBinding Padding}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
   </Style>
   <Style Selector="Button.workspace-action:pointerover">
     <Setter Property="RenderTransform" Value="scale(1.04)"/>
@@ -308,36 +332,25 @@
   <Style Selector="Button.workspace-action:pressed">
     <Setter Property="RenderTransform" Value="scale(0.96)"/>
   </Style>
-  <!-- Rest background + transitions are ours, ahead of the states (see modal-dismiss). The .active tile
-       below still wins over the hover because it comes later in document order — unchanged. -->
-  <Style Selector="Button.workspace-action /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="Transparent"/>
-    <!-- Background only: a BorderBrush transition here would make the keyboard-focus ring FADE IN from
-         FA's gradient ControlElevationBorderBrush instead of snapping (AccessibilityTests catches it),
-         and nothing hovers the border anyway. -->
-    <Setter Property="Transitions">
-      <Transitions>
-        <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
-      </Transitions>
-    </Setter>
-  </Style>
-  <Style Selector="Button.workspace-action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+  <Style Selector="Button.workspace-action:pointerover /template/ Border#PART_Bg">
     <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
   </Style>
   <Style Selector="Button.workspace-action.active">
     <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
   </Style>
-  <Style Selector="Button.workspace-action.active /template/ ContentPresenter#PART_ContentPresenter">
+  <!-- The active tile comes after the hover on purpose: Avalonia resolves by document order, so an
+       active section keeps its accent tile while hovered. -->
+  <Style Selector="Button.workspace-action.active /template/ Border#PART_Bg">
     <Setter Property="Background" Value="{DynamicResource WorkspaceSelectedBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
     <Setter Property="BorderThickness" Value="2,0,0,0"/>
   </Style>
-  <Style Selector="Button.workspace-action:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+  <Style Selector="Button.workspace-action:focus-visible /template/ Border#PART_Bg">
     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
   </Style>
-  <Style Selector="Button.workspace-action.active:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+  <Style Selector="Button.workspace-action.active:focus-visible /template/ Border#PART_Bg">
     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
     <Setter Property="BorderThickness" Value="2,1,1,1"/>
   </Style>

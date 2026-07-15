@@ -121,6 +121,23 @@ public class AccessibilityTests
         }
     }
 
+    /// <summary>The surface a flat chrome button paints its state (hover / active / focus ring) on.
+    /// Classes on FluentAvalonia's stock template use ContentPresenter#PART_ContentPresenter; the ones
+    /// that escape that template (to stop FA flashing its own hover background) expose Border#PART_Bg.
+    /// Both are legitimate, so the a11y guards assert through this seam instead of one hard-coded part.</summary>
+    private static (Thickness Thickness, IBrush? Brush) StateSurface(Button button)
+    {
+        var surface = button.GetVisualDescendants()
+            .OfType<Control>()
+            .First(c => c.Name is "PART_Bg" or "PART_ContentPresenter");
+        return surface switch
+        {
+            Border b => (b.BorderThickness, b.BorderBrush),
+            ContentPresenter cp => (cp.BorderThickness, cp.BorderBrush),
+            _ => throw new InvalidOperationException($"unexpected state surface {surface.GetType().Name}"),
+        };
+    }
+
     /// <summary>Every flat chrome button must SNAP a solid accent focus ring. Covering all of them also
     /// guards the hover-flash fix: the ring is only solid-on-arrival while the base style transitions
     /// Background alone — add a BorderBrush transition and it fades in from FA's gradient border, which
@@ -142,12 +159,9 @@ public class AccessibilityTests
                 button.Focus(NavigationMethod.Tab);
                 Dispatcher.UIThread.RunJobs();
 
-                var presenter = button.GetVisualDescendants()
-                    .OfType<ContentPresenter>()
-                    .First(p => p.Name == "PART_ContentPresenter");
-                Assert.True(presenter.BorderThickness.Left > 0,
-                    $"{styleClass} has no visible keyboard focus border");
-                var focusBrush = Assert.IsAssignableFrom<ISolidColorBrush>(presenter.BorderBrush);
+                var (thickness, brush) = StateSurface(button);
+                Assert.True(thickness.Left > 0, $"{styleClass} has no visible keyboard focus border");
+                var focusBrush = Assert.IsAssignableFrom<ISolidColorBrush>(brush);
                 Assert.True(focusBrush.Color.A > 0,
                     $"{styleClass} keyboard focus border is transparent");
             }
@@ -179,10 +193,8 @@ public class AccessibilityTests
             window.Show();
             Dispatcher.UIThread.RunJobs();
 
-            var workspacePresenter = workspace.GetVisualDescendants()
-                .OfType<ContentPresenter>()
-                .First(p => p.Name == "PART_ContentPresenter");
-            Assert.True(workspacePresenter.BorderThickness.Left > workspacePresenter.BorderThickness.Right,
+            var (thickness, _) = StateSurface(workspace);
+            Assert.True(thickness.Left > thickness.Right,
                 "Active workspace action has no structural marker");
             Assert.Equal(FontWeight.SemiBold, segment.FontWeight);
         }
