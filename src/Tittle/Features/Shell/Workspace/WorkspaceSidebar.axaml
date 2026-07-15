@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Tittle.Features.Shell"
+             xmlns:workspace="using:Tittle.Features.Shell.Workspace"
+             xmlns:viewer="using:Tittle.Features.Viewer"
+             x:Class="Tittle.Features.Shell.Workspace.WorkspaceSidebar"
+             x:DataType="vm:MainWindowViewModel">
+  <Border Background="{DynamicResource WorkspaceSidebarBrush}"
+          BorderBrush="{DynamicResource WorkspaceSeparatorBrush}"
+          BorderThickness="0,0,1,0">
+    <Grid RowDefinitions="40,*">
+      <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="10,0,6,0">
+        <TextBlock Text="Файлы" IsVisible="{Binding IsFilesSectionActive}"
+                   VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12.5"/>
+        <TextBlock Text="Оглавление" IsVisible="{Binding IsOutlineSectionActive}"
+                   VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12.5"/>
+        <TextBlock Text="Закладки" IsVisible="{Binding IsBookmarksSectionActive}"
+                   VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12.5"/>
+        <Button Grid.Column="1" Classes="header-action" Content="×"
+                Command="{Binding OpenWorkspaceSectionCommand}"
+                CommandParameter="{Binding Layout.WorkspaceSection}"
+                ToolTip.Tip="Скрыть боковую панель"
+                AutomationProperties.Name="Скрыть боковую панель"/>
+      </Grid>
+
+      <Grid Grid.Row="1">
+        <Grid IsVisible="{Binding IsFilesSectionActive}" RowDefinitions="Auto,*">
+          <Button Grid.Row="0" Margin="10,8,10,6" Padding="10,6"
+                  HorizontalAlignment="Stretch"
+                  Command="{Binding OpenFileCommand}"
+                  AutomationProperties.Name="Открыть файл">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <PathIcon Data="{StaticResource IconDocument}" Width="15" Height="15"/>
+              <TextBlock Text="Открыть файл…"/>
+            </StackPanel>
+          </Button>
+          <Grid Grid.Row="1">
+            <TextBlock Text="Нет недавних файлов" IsVisible="{Binding !HasRecent}"
+                       Margin="14,12" TextWrapping="Wrap"
+                       Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+            <ItemsControl ItemsSource="{Binding RecentItems}" IsVisible="{Binding HasRecent}"
+                          Margin="6,4">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:RecentFileItem">
+                  <Button Command="{Binding OpenCommand}" ToolTip.Tip="{Binding Path}"
+                          Background="Transparent" BorderThickness="0"
+                          HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                          Padding="10,6" CornerRadius="6">
+                    <StackPanel Spacing="1">
+                      <TextBlock Text="{Binding Name}" FontSize="12.5" TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Text="{Binding Folder}" FontSize="10.5" TextTrimming="CharacterEllipsis"
+                                 Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+                    </StackPanel>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </Grid>
+        </Grid>
+
+        <viewer:OutlinePanel IsVisible="{Binding IsOutlinePaneVisible}"/>
+        <StackPanel IsVisible="{Binding IsOutlineEmptyStateVisible}"
+                    Margin="14,18" Spacing="6">
+          <TextBlock Text="Нет заголовков" FontWeight="SemiBold"/>
+          <TextBlock Text="Откройте документ с заголовками — они появятся здесь."
+                     TextWrapping="Wrap" FontSize="11.5"
+                     Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+        </StackPanel>
+
+        <workspace:BookmarkPanel IsVisible="{Binding IsBookmarksSectionActive}"/>
+      </Grid>
+    </Grid>
+  </Border>
+</UserControl>

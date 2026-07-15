@@ -810,6 +810,15 @@ public partial class DocumentTabViewModel : ViewModelBase, IDisposable
         : GrammarExtension is ".txt" or ".log" ? TextOutline.Parse(DocumentText)
         : [];
 
+    /// <summary>Read-only outline projection used by the workspace Bookmarks section. Bookmark state
+    /// is intentionally kept in <see cref="ViewStateStore"/>; this property only shapes it for the UI.</summary>
+    public IReadOnlyList<HeadingOutline> BookmarkedOutline =>
+        FilePath is null || ViewState is null
+            ? []
+            : Outline.Where(heading => ViewState.IsBookmarked(FilePath, heading.Ordinal)).ToArray();
+
+    public bool HasBookmarkedOutline => BookmarkedOutline.Count > 0;
+
     /// <summary>True when the document has at least one heading (drives the outline pane).</summary>
     public bool HasOutline => Outline.Count > 0;
 
@@ -958,6 +967,8 @@ public partial class DocumentTabViewModel : ViewModelBase, IDisposable
         ViewState.ToggleBookmark(FilePath, heading.Ordinal);
         ViewState.Flush();
         ViewStateVersion++;
+        OnPropertyChanged(nameof(BookmarkedOutline));
+        OnPropertyChanged(nameof(HasBookmarkedOutline));
     }
 
     /// <summary>Raised when the user picks a heading; the view scrolls preview/source to it.</summary>

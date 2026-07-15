@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Tittle.Features.Shell"
+             xmlns:conv="using:Tittle.Shared"
+             x:Class="Tittle.Features.Shell.Workspace.BookmarkPanel"
+             x:DataType="vm:MainWindowViewModel">
+  <Grid>
+    <StackPanel IsVisible="{Binding !SelectedTab.HasBookmarkedOutline, FallbackValue=True}"
+                Margin="14,18" Spacing="6">
+      <TextBlock Text="Нет закладок" FontWeight="SemiBold"/>
+      <TextBlock Text="Отметьте заголовок звёздочкой в оглавлении."
+                 TextWrapping="Wrap" FontSize="11.5"
+                 Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+    </StackPanel>
+
+    <ItemsControl ItemsSource="{Binding SelectedTab.BookmarkedOutline}"
+                  IsVisible="{Binding SelectedTab.HasBookmarkedOutline, FallbackValue=False}">
+      <ItemsControl.Template>
+        <ControlTemplate>
+          <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto" Padding="6,4">
+            <ItemsPresenter/>
+          </ScrollViewer>
+        </ControlTemplate>
+      </ItemsControl.Template>
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <VirtualizingStackPanel/>
+        </ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:CompileBindings="False">
+          <Grid ColumnDefinitions="18,*,Auto"
+                Margin="{Binding Level, Converter={x:Static conv:LevelToIndentConverter.Instance}}">
+            <TextBlock Text="★" VerticalAlignment="Center" HorizontalAlignment="Center"
+                       FontSize="10" Foreground="{DynamicResource AccentBrush}"/>
+            <Button Grid.Column="1" Content="{Binding Text}"
+                    Command="{Binding $parent[ItemsControl].DataContext.SelectedTab.NavigateToHeadingCommand}"
+                    CommandParameter="{Binding}"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                    Background="Transparent" BorderThickness="0" Padding="8,5"
+                    FontSize="12.5"/>
+            <Button Grid.Column="2" Content="×" Classes="header-action"
+                    Command="{Binding $parent[ItemsControl].DataContext.SelectedTab.ToggleBookmarkCommand}"
+                    CommandParameter="{Binding}"
+                    ToolTip.Tip="Убрать закладку"
+                    AutomationProperties.Name="Убрать закладку"/>
+          </Grid>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+  </Grid>
+</UserControl>

@@ -551,18 +551,26 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     /// <summary>Whether the contextual workspace sidebar currently occupies space.</summary>
     public bool IsWorkspaceSidebarVisible => Layout.IsWorkspaceSidebarOpen;
 
-    public bool IsFilesPaneVisible =>
+    public bool IsFilesSectionActive =>
         IsWorkspaceSidebarVisible && Layout.WorkspaceSection == WorkspaceSection.Files;
+
+    public bool IsOutlineSectionActive =>
+        IsWorkspaceSidebarVisible && Layout.WorkspaceSection == WorkspaceSection.Outline;
+
+    public bool IsBookmarksSectionActive =>
+        IsWorkspaceSidebarVisible && Layout.WorkspaceSection == WorkspaceSection.Bookmarks;
+
+    public bool IsFilesPaneVisible => IsFilesSectionActive;
 
     /// <summary>The outline control is shown only for the Outline section and a document with headings.
     /// The sidebar itself stays open for an empty-state message when there is no outline.</summary>
     public bool IsOutlinePaneVisible =>
-        IsWorkspaceSidebarVisible
-        && Layout.WorkspaceSection == WorkspaceSection.Outline
-        && (SelectedTab?.HasOutline ?? false);
+        IsOutlineSectionActive && (SelectedTab?.HasOutline ?? false);
 
-    public bool IsBookmarksPaneVisible =>
-        IsWorkspaceSidebarVisible && Layout.WorkspaceSection == WorkspaceSection.Bookmarks;
+    public bool IsOutlineEmptyStateVisible =>
+        IsOutlineSectionActive && !(SelectedTab?.HasOutline ?? false);
+
+    public bool IsBookmarksPaneVisible => IsBookmarksSectionActive;
 
     /// <summary>Select a workspace section, or collapse the sidebar when its active rail button is
     /// pressed again. A closed sidebar always opens on the requested section.</summary>
@@ -757,8 +765,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             or nameof(LayoutOptions.WorkspaceSection))
         {
             OnPropertyChanged(nameof(IsWorkspaceSidebarVisible));
+            OnPropertyChanged(nameof(IsFilesSectionActive));
+            OnPropertyChanged(nameof(IsOutlineSectionActive));
+            OnPropertyChanged(nameof(IsBookmarksSectionActive));
             OnPropertyChanged(nameof(IsFilesPaneVisible));
             OnPropertyChanged(nameof(IsOutlinePaneVisible));
+            OnPropertyChanged(nameof(IsOutlineEmptyStateVisible));
             OnPropertyChanged(nameof(IsBookmarksPaneVisible));
         }
     }
@@ -1284,5 +1296,6 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         // _isOutlineVisible only covers that field — a tab change is the OTHER input to the property,
         // so it must be raised here explicitly (load-bearing, not incidental).
         OnPropertyChanged(nameof(IsOutlinePaneVisible));
+        OnPropertyChanged(nameof(IsOutlineEmptyStateVisible));
     }
 }
