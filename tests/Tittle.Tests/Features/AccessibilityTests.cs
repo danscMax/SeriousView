@@ -129,7 +129,7 @@ public class AccessibilityTests
     public void FlatChromeButtons_ShowVisibleKeyboardFocus()
     {
         foreach (var styleClass in new[]
-                 { "workspace-action", "header-action", "segment", "statusbtn", "modal-dismiss", "welcome-secondary" })
+                 { "workspace-action", "header-action", "segment", "statusbtn", "modal-dismiss", "welcome-secondary", "accent" })
         {
             var button = new Button { Content = styleClass };
             button.Classes.Add(styleClass);

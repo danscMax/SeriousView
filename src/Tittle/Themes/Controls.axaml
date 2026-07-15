@@ -467,6 +467,14 @@
     <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
     <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
   </Style>
+  <!-- Keyboard focus ring. The primary CTA had none: it sets BorderThickness=0 and never defined a
+       :focus-visible, so tabbing to the most prominent button in the app showed nothing. The ring uses
+       the ON-ACCENT foreground, not AccentBrush — the button's own fill IS the accent, so an accent
+       ring would be invisible on it; the foreground token is guaranteed to read against it in every theme. -->
+  <Style Selector="Button.accent:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentForegroundBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
   <!-- Tactile press feedback. -->
   <Style Selector="Button.accent:pressed">
     <Setter Property="RenderTransform" Value="scale(0.97)" />
