@@ -9,6 +9,8 @@ using Tittle.Core.Documents;
 using Tittle.Core.Services;
 using Tittle.Core.Settings;
 using Tittle.Core.Text;
+using Tittle.Features.Donate;
+using Tittle.Features.Help;
 using Tittle.Features.Shell;
 using Tittle.Features.Viewer;
 using Tittle.Features.Welcome;
@@ -70,33 +72,49 @@ var screens = new (string Name, Func<Control> Build)[]
     }),
 };
 
+// Standalone modal windows. Each IS a Window (the transparent ModalWindow card chrome is the thing
+// under test), so it's captured directly rather than hosted inside a wrapper window. Only the
+// self-contained, no-DI modals live here; the VM-backed ones (Stats/Layout/Macros/Palette) need
+// stub view-models before they can join.
+var modals = new (string Name, Func<Window> Build)[]
+{
+    ("help", () => new HelpWindow()),
+    ("donate", () => new DonateWindow()),
+};
+
 int ok = 0, total = 0;
 Dispatcher.UIThread.Invoke(() =>
 {
+    // Capture one window to a PNG. A leaf screen is hosted in a sized wrapper window; a modal is its
+    // own ModalWindow rendered as-is. Shared so both paths warm + capture + save + count identically.
+    void Capture(string name, Func<Window> makeWindow)
+    {
+        total++;
+        try
+        {
+            var window = makeWindow();
+            window.Show();
+            for (var i = 0; i < 6; i++) { Dispatcher.UIThread.RunJobs(); Thread.Sleep(80); }
+            var frame = window.CaptureRenderedFrame();
+            window.Close();
+            if (frame is null) { Console.WriteLine($"FAIL {name}: null frame"); return; }
+            frame.Save(Path.Combine(outDir, name));
+            Console.WriteLine($"  ok  {name} ({frame.PixelSize.Width}x{frame.PixelSize.Height})");
+            ok++;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"FAIL {name}: {ex.GetType().Name} {ex.Message}");
+        }
+    }
+
     foreach (var (themeName, variant) in themes)
     {
         Application.Current!.RequestedThemeVariant = variant;
         foreach (var (screenName, build) in screens)
-        {
-            total++;
-            var name = $"{screenName}__{themeName}.png";
-            try
-            {
-                var window = new Window { Width = 960, Height = 720, Content = build() };
-                window.Show();
-                for (var i = 0; i < 6; i++) { Dispatcher.UIThread.RunJobs(); Thread.Sleep(80); }
-                var frame = window.CaptureRenderedFrame();
-                window.Close();
-                if (frame is null) { Console.WriteLine($"FAIL {name}: null frame"); continue; }
-                frame.Save(Path.Combine(outDir, name));
-                Console.WriteLine($"  ok  {name} ({frame.PixelSize.Width}x{frame.PixelSize.Height})");
-                ok++;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"FAIL {name}: {ex.GetType().Name} {ex.Message}");
-            }
-        }
+            Capture($"{screenName}__{themeName}.png", () => new Window { Width = 960, Height = 720, Content = build() });
+        foreach (var (modalName, buildModal) in modals)
+            Capture($"{modalName}__{themeName}.png", buildModal);
     }
 });
 
