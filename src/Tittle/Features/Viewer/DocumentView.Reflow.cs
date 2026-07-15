@@ -125,12 +125,14 @@ public partial class DocumentView
     }
 
     // Extra pixels between wrapped lines per reading-density preset (ColorTextBlock.LineSpacing, 0 = the
-    // font's natural leading). Tuned against the ~14-15px preview font.
+    // font's natural leading). Tuned against the ~14-15px preview font. Shifted one step up (2026-07-15,
+    // user call): the old scale bottomed out at the font's raw leading and read cramped, so what used to
+    // be Relaxed is now the Normal default and each preset moved up a notch.
     private static double LineSpacingFor(Tittle.Core.Settings.ReadingDensity density) => density switch
     {
-        Tittle.Core.Settings.ReadingDensity.Compact => 0,
-        Tittle.Core.Settings.ReadingDensity.Relaxed => 9,
-        _ => 4,
+        Tittle.Core.Settings.ReadingDensity.Compact => 4,
+        Tittle.Core.Settings.ReadingDensity.Relaxed => 14,
+        _ => 9,
     };
 
     /// <summary>If a debounced reflow is pending, run it now — so an explicit navigation (TOC jump,

@@ -142,15 +142,14 @@
     <RectangleGeometry Rect="8,17,9.5,1.8" RadiusX="0.9" RadiusY="0.9"/>
   </GeometryGroup>
 
-  <!-- Settings / "sliders": three thin bars with fatter knobs that bulge past them (Nonzero union).
-       A tune glyph reads as config without the fiddly tooth geometry of a gear. -->
-  <GeometryGroup x:Key="IconSettings">
-    <RectangleGeometry Rect="3,6.4,18,1.6" RadiusX="0.8" RadiusY="0.8"/>
-    <RectangleGeometry Rect="3,11.2,18,1.6" RadiusX="0.8" RadiusY="0.8"/>
-    <RectangleGeometry Rect="3,16,18,1.6" RadiusX="0.8" RadiusY="0.8"/>
-    <EllipseGeometry Center="8,7.2" RadiusX="2.4" RadiusY="2.4"/>
-    <EllipseGeometry Center="15,12" RadiusX="2.4" RadiusY="2.4"/>
-    <EllipseGeometry Center="10,16.8" RadiusX="2.4" RadiusY="2.4"/>
+  <!-- Settings: a gear. (Was a "sliders/tune" glyph, on the argument that teeth are fiddly geometry —
+       overruled: a gear is the settings affordance users actually look for, and sliders read as
+       "filters/equalizer" next to a rail of document icons.) The toothed outline is one figure; the
+       hub is punched out by the EvenOdd ellipse so it stays a ring at any Foreground. 24x24 box,
+       matching every other icon here. -->
+  <GeometryGroup x:Key="IconSettings" FillRule="EvenOdd">
+    <PathGeometry Figures="M19.14,12.94 c0.04,-0.3 0.06,-0.61 0.06,-0.94 c0,-0.32 -0.02,-0.64 -0.07,-0.94 l2.03,-1.58 c0.18,-0.14 0.23,-0.41 0.12,-0.61 l-1.92,-3.32 c-0.12,-0.22 -0.37,-0.29 -0.59,-0.22 l-2.39,0.96 c-0.5,-0.38 -1.03,-0.7 -1.62,-0.94 L14.4,2.81 c-0.04,-0.24 -0.24,-0.41 -0.48,-0.41 h-3.84 c-0.24,0 -0.43,0.17 -0.47,0.41 L9.25,5.35 C8.66,5.59 8.12,5.92 7.63,6.29 L5.24,5.33 c-0.22,-0.08 -0.47,0 -0.59,0.22 L2.74,8.87 C2.62,9.08 2.66,9.34 2.86,9.48 l2.03,1.58 C4.84,11.36 4.8,11.69 4.8,12 s0.02,0.64 0.07,0.94 l-2.03,1.58 c-0.18,0.14 -0.23,0.41 -0.12,0.61 l1.92,3.32 c0.12,0.22 0.37,0.29 0.59,0.22 l2.39,-0.96 c0.5,0.38 1.03,0.7 1.62,0.94 l0.36,2.54 c0.05,0.24 0.24,0.41 0.48,0.41 h3.84 c0.24,0 0.44,-0.17 0.47,-0.41 l0.36,-2.54 c0.59,-0.24 1.13,-0.56 1.62,-0.94 l2.39,0.96 c0.22,0.08 0.47,0 0.59,-0.22 l1.92,-3.32 c0.12,-0.22 0.07,-0.47 -0.12,-0.61 Z"/>
+    <EllipseGeometry Center="12,12" RadiusX="3.6" RadiusY="3.6"/>
   </GeometryGroup>
 
   <!-- Heart / "support": a single solid filled heart (two lobes meeting at the top dimple, tapering

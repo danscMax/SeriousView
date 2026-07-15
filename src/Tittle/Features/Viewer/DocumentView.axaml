@@ -173,20 +173,30 @@
       <Setter Property="Background" Value="{DynamicResource TableBorderBrush}"/>
       <Setter Property="Margin" Value="0,14"/>
     </Style>
-    <!-- H3–H6 rhythm: SemiBold with top breathing room; H4–H6 muted slightly so the hierarchy reads
-         (H1/H2 already get a divider rule from PreviewHeadingDivider). Sizes left to the library. -->
+    <!-- Heading rhythm. A heading must be clearly attached to the section it OPENS, so the space above it
+         is much larger than the space below — the GitHub proportion. H1/H2 previously had no margin style
+         at all (left to the library) and collided with the paragraph above them. NB Avalonia does NOT
+         collapse margins like CSS, so these add to the previous block's bottom margin — hence values
+         smaller than GitHub's 24px+ yet reading like it. Sizes (font) stay the library's.
+         H4–H6 are muted slightly so the hierarchy reads; H1/H2 also get a divider from PreviewHeadingDivider. -->
+    <Style Selector="ctxt|CTextBlock.Heading1">
+      <Setter Property="Margin" Value="0,22,0,4"/>
+    </Style>
+    <Style Selector="ctxt|CTextBlock.Heading2">
+      <Setter Property="Margin" Value="0,20,0,4"/>
+    </Style>
     <Style Selector="ctxt|CTextBlock.Heading3">
       <Setter Property="FontWeight" Value="SemiBold"/>
-      <Setter Property="Margin" Value="0,10,0,2"/>
+      <Setter Property="Margin" Value="0,18,0,3"/>
     </Style>
     <Style Selector="ctxt|CTextBlock.Heading4">
       <Setter Property="FontWeight" Value="SemiBold"/>
-      <Setter Property="Margin" Value="0,8,0,2"/>
+      <Setter Property="Margin" Value="0,15,0,3"/>
       <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
     </Style>
     <Style Selector="ctxt|CTextBlock.Heading5, ctxt|CTextBlock.Heading6">
       <Setter Property="FontWeight" Value="SemiBold"/>
-      <Setter Property="Margin" Value="0,6,0,2"/>
+      <Setter Property="Margin" Value="0,13,0,3"/>
       <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
     </Style>
     <!-- CSV table header cells: flat, bold, sticky above the row scroller. -->
