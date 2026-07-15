@@ -5,11 +5,13 @@
 # creates, deletes, or changes registry keys, so it is safe to run in CI or after
 # choosing another application in Explorer.
 #
-#   .\tools\verify-fileassoc.ps1
+#   .\tools\verify-fileassoc.ps1                     # -> Debug build (dev version, matches installer default)
+#   .\tools\verify-fileassoc.ps1 -Target Portable    # -> dist\Tittle.exe
 #   .\tools\verify-fileassoc.ps1 -ExePath 'C:\Apps\Tittle\Tittle.exe'
 # ============================================================================
 
 param(
+    [ValidateSet('Debug', 'Portable')] [string]$Target = 'Debug',
     [string[]]$Extensions = @('.md', '.markdown'),
     [string]$ExePath = ''
 )
@@ -17,8 +19,13 @@ param(
 $ErrorActionPreference = 'Stop'
 $progId = 'Tittle.Markdown'
 $root = if ($PSScriptRoot) { Split-Path -Parent $PSScriptRoot } else { (Get-Location).Path }
-$exe = if ($ExePath) { [System.IO.Path]::GetFullPath($ExePath) } else {
+# Mirror install-fileassoc.ps1's target resolution so a default verify matches a default install.
+$exe = if ($ExePath) {
+    [System.IO.Path]::GetFullPath($ExePath)
+} elseif ($Target -eq 'Portable') {
     Join-Path $root 'dist\Tittle.exe'
+} else {
+    Join-Path $root 'src\Tittle\bin\Debug\net9.0\Tittle.exe'
 }
 $expectedCommand = '"{0}" "%1"' -f $exe
 $failures = [System.Collections.Generic.List[string]]::new()
