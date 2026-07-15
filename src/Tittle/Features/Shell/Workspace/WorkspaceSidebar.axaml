@@ -8,7 +8,8 @@
   <Border Background="{DynamicResource WorkspaceSidebarBrush}"
           BorderBrush="{DynamicResource WorkspaceSeparatorBrush}"
           BorderThickness="0,0,1,0">
-    <Grid RowDefinitions="40,*">
+    <Grid RowDefinitions="40,*"
+          KeyboardNavigation.TabNavigation="Continue">
       <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="10,0,6,0">
         <TextBlock Text="Файлы" IsVisible="{Binding IsFilesSectionActive}"
                    VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12.5"/>
@@ -17,6 +18,7 @@
         <TextBlock Text="Закладки" IsVisible="{Binding IsBookmarksSectionActive}"
                    VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12.5"/>
         <Button Grid.Column="1" Classes="header-action" Content="×"
+                TabIndex="0"
                 Command="{Binding OpenWorkspaceSectionCommand}"
                 CommandParameter="{Binding Layout.WorkspaceSection}"
                 ToolTip.Tip="Скрыть боковую панель"
@@ -26,6 +28,7 @@
       <Grid Grid.Row="1">
         <Grid IsVisible="{Binding IsFilesSectionActive}" RowDefinitions="Auto,*">
           <Button Grid.Row="0" Margin="10,8,10,6" Padding="10,6"
+                  TabIndex="1"
                   HorizontalAlignment="Stretch"
                   Command="{Binding OpenFileCommand}"
                   AutomationProperties.Name="Открыть файл">
@@ -43,6 +46,7 @@
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:RecentFileItem">
                   <Button Command="{Binding OpenCommand}" ToolTip.Tip="{Binding Path}"
+                          AutomationProperties.Name="{Binding Name}"
                           Background="Transparent" BorderThickness="0"
                           HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                           Padding="10,6" CornerRadius="6">

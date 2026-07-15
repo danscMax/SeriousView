@@ -54,6 +54,7 @@ public partial class MainWindow : AppWindow
     private Point _dragStart;
     private bool _dragging;
     private const double DragThreshold = 5;
+    private const double NarrowHeaderThreshold = 640;
 
     // The contextual sidebar is column [1] of the workspace grid. A named ColumnDefinition gets no generated
     // code-behind field (it isn't a control), so reach it through the named grid instead.
@@ -63,6 +64,7 @@ public partial class MainWindow : AppWindow
     public MainWindow()
     {
         InitializeComponent();
+        ApplyResponsiveHeader(CurrentSize().Width);
 
         // Single title-bar strip: our content (brand + tabs + buttons) is drawn into the
         // title-bar area; the system min/max/close buttons sit on top of it (Windows).
@@ -133,6 +135,15 @@ public partial class MainWindow : AppWindow
             (ctrl && shift && !alt && e.Key == Key.P))
         {
             OpenCommandPalette(vm);
+            e.Handled = true;
+            return;
+        }
+
+        // Files is the first workspace action and needs a direct keyboard path because the rail is
+        // intentionally icon-only. Keep the outline action available through Ctrl+K's palette.
+        if (IsFilesWorkspaceShortcut(e.Key, e.KeyModifiers))
+        {
+            vm.OpenWorkspaceSectionCommand.Execute(WorkspaceSection.Files);
             e.Handled = true;
             return;
         }
@@ -537,6 +548,31 @@ public partial class MainWindow : AppWindow
             visible ? LayoutOptions.ClampOutlineWidth(_outlineWidth) : 0, GridUnitType.Pixel);
     }
 
+    /// <summary>Hide only the editable path text at narrow widths; the open and palette actions stay
+    /// available, so the title bar remains useful without forcing a horizontal scroll or clipping.</summary>
+    private void ApplyResponsiveHeader(double width)
+    {
+        // WindowBase raises size notifications before InitializeComponent creates named controls.
+        if (OmnibarBox is null || Omnibar is null)
+            return;
+
+        var (pathVisible, minWidth) = ResponsiveHeaderLayout(width);
+        OmnibarBox.IsVisible = pathVisible;
+        Omnibar.MinWidth = minWidth;
+    }
+
+    internal static bool IsFilesWorkspaceShortcut(Key key, KeyModifiers modifiers) =>
+        key == Key.E
+        && modifiers.HasFlag(KeyModifiers.Control)
+        && modifiers.HasFlag(KeyModifiers.Shift)
+        && !modifiers.HasFlag(KeyModifiers.Alt);
+
+    internal static (bool PathVisible, double MinWidth) ResponsiveHeaderLayout(double width)
+    {
+        var compact = width > 0 && width < NarrowHeaderThreshold;
+        return (!compact, compact ? 0 : 340);
+    }
+
     // NOTE: Avalonia 11.3 marks DragEventArgs.Data / DataFormats.Files obsolete in favour of the
     // newer DataTransfer API. The classic API still works; migrating to DataTransfer is follow-up.
 #pragma warning disable CS0618
@@ -609,6 +645,7 @@ public partial class MainWindow : AppWindow
         if (change.Property == WidthProperty || change.Property == HeightProperty
             || change.Property == ClientSizeProperty)
         {
+            ApplyResponsiveHeader(CurrentSize().Width);
             MeasureChromeOffset();
             TrackNormalBounds();
         }

@@ -48,6 +48,33 @@ public sealed class WorkspaceNavigationTests
     }
 
     [AvaloniaFact]
+    public void WorkspaceRail_Actions_AreKeyboardReachableAndSized()
+    {
+        var vm = CreateVm();
+        var rail = new WorkspaceRail { DataContext = vm };
+        var window = new Window { Width = 60, Height = 420, Content = rail };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+
+        var actions = rail.GetVisualDescendants().OfType<Button>()
+            .Where(button => button.Classes.Contains("workspace-action"))
+            .ToArray();
+
+        Assert.Equal(7, actions.Length);
+        Assert.Equal(Enumerable.Range(0, actions.Length), actions.Select(button => button.TabIndex));
+        Assert.All(actions, button =>
+        {
+            Assert.True(button.Focusable);
+            Assert.True(button.IsTabStop);
+            Assert.True(button.Bounds.Width >= 24);
+            Assert.True(button.Bounds.Height >= 24);
+            Assert.False(string.IsNullOrWhiteSpace(Avalonia.Automation.AutomationProperties.GetName(button)));
+        });
+
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void WorkspaceRail_SectionAction_UpdatesSidebarSection()
     {
         var vm = CreateVm("# Heading");
@@ -93,6 +120,33 @@ public sealed class WorkspaceNavigationTests
         var labels = sidebar.GetVisualDescendants().OfType<Button>().Select(b => b.Content?.ToString()).ToArray();
         Assert.Contains(labels, value => value == "First");
         Assert.Contains(labels, value => value == "Second");
+
+        var names = sidebar.GetVisualDescendants().OfType<Button>()
+            .Select(Avalonia.Automation.AutomationProperties.GetName)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .ToArray();
+        Assert.Contains("First", names);
+        Assert.Contains("Second", names);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void WorkspaceSidebar_RecentFiles_ExposeAutomationNames()
+    {
+        var recent = new FakeRecentFilesStore();
+        recent.Add(@"C:\docs\readme.md");
+        var vm = CreateVm(recent: recent);
+        var sidebar = new WorkspaceSidebar { DataContext = vm };
+        var window = new Window { Width = 360, Height = 420, Content = sidebar };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+
+        var names = sidebar.GetVisualDescendants().OfType<Button>()
+            .Select(Avalonia.Automation.AutomationProperties.GetName)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .ToArray();
+
+        Assert.Contains("readme.md", names);
         window.Close();
     }
 

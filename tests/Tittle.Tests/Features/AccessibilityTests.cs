@@ -15,10 +15,12 @@ using Tittle.Core.Settings;
 using Tittle.Features.Shell;
 using Tittle.Features.Shell.Workspace;
 using Tittle.Platform;
+using Tittle.Shared;
 using Xunit;
 
 namespace Tittle.Tests.Features;
 
+[Collection("MainWindow UI")]
 public class AccessibilityTests
 {
     // The chrome's glyph buttons (↵ # A− A+ 📂 ⌘) and the go-to-line box read as their raw glyph (or
@@ -205,4 +207,61 @@ public class AccessibilityTests
         }
     }
 
+    [AvaloniaFact]
+    public void MainWindow_CtrlShiftE_OpensFilesWorkspaceSection()
+    {
+        var vm = new MainWindowViewModel(
+            new FakeFileDialogService(null), new FakeFileReader("# Heading"), new FakeThemeService(),
+            new FakeRecentFilesStore(), new AppSettingsService(new FakeSettingsStore()),
+            new FakeClipboardService(), new FakeShellService(), Array.Empty<string>());
+        vm.OpenWorkspaceSectionCommand.Execute(WorkspaceSection.Outline);
+        Assert.True(MainWindow.IsFilesWorkspaceShortcut(
+            Key.E, KeyModifiers.Control | KeyModifiers.Shift));
+        vm.OpenWorkspaceSectionCommand.Execute(WorkspaceSection.Files);
+        Assert.True(vm.IsFilesSectionActive);
+    }
+
+    [AvaloniaFact]
+    public void MainWindow_NarrowHeader_HidesNonessentialOmnibarTextAndRestoresIt()
+    {
+        Assert.Equal((false, 0d), MainWindow.ResponsiveHeaderLayout(560));
+        Assert.Equal((true, 340d), MainWindow.ResponsiveHeaderLayout(960));
+    }
+
+    [AvaloniaFact]
+    public void MainWindow_CollapsedSidebar_ReclaimsItsColumnAndRestoresWidth()
+    {
+        var vm = new MainWindowViewModel(
+            new FakeFileDialogService(null), new FakeFileReader("# Heading"), new FakeThemeService(),
+            new FakeRecentFilesStore(), new AppSettingsService(new FakeSettingsStore()),
+            new FakeClipboardService(), new FakeShellService(),
+            Array.Empty<string>());
+
+        var rememberedWidth = LayoutOptions.DefaultOutlineWidth;
+        Assert.True(LayoutOptions.ClampOutlineWidth(rememberedWidth)
+                    >= LayoutOptions.MinOutlineWidth);
+
+        vm.OpenWorkspaceSectionCommand.Execute(WorkspaceSection.Files);
+        Assert.False(vm.IsWorkspaceSidebarVisible);
+
+        vm.OpenWorkspaceSectionCommand.Execute(WorkspaceSection.Files);
+        Assert.True(vm.IsWorkspaceSidebarVisible);
+        Assert.True(LayoutOptions.ClampOutlineWidth(rememberedWidth)
+                    >= LayoutOptions.MinOutlineWidth);
+    }
+
+    [AvaloniaFact]
+    public void CommandPalette_RetainsOutlineAction()
+    {
+        var vm = new MainWindowViewModel(
+            new FakeFileDialogService(null), new FakeFileReader("# Heading"), new FakeThemeService(),
+            new FakeRecentFilesStore(), new AppSettingsService(new FakeSettingsStore()),
+            new FakeClipboardService(), new FakeShellService(), Array.Empty<string>());
+
+        Assert.Contains(vm.BuildPaletteItems(), item => item.Title == "Оглавление");
+    }
+
 }
+
+[CollectionDefinition("MainWindow UI", DisableParallelization = true)]
+public sealed class MainWindowUiCollection { }

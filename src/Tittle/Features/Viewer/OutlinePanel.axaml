@@ -66,6 +66,7 @@
               </Border.IsVisible>
             </Border>
             <Button Grid.Column="1" Classes="outline-item"
+                    AutomationProperties.Name="{Binding Text}"
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                     Background="Transparent" BorderThickness="0" Padding="8,4"
                     FontSize="12.5"

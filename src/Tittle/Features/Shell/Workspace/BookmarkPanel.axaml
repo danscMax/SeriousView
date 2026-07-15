@@ -35,6 +35,7 @@
             <TextBlock Text="★" VerticalAlignment="Center" HorizontalAlignment="Center"
                        FontSize="10" Foreground="{DynamicResource AccentBrush}"/>
             <Button Grid.Column="1" Content="{Binding Text}"
+                    AutomationProperties.Name="{Binding Text}"
                     Command="{Binding $parent[ItemsControl].DataContext.SelectedTab.NavigateToHeadingCommand}"
                     CommandParameter="{Binding}"
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"

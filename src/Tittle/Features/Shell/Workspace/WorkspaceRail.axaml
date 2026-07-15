@@ -8,9 +8,11 @@
   <Border Background="{DynamicResource WorkspaceRailBrush}"
           BorderBrush="{DynamicResource WorkspaceSeparatorBrush}"
           BorderThickness="0,0,1,0">
-    <Grid RowDefinitions="Auto,*,Auto" Margin="4,6">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="4,6"
+          KeyboardNavigation.TabNavigation="Continue">
       <StackPanel Grid.Row="0" Spacing="4">
         <Button Classes="workspace-action"
+                TabIndex="0"
                 Classes.active="{Binding IsFilesSectionActive}"
                 Command="{Binding OpenWorkspaceSectionCommand}"
                 CommandParameter="{x:Static settings:WorkspaceSection.Files}"
@@ -19,12 +21,14 @@
           <PathIcon Data="{StaticResource IconDocument}" Width="17" Height="17"/>
         </Button>
         <Button Classes="workspace-action"
+                TabIndex="1"
                 Command="{Binding OpenSearchCommand}"
                 ToolTip.Tip="Поиск (Ctrl+F)"
                 AutomationProperties.Name="Поиск">
           <PathIcon Data="{StaticResource IconSearch}" Width="17" Height="17"/>
         </Button>
         <Button Classes="workspace-action"
+                TabIndex="2"
                 Classes.active="{Binding IsOutlineSectionActive}"
                 Command="{Binding OpenWorkspaceSectionCommand}"
                 CommandParameter="{x:Static settings:WorkspaceSection.Outline}"
@@ -33,6 +37,7 @@
           <PathIcon Data="{StaticResource IconSidebar}" Width="17" Height="17"/>
         </Button>
         <Button Classes="workspace-action"
+                TabIndex="3"
                 Classes.active="{Binding IsBookmarksSectionActive}"
                 Command="{Binding OpenWorkspaceSectionCommand}"
                 CommandParameter="{x:Static settings:WorkspaceSection.Bookmarks}"
@@ -41,6 +46,7 @@
           <TextBlock Text="★" FontSize="16" FontWeight="SemiBold"/>
         </Button>
         <Button Classes="workspace-action"
+                TabIndex="4"
                 Click="OnCommandPaletteClick"
                 ToolTip.Tip="Командная палитра (Ctrl+K)"
                 AutomationProperties.Name="Командная палитра">
@@ -50,12 +56,14 @@
 
       <StackPanel Grid.Row="2" Spacing="4">
         <Button Classes="workspace-action"
+                TabIndex="5"
                 Command="{Binding OpenLayoutSettingsCommand}"
                 ToolTip.Tip="Настройки"
                 AutomationProperties.Name="Настройки">
           <PathIcon Data="{StaticResource IconSettings}" Width="17" Height="17"/>
         </Button>
         <Button Classes="workspace-action"
+                TabIndex="6"
                 Command="{Binding ShowHelpCommand}"
                 ToolTip.Tip="Справка (F1)"
                 AutomationProperties.Name="Справка">
