@@ -448,13 +448,19 @@
     <img:ImageFileView IsVisible="{Binding ShowImage}"/>
 
     <!-- Notice overlay: binary / too-large / empty files (no editor, no preview).
-         Text-only (no SymbolIcon) so it renders without the FluentAvalonia Symbols font. -->
+         Text-only (no SymbolIcon) so it renders without the FluentAvalonia Symbols font.
+         A file-backed notice (binary / too-large) offers the same "open externally" hand-off
+         PdfView / ImageFileView give — the only non-viewable kind that used to be a dead end. -->
     <Border IsVisible="{Binding ShowNotice}" Background="{DynamicResource EditorSurfaceBrush}"
             Padding="14" AutomationProperties.AutomationId="DocumentNotice">
-      <TextBlock Text="{Binding NoticeText}" TextWrapping="Wrap" TextAlignment="Center"
-                 MaxWidth="420" FontSize="15"
-                 HorizontalAlignment="Center" VerticalAlignment="Center"
-                 Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="14" MaxWidth="420">
+        <TextBlock Text="{Binding NoticeText}" TextWrapping="Wrap" TextAlignment="Center"
+                   FontSize="15" Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+        <Button Content="Открыть во внешнем приложении" HorizontalAlignment="Center"
+                IsVisible="{Binding CanOpenExternally}"
+                Command="{Binding OpenExternallyCommand}"
+                AutomationProperties.Name="Открыть во внешнем приложении"/>
+      </StackPanel>
     </Border>
     </Panel>
   </DockPanel>

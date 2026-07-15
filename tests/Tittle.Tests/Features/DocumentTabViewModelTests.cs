@@ -10,6 +10,24 @@ namespace Tittle.Tests.Features;
 public class DocumentTabViewModelTests
 {
     [Fact]
+    public void BinaryNotice_OffersOpenExternally_WhenFileBacked()
+    {
+        var vm = DocumentTabViewModel.FromLoad(FileLoadResult.Binary(2048), "/docs/data.bin");
+
+        Assert.True(vm.ShowNotice);        // binary → notice overlay, not editor/preview
+        Assert.True(vm.CanOpenExternally); // ...and it can hand off to the OS app (not a dead end)
+    }
+
+    [Fact]
+    public void CanOpenExternally_IsFalse_ForAPathlessInMemoryDocument()
+    {
+        var vm = DocumentTabViewModel.CreateSample(); // no FilePath backing it
+
+        Assert.Null(vm.FilePath);
+        Assert.False(vm.CanOpenExternally);
+    }
+
+    [Fact]
     public void FromFile_MarkdownFile_DefaultsToPreview()
     {
         var vm = DocumentTabViewModel.FromFile("# Title", "/docs/readme.md");

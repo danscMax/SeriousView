@@ -490,6 +490,11 @@ public partial class DocumentTabViewModel : ViewModelBase, IDisposable
             Shell?.OpenExternally(path);
     }
 
+    /// <summary>Whether the "open externally" affordance is meaningful: a file-backed notice tab
+    /// (binary / too-large) can hand off to the OS default app, an empty in-memory doc cannot.
+    /// Fixed at construction for a notice tab, so no change notification is needed.</summary>
+    public bool CanOpenExternally => FilePath is not null;
+
     // --- Image files (raster decoded by Avalonia/Skia; .svg via SvgImage — both are IImage) ---
 
     /// <summary>True for an image file — shown by the dedicated ImageFileView, not as text.</summary>
