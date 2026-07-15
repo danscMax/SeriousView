@@ -121,6 +121,43 @@ public class AccessibilityTests
         }
     }
 
+    /// <summary>A submenu is painted by an unnamed Border inside FluentAvalonia's MenuItem template, which
+    /// reads the MenuFlyoutPresenter* RESOURCE keys — no selector can reach it, so every theme file has to
+    /// restate its own surface/border under those keys (Themes/Menus.axaml covers what selectors CAN
+    /// reach). That restating is a copy, so pin it: menus must resolve to EXACTLY the chrome colours in
+    /// every theme, or a submenu drifts away from its parent flyout again.</summary>
+    [AvaloniaFact]
+    public void EveryTheme_PaintsMenusInTheChromeColours()
+    {
+        var app = Application.Current!;
+        var service = new ThemeService(new AppSettingsService(new FakeSettingsStore()));
+        (string Menu, string Chrome)[] pairs =
+        [
+            ("MenuFlyoutPresenterBackground", "EditorSurfaceBrush"),
+            ("MenuFlyoutPresenterBorderBrush", "ChromeBorderBrush"),
+        ];
+
+        foreach (var theme in ThemeCatalog.All)
+        {
+            if (theme.Mode == ThemeMode.Auto)
+                continue;
+
+            service.SetMode(theme.Mode);
+            foreach (var (menuKey, chromeKey) in pairs)
+            {
+                Assert.True(app.TryGetResource(menuKey, app.RequestedThemeVariant, out var menu),
+                    $"{theme.Mode}: {menuKey} is unresolved");
+                Assert.True(app.TryGetResource(chromeKey, app.RequestedThemeVariant, out var chrome),
+                    $"{theme.Mode}: {chromeKey} is unresolved");
+
+                var menuColor = Assert.IsAssignableFrom<ISolidColorBrush>(menu).Color;
+                var chromeColor = Assert.IsAssignableFrom<ISolidColorBrush>(chrome).Color;
+                Assert.True(menuColor == chromeColor,
+                    $"{theme.Mode}: {menuKey} ({menuColor}) drifted from {chromeKey} ({chromeColor})");
+            }
+        }
+    }
+
     /// <summary>The surface a flat chrome button paints its state (hover / active / focus ring) on.
     /// Classes on FluentAvalonia's stock template use ContentPresenter#PART_ContentPresenter; the ones
     /// that escape that template (to stop FA flashing its own hover background) expose Border#PART_Bg.

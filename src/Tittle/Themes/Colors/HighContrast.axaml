@@ -30,4 +30,11 @@
     <SolidColorBrush x:Key="StatusBarBackgroundBrush" Color="#000000" />
     <SolidColorBrush x:Key="StatusBarForegroundBrush" Color="#E0E0E0" />
 
+
+    <!-- Menu surfaces. A SUBMENU is drawn by an unnamed Border inside the MenuItem template that reads
+         these RESOURCE keys, so no selector can reach it (Themes/Menus.axaml styles everything that a
+         selector CAN reach). Kept equal to EditorSurfaceBrush / ChromeBorderBrush above so a submenu
+         matches its parent flyout and the chrome; ThemeMenuResourceTests guards the pair from drifting. -->
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#0A0A0A" />
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#FFFFFF" />
 </ResourceDictionary>

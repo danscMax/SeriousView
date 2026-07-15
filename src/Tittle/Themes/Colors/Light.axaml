@@ -82,4 +82,11 @@
     <!-- Indent guides in the code view (ported): a whisper, not a stripe. -->
     <SolidColorBrush x:Key="IndentGuideBrush" Color="#1F2328" Opacity="0.12" />
 
+
+    <!-- Menu surfaces. A SUBMENU is drawn by an unnamed Border inside the MenuItem template that reads
+         these RESOURCE keys, so no selector can reach it (Themes/Menus.axaml styles everything that a
+         selector CAN reach). Kept equal to EditorSurfaceBrush / ChromeBorderBrush above so a submenu
+         matches its parent flyout and the chrome; ThemeMenuResourceTests guards the pair from drifting. -->
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#D8D6DE" />
 </ResourceDictionary>
