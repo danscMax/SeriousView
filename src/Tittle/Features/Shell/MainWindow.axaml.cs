@@ -559,7 +559,16 @@ public partial class MainWindow : AppWindow
         var (pathVisible, minWidth) = ResponsiveHeaderLayout(width);
         OmnibarBox.IsVisible = pathVisible;
         Omnibar.MinWidth = minWidth;
+        if (WorkspaceStatusStrip is not null)
+        {
+            if (!pathVisible)
+                WorkspaceStatusStrip.Classes.Add("compact-status");
+            else
+                WorkspaceStatusStrip.Classes.Remove("compact-status");
+        }
     }
+
+    internal void ApplyResponsiveHeaderForTest(double width) => ApplyResponsiveHeader(width);
 
     internal static bool IsFilesWorkspaceShortcut(Key key, KeyModifiers modifiers) =>
         key == Key.E
@@ -645,7 +654,9 @@ public partial class MainWindow : AppWindow
         if (change.Property == WidthProperty || change.Property == HeightProperty
             || change.Property == ClientSizeProperty)
         {
-            ApplyResponsiveHeader(CurrentSize().Width);
+            // ClientSize is the live native width after a resize; Width may still be the requested
+            // restore value while the platform is settling a DPI/window-size change.
+            ApplyResponsiveHeader(ClientSize.Width > 0 ? ClientSize.Width : CurrentSize().Width);
             MeasureChromeOffset();
             TrackNormalBounds();
         }

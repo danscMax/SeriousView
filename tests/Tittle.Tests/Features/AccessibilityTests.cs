@@ -77,6 +77,11 @@ public class AccessibilityTests
         Assert.Equal(new Thickness(1), segmented.BorderThickness);
         Assert.NotEmpty(segments);
         Assert.All(segments, button => Assert.Equal(new Thickness(10, 6), button.Padding));
+
+        window.ApplyResponsiveHeaderForTest(560);
+        var compactStatus = window.FindControl<Border>("WorkspaceStatusStrip");
+        Assert.NotNull(compactStatus);
+        Assert.Contains("compact-status", compactStatus!.Classes);
     }
 
     [AvaloniaFact]

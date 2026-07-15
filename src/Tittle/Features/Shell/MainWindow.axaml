@@ -30,6 +30,16 @@
       <Setter Property="FontSize" Value="11.5"/>
       <Setter Property="Foreground" Value="{DynamicResource StatusBarForegroundBrush}"/>
     </Style>
+    <!-- At a phone-width window the status strip cannot fit every optional metric and action without
+         making the DockPanel overlap. The commands remain available through shortcuts/palette; hide
+         only this secondary chrome while preserving the strip itself and its height. -->
+    <Style Selector="Border.compact-status TextBlock.status-optional,
+                     Border.compact-status StackPanel.status-optional,
+                     Border.compact-status Panel.status-optional,
+                     Border.compact-status Button.status-optional,
+                     Border.compact-status Border.status-optional">
+      <Setter Property="IsVisible" Value="False"/>
+    </Style>
     <!-- Omnibar address field: a borderless TextBox that blends into the omnibar pill (the outer Border
          already draws the box). Editable + selectable so the path can be copied or replaced (Enter opens
          it; see code-behind). We flatten the FluentAvalonia template's PART_BorderElement across all
@@ -414,86 +424,112 @@
     </ui:InfoBar>
 
     <!-- 24px document-state strip: messages, position, encoding/metrics, zoom and format actions. -->
-    <Border DockPanel.Dock="Bottom" Classes="chrome" Height="24"
+    <Border DockPanel.Dock="Bottom" x:Name="WorkspaceStatusStrip" Classes="chrome" Height="24"
             AutomationProperties.AutomationId="WorkspaceStatusStrip"
             Background="{DynamicResource StatusBarBackgroundBrush}" Padding="{DynamicResource StatusBarPadding}">
       <DockPanel>
-        <TextBlock DockPanel.Dock="Right" Text="{Binding SelectedTab.StatusText}"
-                   IsVisible="{Binding HasTabs}"
-                   Foreground="{DynamicResource StatusBarForegroundBrush}" FontSize="11.5"
-                   Opacity="0.92" VerticalAlignment="Center"/>
+        <Panel DockPanel.Dock="Right" Classes="status-optional">
+          <TextBlock Text="{Binding SelectedTab.StatusText}"
+                     IsVisible="{Binding HasTabs}"
+                     Foreground="{DynamicResource StatusBarForegroundBrush}" FontSize="11.5"
+                     Opacity="0.92" VerticalAlignment="Center"/>
+        </Panel>
         <!-- Selection word count (ported) — empty text collapses to nothing. -->
-        <TextBlock DockPanel.Dock="Right" Text="{Binding SelectedTab.SelectionInfo, FallbackValue=''}"
-                   Margin="0,0,12,0" Foreground="{DynamicResource StatusBarForegroundBrush}"
-                   FontSize="11.5" Opacity="0.92" VerticalAlignment="Center"/>
+        <Panel DockPanel.Dock="Right" Classes="status-optional">
+          <TextBlock Text="{Binding SelectedTab.SelectionInfo, FallbackValue=''}"
+                     Margin="0,0,12,0" Foreground="{DynamicResource StatusBarForegroundBrush}"
+                     FontSize="11.5" Opacity="0.92" VerticalAlignment="Center"/>
+        </Panel>
         <!-- Scroll position (ported) — "NN%" through the document, both view modes. -->
-        <TextBlock DockPanel.Dock="Right" Text="{Binding SelectedTab.ScrollPercentText, FallbackValue=''}"
-                   Margin="0,0,12,0" Foreground="{DynamicResource StatusBarForegroundBrush}"
-                   FontSize="11.5" Opacity="0.92" VerticalAlignment="Center"/>
+        <Panel DockPanel.Dock="Right" Classes="status-optional">
+          <TextBlock Text="{Binding SelectedTab.ScrollPercentText, FallbackValue=''}"
+                     Margin="0,0,12,0" Foreground="{DynamicResource StatusBarForegroundBrush}"
+                     FontSize="11.5" Opacity="0.92" VerticalAlignment="Center"/>
+        </Panel>
         <!-- Caret position — only meaningful (and shown) while the source editor is visible. -->
-        <TextBlock DockPanel.Dock="Right" Text="{Binding SelectedTab.CaretText}"
-                   IsVisible="{Binding SelectedTab.ShowSource, FallbackValue=False}" Margin="0,0,12,0"
-                   Foreground="{DynamicResource StatusBarForegroundBrush}" FontSize="11.5"
-                   Opacity="0.92" VerticalAlignment="Center"/>
+        <Panel DockPanel.Dock="Right" Classes="status-optional">
+          <TextBlock Text="{Binding SelectedTab.CaretText}"
+                     IsVisible="{Binding SelectedTab.ShowSource, FallbackValue=False}" Margin="0,0,12,0"
+                     Foreground="{DynamicResource StatusBarForegroundBrush}" FontSize="11.5"
+                     Opacity="0.92" VerticalAlignment="Center"/>
+        </Panel>
         <!-- PDF page counter «стр N / M» — written by PdfView from the scroll position. -->
-        <TextBlock DockPanel.Dock="Right" Text="{Binding SelectedTab.PdfPageText}"
-                   IsVisible="{Binding SelectedTab.ShowPdf, FallbackValue=False}" Margin="0,0,12,0"
-                   Foreground="{DynamicResource StatusBarForegroundBrush}" FontSize="11.5"
-                   Opacity="0.92" VerticalAlignment="Center"/>
+        <Panel DockPanel.Dock="Right" Classes="status-optional">
+          <TextBlock Text="{Binding SelectedTab.PdfPageText}"
+                     IsVisible="{Binding SelectedTab.ShowPdf, FallbackValue=False}" Margin="0,0,12,0"
+                     Foreground="{DynamicResource StatusBarForegroundBrush}" FontSize="11.5"
+                     Opacity="0.92" VerticalAlignment="Center"/>
+        </Panel>
         <!-- Zoom — in the status bar for the source editor AND the markdown preview (the preview is
              scaled via a layout transform by the same font-size value). Hidden for table/notice tabs. -->
-        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2" Margin="0,0,10,0"
-                    VerticalAlignment="Center" IsVisible="{Binding SelectedTab.ZoomApplies, FallbackValue=False}">
-          <Button Command="{Binding ZoomOutCommand}" ToolTip.Tip="Меньше (Ctrl+−)"
-                  AutomationProperties.Name="Уменьшить шрифт" Content="A−" Classes="statusbtn"/>
-          <Button Command="{Binding ZoomResetCommand}" ToolTip.Tip="Сбросить масштаб (Ctrl+0)"
-                  AutomationProperties.Name="Размер шрифта" Content="{Binding Editor.FontSize}" Classes="statusbtn"/>
-          <Button Command="{Binding ZoomInCommand}" ToolTip.Tip="Больше (Ctrl++)"
-                  AutomationProperties.Name="Увеличить шрифт" Content="A+" Classes="statusbtn"/>
-        </StackPanel>
+        <Panel DockPanel.Dock="Right" Classes="status-optional">
+          <StackPanel Orientation="Horizontal" Spacing="2" Margin="0,0,10,0"
+                      VerticalAlignment="Center" IsVisible="{Binding SelectedTab.ZoomApplies, FallbackValue=False}">
+            <Button Command="{Binding ZoomOutCommand}" ToolTip.Tip="Меньше (Ctrl+−)"
+                    AutomationProperties.Name="Уменьшить шрифт" Content="A−" Classes="statusbtn"/>
+            <Button Command="{Binding ZoomResetCommand}" ToolTip.Tip="Сбросить масштаб (Ctrl+0)"
+                    AutomationProperties.Name="Размер шрифта" Content="{Binding Editor.FontSize}" Classes="statusbtn"/>
+            <Button Command="{Binding ZoomInCommand}" ToolTip.Tip="Больше (Ctrl++)"
+                    AutomationProperties.Name="Увеличить шрифт" Content="A+" Classes="statusbtn"/>
+          </StackPanel>
+        </Panel>
         <!-- Wrap · numbers FALLBACK — shown here only when ToolbarMode is Off; otherwise they live in the
              contextual toolbar above (the converter keeps them in exactly one place). -->
-        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2" Margin="0,0,4,0"
-                    VerticalAlignment="Center">
-          <StackPanel.IsVisible>
-            <MultiBinding Converter="{x:Static conv:ToolbarVisibilityConverter.Instance}" ConverterParameter="statusfallback">
-              <Binding Path="Layout.ToolbarMode"/>
-              <Binding Path="SelectedTab.ShowSource" FallbackValue="False"/>
-              <Binding Path="HasTabs"/>
-            </MultiBinding>
-          </StackPanel.IsVisible>
-          <vm:EditorToggleCluster/>
-        </StackPanel>
+        <Panel DockPanel.Dock="Right" Classes="status-optional">
+          <StackPanel Orientation="Horizontal" Spacing="2" Margin="0,0,4,0"
+                      VerticalAlignment="Center">
+            <StackPanel.IsVisible>
+              <MultiBinding Converter="{x:Static conv:ToolbarVisibilityConverter.Instance}" ConverterParameter="statusfallback">
+                <Binding Path="Layout.ToolbarMode"/>
+                <Binding Path="SelectedTab.ShowSource" FallbackValue="False"/>
+                <Binding Path="HasTabs"/>
+              </MultiBinding>
+            </StackPanel.IsVisible>
+            <vm:EditorToggleCluster/>
+          </StackPanel>
+        </Panel>
         <!-- Table/source toggle for delimited files (ported csv-as-table) — in the status bar,
              which stays visible in both views (the contextual toolbar hides with the editor). -->
-        <Button DockPanel.Dock="Right" Classes="statusbtn" Margin="0,0,6,0"
-                Command="{Binding SelectedTab.ToggleCsvViewCommand}"
-                ToolTip.Tip="Таблица / исходник" AutomationProperties.Name="Таблица или исходник"
-                Content="▦"
-                IsVisible="{Binding SelectedTab.CsvTable, FallbackValue=False, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+        <Panel DockPanel.Dock="Right" Classes="status-optional">
+          <Button Classes="statusbtn" Margin="0,0,6,0"
+                  Command="{Binding SelectedTab.ToggleCsvViewCommand}"
+                  ToolTip.Tip="Таблица / исходник" AutomationProperties.Name="Таблица или исходник"
+                  Content="▦"
+                  IsVisible="{Binding SelectedTab.CsvTable, FallbackValue=False, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+        </Panel>
         <!-- PDF fit-to-width ⟷ actual size (100%) toggle. -->
-        <Button DockPanel.Dock="Right" Classes="statusbtn" Margin="0,0,6,0"
-                Command="{Binding SelectedTab.TogglePdfFitCommand}"
-                ToolTip.Tip="По ширине / 100%" AutomationProperties.Name="Масштаб PDF"
-                Content="⤢" IsVisible="{Binding SelectedTab.ShowPdf, FallbackValue=False}"/>
+        <Panel DockPanel.Dock="Right" Classes="status-optional">
+          <Button Classes="statusbtn" Margin="0,0,6,0"
+                  Command="{Binding SelectedTab.TogglePdfFitCommand}"
+                  ToolTip.Tip="По ширине / 100%" AutomationProperties.Name="Масштаб PDF"
+                  Content="⤢" IsVisible="{Binding SelectedTab.ShowPdf, FallbackValue=False}"/>
+        </Panel>
         <!-- Image: rotate 90° + fit/100% toggle. -->
-        <Button DockPanel.Dock="Right" Classes="statusbtn" Margin="0,0,6,0"
-                Command="{Binding SelectedTab.RotateImageCommand}"
-                ToolTip.Tip="Повернуть на 90°" AutomationProperties.Name="Повернуть изображение"
-                Content="↻" IsVisible="{Binding SelectedTab.ShowImage, FallbackValue=False}"/>
-        <Button DockPanel.Dock="Right" Classes="statusbtn" Margin="0,0,6,0"
-                Command="{Binding SelectedTab.ToggleImageFitCommand}"
-                ToolTip.Tip="Вписать / 100%" AutomationProperties.Name="Масштаб изображения"
-                Content="⤢" IsVisible="{Binding SelectedTab.ShowImage, FallbackValue=False}"/>
-        <Border DockPanel.Dock="Right" Width="1" Margin="10,1" IsVisible="{Binding HasTabs}"
-                Background="{DynamicResource StatusBarForegroundBrush}" Opacity="0.3"/>
+        <Panel DockPanel.Dock="Right" Classes="status-optional">
+          <Button Classes="statusbtn" Margin="0,0,6,0"
+                  Command="{Binding SelectedTab.RotateImageCommand}"
+                  ToolTip.Tip="Повернуть на 90°" AutomationProperties.Name="Повернуть изображение"
+                  Content="↻" IsVisible="{Binding SelectedTab.ShowImage, FallbackValue=False}"/>
+        </Panel>
+        <Panel DockPanel.Dock="Right" Classes="status-optional">
+          <Button Classes="statusbtn" Margin="0,0,6,0"
+                  Command="{Binding SelectedTab.ToggleImageFitCommand}"
+                  ToolTip.Tip="Вписать / 100%" AutomationProperties.Name="Масштаб изображения"
+                  Content="⤢" IsVisible="{Binding SelectedTab.ShowImage, FallbackValue=False}"/>
+        </Panel>
+        <Panel DockPanel.Dock="Right" Classes="status-optional">
+          <Border Width="1" Margin="10,1" IsVisible="{Binding HasTabs}"
+                  Background="{DynamicResource StatusBarForegroundBrush}" Opacity="0.3"/>
+        </Panel>
         <!-- Left segment: status messages, replaced by the go-to-line input (Ctrl+G) while open.
              Lives in the status bar (chrome) rather than over the editor, where an overlay won't
              repaint over AvaloniaEdit's GPU surface. -->
         <Panel>
-          <TextBlock Text="{Binding StatusText}" IsVisible="{Binding !SelectedTab.IsGoToLineOpen, FallbackValue=True}"
-                     Foreground="{DynamicResource StatusBarForegroundBrush}" FontSize="11.5"
-                     VerticalAlignment="Center"/>
+          <Panel Classes="status-optional">
+            <TextBlock Text="{Binding StatusText}" IsVisible="{Binding !SelectedTab.IsGoToLineOpen, FallbackValue=True}"
+                       Foreground="{DynamicResource StatusBarForegroundBrush}" FontSize="11.5"
+                       VerticalAlignment="Center"/>
+          </Panel>
           <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
                       IsVisible="{Binding SelectedTab.IsGoToLineOpen, FallbackValue=False}">
             <TextBlock Text="Перейти к строке:" VerticalAlignment="Center"
