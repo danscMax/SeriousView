@@ -1,0 +1,78 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- ═══ Menus ═══════════════════════════════════════════════════════════════════════════════════
+       The ☰ menu used to be left to FluentAvalonia on the assumption (a comment in MainWindow.axaml)
+       that "FluentAvalonia themes them to match the chrome". It does not: FA paints menus from ITS OWN
+       resources, while our 14 themes only override OUR chrome tokens — so the flyout and the chrome
+       drifted apart, and the top-level menu and its submenus did not even match each other.
+
+       Every menu surface is themed here from the same tokens as the rest of the chrome, so a menu is
+       recognisably part of the app in every theme. Styles (not resource overrides) on purpose: a Style
+       setter takes {DynamicResource}, so the whole thing follows a live theme switch for free.
+       ═════════════════════════════════════════════════════════════════════════════════════════════ -->
+
+  <!-- The flyout surface itself: same card vocabulary as the modals (surface + hairline + radius). -->
+  <Style Selector="MenuFlyoutPresenter">
+    <Setter Property="Background" Value="{DynamicResource EditorSurfaceBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource ChromeBorderBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="Padding" Value="4"/>
+  </Style>
+
+  <!-- Submenus are hosted by a plain FlyoutPresenter/Popup rather than the MenuFlyoutPresenter above —
+       that mismatch is exactly what made a submenu a different colour from its parent. Same tokens. -->
+  <Style Selector="FlyoutPresenter">
+    <Setter Property="Background" Value="{DynamicResource EditorSurfaceBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource ChromeBorderBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="8"/>
+  </Style>
+
+  <!-- Rows: our text colour, our hover overlay, comfortable hit height. -->
+  <Style Selector="MenuItem">
+    <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}"/>
+    <Setter Property="MinHeight" Value="32"/>
+    <Setter Property="CornerRadius" Value="4"/>
+  </Style>
+  <Style Selector="MenuItem /template/ Border#PART_LayoutRoot">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <!-- Background only, and owned at rest: the same FluentAvalonia trap as the chrome buttons — leave
+         the rest state to FA and it paints its own hover first, flashing before ours lands. -->
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="MenuItem:pointerover /template/ Border#PART_LayoutRoot">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+  </Style>
+  <Style Selector="MenuItem:selected /template/ Border#PART_LayoutRoot">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+  </Style>
+  <!-- A disabled row must read as unavailable, not as "muted body text". -->
+  <Style Selector="MenuItem:disabled">
+    <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
+    <Setter Property="Opacity" Value="0.5"/>
+  </Style>
+
+  <!-- Shortcut hints (InputGesture) are secondary information: muted, never competing with the label. -->
+  <Style Selector="MenuItem /template/ TextBlock#PART_InputGestureText">
+    <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
+  </Style>
+  <!-- The submenu chevron follows the label, not FA's own accent. -->
+  <Style Selector="MenuItem /template/ Path#PART_ChevronPath">
+    <Setter Property="Fill" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
+  </Style>
+
+  <!-- Group separators: the same hairline token as every other divider in the app. (Avalonia menus use
+       a plain Separator — MenuFlyoutSeparator is a WinUI type and does not exist here.) -->
+  <Style Selector="MenuFlyoutPresenter Separator, ContextMenu Separator">
+    <Setter Property="Background" Value="{DynamicResource ChromeBorderBrush}"/>
+    <Setter Property="Margin" Value="6,4"/>
+  </Style>
+
+</Styles>
