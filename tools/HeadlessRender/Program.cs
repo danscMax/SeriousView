@@ -8,13 +8,20 @@ using Tittle.Core.Abstractions;
 using Tittle.Core.Documents;
 using Tittle.Core.Services;
 using Tittle.Core.Settings;
+using Tittle.Core.Editing;
 using Tittle.Core.Text;
 using Tittle.Features.Donate;
 using Tittle.Features.Help;
+using Tittle.Features.Macros;
+using Tittle.Features.Palette;
+using Tittle.Features.Settings;
 using Tittle.Features.Shell;
+using Tittle.Features.Stats;
 using Tittle.Features.Viewer;
 using Tittle.Features.Welcome;
 using Tittle.Platform;
+using Tittle.Shared;
+using CommunityToolkit.Mvvm.Input;
 
 // Layer-1 render oracle: render leaf controls to PNG in every theme (the cheap, deterministic
 // both-theme visual check). Output dir is arg[0] (default: plans/avalonia-smoke/screenshots).
@@ -80,6 +87,10 @@ var modals = new (string Name, Func<Window> Build)[]
 {
     ("help", () => new HelpWindow()),
     ("donate", () => new DonateWindow()),
+    ("stats", () => new StatsWindow { DataContext = TextStatistics.Compute(sampleMd) }),
+    ("layout", () => new LayoutSettingsWindow { DataContext = new LayoutOptions(), Diagrams = new DiagramOptions() }),
+    ("palette", () => new CommandPaletteWindow { DataContext = new CommandPaletteViewModel(SamplePaletteItems()) }),
+    ("macros", () => new MacroManagerWindow { DataContext = new MacroManagerViewModel(new RenderMacroLibrary()) }),
 };
 
 int ok = 0, total = 0;
@@ -127,6 +138,21 @@ static MainWindowViewModel BuildWelcomeVm()
     return new MainWindowViewModel(
         new RenderFileDialog(), new RenderFileReader(), new RenderThemeService(), recent,
         new AppSettingsService(new RenderSettingsStore()), new RenderClipboard(), new RenderShell(), []);
+}
+
+// A handful of representative command-palette entries (a no-op command; the palette renders titles + shortcuts).
+static IReadOnlyList<PaletteItem> SamplePaletteItems()
+{
+    var noop = new RelayCommand(() => { });
+    return
+    [
+        new PaletteItem("Открыть файл…", noop, "Ctrl+O"),
+        new PaletteItem("Палитра команд", noop, "Ctrl+K"),
+        new PaletteItem("Найти в документе", noop, "Ctrl+F"),
+        new PaletteItem("Тема: Тёмная", noop),
+        new PaletteItem("Экспорт в HTML…", noop),
+        new PaletteItem("Статистика документа", noop),
+    ];
 }
 
 sealed class RenderFileDialog : IFileDialogService
@@ -183,4 +209,17 @@ sealed class RenderShell : IShellService
 {
     public void RevealInExplorer(string filePath) { }
     public void OpenWithDefaultApp(string filePath) { }
+}
+
+// Stub macro library so the manager dialog renders a populated, representative list of rows.
+sealed class RenderMacroLibrary : IMacroLibrary
+{
+    public IReadOnlyList<Macro> Macros { get; } =
+    [
+        new Macro("Обернуть в кавычки", RepeatMode.Once, 1, Array.Empty<IEditorIntent>(), "Ctrl+Shift+1"),
+        new Macro("Удалить пустые строки", RepeatMode.UntilNoMatch, 1, Array.Empty<IEditorIntent>()),
+        new Macro("Пронумеровать список", RepeatMode.Times, 5, Array.Empty<IEditorIntent>()),
+    ];
+    public void ReplaceMacroLibrary(IReadOnlyList<Macro> macros) { }
+    public void ReplayMacro(Macro macro) { }
 }
