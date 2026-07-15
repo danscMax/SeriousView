@@ -59,6 +59,97 @@
     <Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
   </Style>
+
+  <!-- Welcome workspace: one restrained document mark, a useful drop target and compact shortcut
+       keycaps. Everything reuses semantic shell surfaces so all fourteen themes inherit the same
+       hierarchy without theme-specific colours. -->
+  <Style Selector="Border.welcome-mark">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceSelectedBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource WorkspaceSeparatorBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="14"/>
+  </Style>
+  <Style Selector="Border.drop-zone">
+    <Setter Property="Padding" Value="14"/>
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHeaderBackgroundBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource WorkspaceSeparatorBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="10"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
+        <BrushTransition Property="BorderBrush" Duration="{DynamicResource DurFast}"/>
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Border.drop-zone:pointerover">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+  </Style>
+  <Style Selector="Border.drop-icon">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceSelectedBrush}"/>
+    <Setter Property="CornerRadius" Value="8"/>
+  </Style>
+  <Style Selector="Border.keycap">
+    <Setter Property="Padding" Value="6,3"/>
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHeaderBackgroundBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource WorkspaceSeparatorBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="5"/>
+    <Setter Property="TextElement.FontSize" Value="10.5"/>
+    <Setter Property="TextElement.FontWeight" Value="SemiBold"/>
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource ChromeForegroundBrush}"/>
+  </Style>
+  <Style Selector="Border.welcome-card">
+    <Setter Property="Padding" Value="8"/>
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHeaderBackgroundBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource WorkspaceSeparatorBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="12"/>
+  </Style>
+  <Style Selector="Button.welcome-secondary">
+    <Setter Property="Padding" Value="14,9"/>
+    <Setter Property="CornerRadius" Value="7"/>
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHeaderBackgroundBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource WorkspaceSeparatorBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}"/>
+    <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <TransformOperationsTransition Property="RenderTransform" Duration="{DynamicResource DurFast}"/>
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.welcome-secondary /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
+        <BrushTransition Property="BorderBrush" Duration="{DynamicResource DurFast}"/>
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.welcome-secondary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+  </Style>
+  <Style Selector="Button.welcome-secondary:pressed">
+    <Setter Property="RenderTransform" Value="scale(0.98)"/>
+  </Style>
+  <Style Selector="Button.welcome-secondary:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+  <Style Selector="StackPanel.sidebar-empty">
+    <Setter Property="Margin" Value="14,20"/>
+    <Setter Property="Spacing" Value="7"/>
+  </Style>
+  <Style Selector="Border.sidebar-empty-icon">
+    <Setter Property="Width" Value="36"/>
+    <Setter Property="Height" Value="36"/>
+    <Setter Property="CornerRadius" Value="9"/>
+    <Setter Property="Background" Value="{DynamicResource WorkspaceSelectedBrush}"/>
+    <Setter Property="Margin" Value="0,0,0,3"/>
+  </Style>
   <!-- CheckBox/RadioButton resolve their label colour from their own Foreground property (the Fluent
        theme default wins over an inherited TextElement.Foreground), so set it explicitly for the ones
        inside a modal card. Scoped to those two controls only — the accent button keeps its own

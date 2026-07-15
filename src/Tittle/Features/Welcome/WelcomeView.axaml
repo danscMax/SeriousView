@@ -1,74 +1,119 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Tittle.Features.Shell"
+             xmlns:conv="using:Tittle.Shared"
              x:Class="Tittle.Features.Welcome.WelcomeView"
              x:DataType="vm:MainWindowViewModel">
   <Grid Background="{DynamicResource EditorSurfaceBrush}">
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
       <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
-                  Spacing="14" MaxWidth="520" Margin="24,40">
-        <TextBlock Text="Начните с документа" FontSize="22" FontWeight="SemiBold"
-                   Foreground="{DynamicResource ChromeForegroundBrush}"/>
-        <TextBlock Text="Откройте Markdown, код, таблицу, PDF или изображение."
-                   FontSize="13" TextWrapping="Wrap"
-                   Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
-
-        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0">
-          <Button Content="Открыть файл…" Command="{Binding OpenFileCommand}"
-                  Classes="accent" Padding="14,10"
-                  AutomationProperties.Name="Открыть файл"/>
-          <Button Content="Открыть пример" Command="{Binding OpenSampleCommand}"
-                  Classes="header-action"
-                  AutomationProperties.AutomationId="OpenSampleButton"
-                  AutomationProperties.Name="Открыть пример"/>
-        </StackPanel>
-
-        <!-- MainWindow owns DragDrop; this calm slot explains that whole-window affordance. -->
-        <Border Padding="14" CornerRadius="6" Margin="0,4,0,0"
-                BorderBrush="{DynamicResource WorkspaceSeparatorBrush}" BorderThickness="1"
-                Background="{DynamicResource WorkspaceHoverBrush}"
-                AutomationProperties.Name="Область перетаскивания файла">
-          <StackPanel Orientation="Horizontal" Spacing="10">
-            <PathIcon Data="{StaticResource IconDocument}" Width="18" Height="18"
+                  Spacing="18" MaxWidth="600" Margin="32,48">
+        <!-- Signature mark: a calm document tile, echoing the rail's active accent without turning the
+             welcome page into a marketing splash. -->
+        <StackPanel Orientation="Horizontal" Spacing="14">
+          <Border Classes="welcome-mark" Width="48" Height="48">
+            <PathIcon Data="{StaticResource IconDocument}" Width="23" Height="23"
+                      HorizontalAlignment="Center" VerticalAlignment="Center"
                       Foreground="{DynamicResource AccentBrush}"/>
-            <TextBlock Text="Перетащите файл сюда" VerticalAlignment="Center"
+          </Border>
+          <StackPanel Spacing="2" VerticalAlignment="Center">
+            <TextBlock Text="TITTLE" FontSize="10.5" FontWeight="SemiBold"
+                       Foreground="{DynamicResource AccentBrush}"/>
+            <TextBlock Text="Начните с документа" FontSize="24" FontWeight="SemiBold"
                        Foreground="{DynamicResource ChromeForegroundBrush}"/>
           </StackPanel>
-        </Border>
+        </StackPanel>
 
-        <TextBlock Text="Ctrl+O — открыть · Ctrl+K — команды"
-                   FontSize="11.5" Margin="0,-2,0,2"
+        <TextBlock Text="Читайте, редактируйте и сравнивайте Markdown, код, таблицы, PDF и изображения — в одном спокойном рабочем пространстве."
+                   FontSize="13" MaxWidth="560" TextWrapping="Wrap"
                    Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
 
-        <StackPanel IsVisible="{Binding HasRecent}" Spacing="4" Margin="0,6,0,0">
-          <TextBlock Text="Недавние" FontWeight="SemiBold" FontSize="12"
-                     Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
-          <ItemsControl ItemsSource="{Binding RecentItems}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate x:DataType="vm:RecentFileItem">
-                <Button Classes="recent" Command="{Binding OpenCommand}" ToolTip.Tip="{Binding Path}"
-                        Background="Transparent" BorderThickness="0" CornerRadius="6"
-                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                        Padding="10,6">
-                  <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Spacing="1">
-                      <TextBlock Text="{Binding Name}" FontSize="12.5"
-                                 TextTrimming="CharacterEllipsis"
-                                 Foreground="{DynamicResource ChromeForegroundBrush}"/>
-                      <TextBlock Text="{Binding Folder}" FontSize="10.5"
-                                 TextTrimming="CharacterEllipsis"
-                                 Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
-                    </StackPanel>
-                    <PathIcon Grid.Column="1" Data="{StaticResource IconArrowUpRight}"
-                              Width="13" Height="13" Margin="10,0,0,0"
-                              VerticalAlignment="Center"
-                              Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
-                  </Grid>
-                </Button>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <Button Command="{Binding OpenFileCommand}" Classes="accent" Padding="14,9"
+                  AutomationProperties.Name="Открыть файл">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <PathIcon Data="{StaticResource IconFolderOpen}" Width="16" Height="16"/>
+              <TextBlock Text="Открыть файл…"/>
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding OpenSampleCommand}" Classes="welcome-secondary"
+                  AutomationProperties.AutomationId="OpenSampleButton"
+                  AutomationProperties.Name="Открыть пример">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <TextBlock Text="Открыть пример"/>
+              <PathIcon Data="{StaticResource IconArrowUpRight}" Width="12" Height="12"/>
+            </StackPanel>
+          </Button>
         </StackPanel>
+
+        <!-- MainWindow owns DragDrop; this slot explains that whole-window affordance. -->
+        <Border Classes="drop-zone" AutomationProperties.Name="Область перетаскивания файла">
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <Border Classes="drop-icon" Width="34" Height="34">
+              <PathIcon Data="{StaticResource IconDocument}" Width="16" Height="16"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentBrush}"/>
+            </Border>
+            <StackPanel Grid.Column="1" Margin="10,0" Spacing="1" VerticalAlignment="Center">
+              <TextBlock Text="Перетащите файл сюда" FontWeight="SemiBold"
+                         Foreground="{DynamicResource ChromeForegroundBrush}"/>
+              <TextBlock Text="Он откроется в новой вкладке" FontSize="11"
+                         Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+            </StackPanel>
+            <TextBlock Grid.Column="2" Text="DROP" FontSize="10" FontWeight="SemiBold"
+                       VerticalAlignment="Center" Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+          </Grid>
+        </Border>
+
+        <StackPanel Orientation="Horizontal" Spacing="16">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <Border Classes="keycap"><TextBlock Text="Ctrl+O"/></Border>
+            <TextBlock Text="открыть" VerticalAlignment="Center"
+                       Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <Border Classes="keycap"><TextBlock Text="Ctrl+K"/></Border>
+            <TextBlock Text="команды" VerticalAlignment="Center"
+                       Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+          </StackPanel>
+        </StackPanel>
+
+        <Border Classes="welcome-card" IsVisible="{Binding HasRecent}">
+          <StackPanel Spacing="4">
+            <TextBlock Text="Недавние документы" FontWeight="SemiBold" FontSize="11.5" Margin="6,2,6,4"
+                       Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+            <ItemsControl ItemsSource="{Binding RecentItems}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:RecentFileItem">
+                  <Button Classes="recent" Command="{Binding OpenCommand}" ToolTip.Tip="{Binding Path}"
+                          Background="Transparent" BorderThickness="0" CornerRadius="6"
+                          HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                          Padding="8,6">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                      <Border Width="30" Height="30" CornerRadius="7"
+                              Background="{DynamicResource WorkspaceHoverBrush}">
+                        <PathIcon Data="{Binding Extension, Converter={x:Static conv:ExtensionToIconConverter.Instance}}"
+                                  Width="14" Height="14" Foreground="{DynamicResource AccentBrush}"/>
+                      </Border>
+                      <StackPanel Grid.Column="1" Spacing="1" Margin="10,0">
+                        <TextBlock Text="{Binding Name}" FontSize="12.5"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource ChromeForegroundBrush}"/>
+                        <TextBlock Text="{Binding Folder}" FontSize="10.5"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+                      </StackPanel>
+                      <PathIcon Grid.Column="2" Data="{StaticResource IconArrowUpRight}"
+                                Width="13" Height="13" Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+                    </Grid>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
       </StackPanel>
     </ScrollViewer>
   </Grid>

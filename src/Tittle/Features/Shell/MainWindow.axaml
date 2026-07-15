@@ -71,6 +71,21 @@
       <Setter Property="Background" Value="Transparent"/>
       <Setter Property="BorderThickness" Value="0"/>
     </Style>
+    <Style Selector="Border.omnibar-shell">
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
+          <BrushTransition Property="BorderBrush" Duration="{DynamicResource DurFast}"/>
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Border.omnibar-shell:pointerover">
+      <Setter Property="BorderBrush" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
+    </Style>
+    <Style Selector="Border.omnibar-shell.focused">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource WorkspaceHeaderBackgroundBrush}"/>
+    </Style>
   </wnd:AppWindow.Styles>
   <!-- One 40px window header above a three-region workspace: rail, contextual sidebar, document.
        The system caption buttons occupy the reserved right header column. -->
@@ -247,7 +262,7 @@
       <!-- Omnibar (etalon header): active document path · 📂 Open · ⌘ palette, in a slim inset field.
            Toggled by Layout.ShowOmnibar. AllowInteractionInTitleBar so its buttons click; the empty
            title area around it (it is centred + width-capped) still drags the window. -->
-      <Border Grid.Column="1" x:Name="Omnibar" AutomationProperties.AutomationId="Omnibar"
+      <Border Grid.Column="1" x:Name="Omnibar" Classes="omnibar-shell" AutomationProperties.AutomationId="Omnibar"
               IsVisible="{Binding Layout.ShowOmnibar}"
               wnd:AppWindow.AllowInteractionInTitleBar="True"
               Background="{DynamicResource EditorSurfaceBrush}" CornerRadius="6"

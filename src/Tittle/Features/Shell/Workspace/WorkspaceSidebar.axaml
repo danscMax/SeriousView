@@ -3,6 +3,7 @@
              xmlns:vm="using:Tittle.Features.Shell"
              xmlns:workspace="using:Tittle.Features.Shell.Workspace"
              xmlns:viewer="using:Tittle.Features.Viewer"
+             xmlns:conv="using:Tittle.Shared"
              x:Class="Tittle.Features.Shell.Workspace.WorkspaceSidebar"
              x:DataType="vm:MainWindowViewModel">
   <Border Background="{DynamicResource WorkspaceSidebarBrush}"
@@ -37,14 +38,22 @@
                   Command="{Binding OpenFileCommand}"
                   AutomationProperties.Name="Открыть файл">
             <StackPanel Orientation="Horizontal" Spacing="8">
-              <PathIcon Data="{StaticResource IconDocument}" Width="15" Height="15"/>
+              <PathIcon Data="{StaticResource IconFolderOpen}" Width="15" Height="15"/>
               <TextBlock Text="Открыть файл…"/>
             </StackPanel>
           </Button>
           <Grid Grid.Row="1">
-            <TextBlock Text="Нет недавних файлов" IsVisible="{Binding !HasRecent}"
-                       Margin="14,12" TextWrapping="Wrap"
-                       Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+            <StackPanel Classes="sidebar-empty" IsVisible="{Binding !HasRecent}">
+              <Border Classes="sidebar-empty-icon">
+                <PathIcon Data="{StaticResource IconFolderOpen}" Width="16" Height="16"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                          Foreground="{DynamicResource AccentBrush}"/>
+              </Border>
+              <TextBlock Text="Недавних файлов пока нет" FontWeight="SemiBold"/>
+              <TextBlock Text="Открытые документы появятся здесь для быстрого доступа."
+                         TextWrapping="Wrap" FontSize="11.5"
+                         Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+            </StackPanel>
             <ItemsControl ItemsSource="{Binding RecentItems}" IsVisible="{Binding HasRecent}"
                           Margin="6,4">
               <ItemsControl.ItemTemplate>
@@ -54,11 +63,16 @@
                           Background="Transparent" BorderThickness="0"
                           HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                           Padding="10,6" CornerRadius="6">
-                    <StackPanel Spacing="1">
-                      <TextBlock Text="{Binding Name}" FontSize="12.5" TextTrimming="CharacterEllipsis"/>
-                      <TextBlock Text="{Binding Folder}" FontSize="10.5" TextTrimming="CharacterEllipsis"
-                                 Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
-                    </StackPanel>
+                    <Grid ColumnDefinitions="Auto,*">
+                      <PathIcon Data="{Binding Extension, Converter={x:Static conv:ExtensionToIconConverter.Instance}}"
+                                Width="14" Height="14" Margin="1,0,9,0" VerticalAlignment="Center"
+                                Foreground="{DynamicResource AccentBrush}"/>
+                      <StackPanel Grid.Column="1" Spacing="1">
+                        <TextBlock Text="{Binding Name}" FontSize="12.5" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding Folder}" FontSize="10.5" TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+                      </StackPanel>
+                    </Grid>
                   </Button>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
@@ -67,10 +81,14 @@
         </Grid>
 
         <viewer:OutlinePanel IsVisible="{Binding IsOutlinePaneVisible}"/>
-        <StackPanel IsVisible="{Binding IsOutlineEmptyStateVisible}"
-                    Margin="14,18" Spacing="6">
+        <StackPanel Classes="sidebar-empty" IsVisible="{Binding IsOutlineEmptyStateVisible}">
+          <Border Classes="sidebar-empty-icon">
+            <PathIcon Data="{StaticResource IconSidebar}" Width="16" Height="16"
+                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                      Foreground="{DynamicResource AccentBrush}"/>
+          </Border>
           <TextBlock Text="Нет заголовков" FontWeight="SemiBold"/>
-          <TextBlock Text="Откройте документ с заголовками — они появятся здесь."
+          <TextBlock Text="Добавьте заголовки в Markdown — оглавление соберётся автоматически."
                      TextWrapping="Wrap" FontSize="11.5"
                      Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
         </StackPanel>

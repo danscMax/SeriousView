@@ -14,12 +14,14 @@ public sealed class RecentFileItem
     public string Path { get; }
     public string Name { get; }
     public string Folder { get; }
+    public string Extension { get; }
     public IRelayCommand OpenCommand { get; }
 
     public RecentFileItem(string path, Action open)
     {
         Path = path;
         (Name, Folder) = RecentFileLabel.Describe(path);
+        Extension = System.IO.Path.GetExtension(path);
         OpenCommand = new RelayCommand(open);
     }
 }

@@ -5,10 +5,15 @@
              x:Class="Tittle.Features.Shell.Workspace.BookmarkPanel"
              x:DataType="vm:MainWindowViewModel">
   <Grid>
-    <StackPanel IsVisible="{Binding !SelectedTab.HasBookmarkedOutline, FallbackValue=True}"
-                Margin="14,18" Spacing="6">
+    <StackPanel Classes="sidebar-empty"
+                IsVisible="{Binding !SelectedTab.HasBookmarkedOutline, FallbackValue=True}">
+      <Border Classes="sidebar-empty-icon">
+        <PathIcon Data="{StaticResource IconBookmarkOutline}" Width="16" Height="16"
+                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                  Foreground="{DynamicResource AccentBrush}"/>
+      </Border>
       <TextBlock Text="Нет закладок" FontWeight="SemiBold"/>
-      <TextBlock Text="Отметьте заголовок звёздочкой в оглавлении."
+      <TextBlock Text="Сохраните важный заголовок в оглавлении — он появится здесь."
                  TextWrapping="Wrap" FontSize="11.5"
                  Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
     </StackPanel>

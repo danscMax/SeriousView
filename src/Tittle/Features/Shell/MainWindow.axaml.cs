@@ -95,6 +95,8 @@ public partial class MainWindow : AppWindow
         GoToLineBox.KeyDown += OnGoToLineKeyDown;
         // Omnibar address field: Enter opens the typed path, Esc reverts to the active tab's path.
         OmnibarBox.KeyDown += OnOmnibarKeyDown;
+        OmnibarBox.GotFocus += (_, _) => SetOmnibarFocused(true);
+        OmnibarBox.LostFocus += (_, _) => SetOmnibarFocused(false);
         // Tab drag-reorder. Tunnel so we observe the gesture before the ListBox's own pointer handling.
         TabStrip.AddHandler(PointerPressedEvent, OnTabPointerPressed, RoutingStrategies.Tunnel);
         TabStrip.AddHandler(PointerMovedEvent, OnTabPointerMoved, RoutingStrategies.Tunnel);
@@ -105,6 +107,14 @@ public partial class MainWindow : AppWindow
 #if DEBUG
         this.AttachDevTools();
 #endif
+    }
+
+    private void SetOmnibarFocused(bool focused)
+    {
+        if (focused)
+            Omnibar.Classes.Add("focused");
+        else
+            Omnibar.Classes.Remove("focused");
     }
 
     // Pin the caption-button glyph colour to the chrome foreground for the current theme, so the

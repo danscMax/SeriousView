@@ -80,6 +80,45 @@
       <Setter Property="FontSize" Value="14"/>
       <Setter Property="VerticalAlignment" Value="Center"/>
       <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}"/>
+      <Setter Property="CornerRadius" Value="5"/>
+    </Style>
+    <Style Selector="Button.findbtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+    </Style>
+    <Style Selector="Button.findbtn /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
+          <BrushTransition Property="BorderBrush" Duration="{DynamicResource DurFast}"/>
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Button.findbtn:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    <Style Selector="TextBox.find-field">
+      <Setter Property="Height" Value="30"/>
+      <Setter Property="Padding" Value="8,3"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Background" Value="{DynamicResource WorkspaceHeaderBackgroundBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource WorkspaceSeparatorBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
+          <BrushTransition Property="BorderBrush" Duration="{DynamicResource DurFast}"/>
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="TextBox.find-field:pointerover">
+      <Setter Property="BorderBrush" Value="{DynamicResource ChromeBorderBrush}"/>
+    </Style>
+    <Style Selector="TextBox.find-field:focus /template/ Border#PART_BorderElement">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
     </Style>
     <Style Selector="ToggleButton.findtoggle">
       <Setter Property="MinWidth" Value="0"/>
@@ -168,16 +207,22 @@
     <!-- Find bar — a chrome strip docked above the editor, NOT an overlay (an overlay over AvaloniaEdit's
          GPU surface won't repaint — see project memory). Per-tab; shown on IsSearchOpen. -->
     <Border DockPanel.Dock="Top" IsVisible="{Binding IsSearchOpen}"
-            Background="{DynamicResource ChromeBackgroundBrush}"
-            BorderBrush="{DynamicResource ChromeBorderBrush}" BorderThickness="0,0,0,1" Padding="8,5">
+            Background="{DynamicResource WorkspaceHeaderBackgroundBrush}"
+            BorderBrush="{DynamicResource WorkspaceSeparatorBrush}" BorderThickness="0,0,0,1" Padding="10,6">
       <StackPanel Spacing="5">
       <DockPanel LastChildFill="True">
-        <Button DockPanel.Dock="Right" Classes="findbtn" Content="&#x2715;" ToolTip.Tip="Закрыть (Esc)"
-                AutomationProperties.Name="Закрыть поиск" Command="{Binding CloseSearchCommand}"/>
-        <Button DockPanel.Dock="Right" Classes="findbtn" Content="&#x203A;" ToolTip.Tip="Следующее (Enter)"
-                AutomationProperties.Name="Следующее совпадение" Command="{Binding NextMatchCommand}"/>
-        <Button DockPanel.Dock="Right" Classes="findbtn" Content="&#x2039;" ToolTip.Tip="Предыдущее (Shift+Enter)"
-                AutomationProperties.Name="Предыдущее совпадение" Command="{Binding PreviousMatchCommand}"/>
+        <Button DockPanel.Dock="Right" Classes="findbtn" ToolTip.Tip="Закрыть (Esc)"
+                AutomationProperties.Name="Закрыть поиск" Command="{Binding CloseSearchCommand}">
+          <PathIcon Data="{StaticResource IconClose}" Width="11" Height="11"/>
+        </Button>
+        <Button DockPanel.Dock="Right" Classes="findbtn" ToolTip.Tip="Следующее (Enter)"
+                AutomationProperties.Name="Следующее совпадение" Command="{Binding NextMatchCommand}">
+          <PathIcon Data="{StaticResource IconChevronRight}" Width="12" Height="12"/>
+        </Button>
+        <Button DockPanel.Dock="Right" Classes="findbtn" ToolTip.Tip="Предыдущее (Shift+Enter)"
+                AutomationProperties.Name="Предыдущее совпадение" Command="{Binding PreviousMatchCommand}">
+          <PathIcon Data="{StaticResource IconChevronLeft}" Width="12" Height="12"/>
+        </Button>
         <TextBlock DockPanel.Dock="Right" Text="{Binding SearchStatus}" VerticalAlignment="Center"
                    Margin="10,0,4,0" MinWidth="64" TextAlignment="Right" FontSize="12"
                    Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
@@ -188,18 +233,18 @@
         <ToggleButton DockPanel.Dock="Right" Classes="findtoggle" Content="Aa" ToolTip.Tip="Учитывать регистр"
                       AutomationProperties.Name="Учитывать регистр"
                       IsChecked="{Binding SearchCaseSensitive, Mode=TwoWay}"/>
-        <TextBox x:Name="SearchBox" Watermark="Найти" AutomationProperties.Name="Найти"
+        <TextBox x:Name="SearchBox" Classes="find-field" Watermark="Найти" AutomationProperties.Name="Найти"
                  Text="{Binding SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                 Height="28" Padding="7,2" FontSize="13" VerticalContentAlignment="Center" Margin="0,0,8,0"/>
+                 Margin="0,0,8,0"/>
       </DockPanel>
       <DockPanel LastChildFill="True" IsVisible="{Binding IsReplaceMode}">
         <Button DockPanel.Dock="Right" Content="Все" ToolTip.Tip="Заменить всё" Margin="4,0,0,0" Padding="9,3"
                 AutomationProperties.Name="Заменить всё" Command="{Binding ReplaceAllCommand}"/>
         <Button DockPanel.Dock="Right" Content="Заменить" ToolTip.Tip="Заменить совпадение и далее" Padding="9,3"
                 AutomationProperties.Name="Заменить" Command="{Binding ReplaceCurrentCommand}"/>
-        <TextBox x:Name="ReplaceBox" Watermark="Заменить на" AutomationProperties.Name="Заменить на"
+        <TextBox x:Name="ReplaceBox" Classes="find-field" Watermark="Заменить на" AutomationProperties.Name="Заменить на"
                  Text="{Binding ReplaceText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                 Height="28" Padding="7,2" FontSize="13" VerticalContentAlignment="Center" Margin="0,0,8,0"/>
+                 Margin="0,0,8,0"/>
       </DockPanel>
       </StackPanel>
     </Border>
@@ -334,12 +379,14 @@
       </ScrollViewer>
       <!-- Back-to-top (ported): floats over the preview once it's scrolled a screen down.
            Visibility is driven from OnPreviewScrollChanged in code-behind. -->
-      <Button x:Name="BackToTopButton" Content="↑" FontSize="16" Width="38" Height="38"
+      <Button x:Name="BackToTopButton" Width="38" Height="38"
               CornerRadius="19" HorizontalAlignment="Right" VerticalAlignment="Bottom"
               Margin="0,0,26,22" IsVisible="False" Click="OnBackToTopClick"
               Background="{DynamicResource ChromeOverlayBrush}"
               BorderBrush="{DynamicResource ChromeBorderBrush}" BorderThickness="1"
-              ToolTip.Tip="Наверх" AutomationProperties.Name="Наверх"/>
+              ToolTip.Tip="Наверх" AutomationProperties.Name="Наверх">
+        <PathIcon Data="{StaticResource IconArrowUp}" Width="15" Height="15"/>
+      </Button>
     </Panel>
     </Border>
     </Grid>

@@ -316,6 +316,7 @@ public class MainWindowViewModelTests
         Assert.Equal("readme.md", item.Name);
         Assert.Equal(dir, item.Folder);
         Assert.Equal(path, item.Path);
+        Assert.Equal(".md", item.Extension);
         Assert.NotNull(item.OpenCommand);
     }
 
