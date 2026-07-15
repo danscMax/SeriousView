@@ -25,6 +25,8 @@
          per-theme colour files. -->
     <SolidColorBrush x:Key="LightboxScrimBrush" Color="#E6101016"/>
     <SolidColorBrush x:Key="LightboxHintBrush" Color="#9A9AA8"/>
+    <!-- A rendered PDF page is paper content, not theme chrome, and stays white in every mode. -->
+    <SolidColorBrush x:Key="PdfPageSurfaceBrush" Color="White"/>
 
     <!-- Animation durations -->
     <sys:TimeSpan x:Key="DurFast">0:0:0.12</sys:TimeSpan>

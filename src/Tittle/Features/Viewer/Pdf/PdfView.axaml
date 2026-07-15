@@ -17,9 +17,10 @@
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
           <DataTemplate x:DataType="pdf:PdfPageViewModel">
-            <Border Margin="0,0,0,14" HorizontalAlignment="Center" Background="White"
+            <Border Margin="0,0,0,14" HorizontalAlignment="Center"
+                    Background="{DynamicResource PdfPageSurfaceBrush}"
                     Width="{Binding DisplayWidth}" Height="{Binding DisplayHeight}"
-                    BoxShadow="0 2 14 0 #44000000">
+                    BoxShadow="{DynamicResource ChromeShadow}">
               <Image Source="{Binding Image}" Stretch="Fill"/>
             </Border>
           </DataTemplate>

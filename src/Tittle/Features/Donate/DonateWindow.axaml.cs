@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -27,8 +28,8 @@ public partial class DonateWindow : ModalWindow
             CryptoPanel.Children.Add(BuildCryptoCard(method));
     }
 
-    // A bordered card with an accent leading edge: header (title · fee chip), the recommended-wallet
-    // link, then the address in an inset monospace pill with an icon Copy button.
+    // A bordered card: header (title · fee chip), the recommended-wallet link, then the address in an
+    // inset monospace pill with an icon Copy button.
     private Control BuildCryptoCard(DonationMethod method)
     {
         var titleRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, VerticalAlignment = VerticalAlignment.Center };
@@ -49,6 +50,8 @@ public partial class DonateWindow : ModalWindow
             linkRow.Children.Add(new PathIcon { Data = Geo("IconExternalLink"), Width = 11, Height = 11, VerticalAlignment = VerticalAlignment.Center });
             var link = new Button { Content = linkRow };
             link.Classes.Add("link");
+            AutomationProperties.SetName(link, $"Открыть кошелёк {walletName}");
+            ToolTip.SetTip(link, $"Открыть кошелёк {walletName}");
             link.Click += (_, _) => OpenUrl(walletUrl);
             content.Children.Add(link);
         }
@@ -59,8 +62,9 @@ public partial class DonateWindow : ModalWindow
         var copyIcon = new PathIcon { Data = Geo("IconCopy"), Width = 14, Height = 14 };
         var copy = new Button { Content = copyIcon };
         copy.Classes.Add("copy");
+        AutomationProperties.SetName(copy, $"Скопировать адрес {method.Title}");
         ToolTip.SetTip(copy, "Скопировать адрес");
-        copy.Click += (_, _) => CopyAddress(method.Target, copy, copyIcon);
+        copy.Click += (_, _) => CopyAddress(method.Target, method.Title, copy, copyIcon);
 
         var pillGrid = new Grid { ColumnDefinitions = new("*,Auto"), ColumnSpacing = 8, VerticalAlignment = VerticalAlignment.Center };
         Grid.SetColumn(copy, 1);
@@ -70,15 +74,7 @@ public partial class DonateWindow : ModalWindow
         pill.Classes.Add("addrpill");
         content.Children.Add(pill);
 
-        var edge = new Border { Width = 3, VerticalAlignment = VerticalAlignment.Stretch };
-        edge.Classes.Add("accentedge");
-
-        var grid = new Grid { ColumnDefinitions = new("3,*") };
-        Grid.SetColumn(content, 1);
-        grid.Children.Add(edge);
-        grid.Children.Add(content);
-
-        var card = new Border { Child = grid };
+        var card = new Border { Child = content };
         card.Classes.Add("cryptocard");
         return card;
     }
@@ -102,7 +98,7 @@ public partial class DonateWindow : ModalWindow
         }
     }
 
-    private async void CopyAddress(string address, Button button, PathIcon icon)
+    private async void CopyAddress(string address, string methodTitle, Button button, PathIcon icon)
     {
         try
         {
@@ -110,10 +106,12 @@ public partial class DonateWindow : ModalWindow
                 return;
             await clipboard.SetTextAsync(address);
             button.Classes.Add("done");
+            AutomationProperties.SetName(button, $"Адрес {methodTitle} скопирован");
             icon.Data = Geo("IconCheck");
             DispatcherTimer.RunOnce(() =>
             {
                 button.Classes.Remove("done");
+                AutomationProperties.SetName(button, $"Скопировать адрес {methodTitle}");
                 icon.Data = Geo("IconCopy");
             }, TimeSpan.FromSeconds(1.6));
         }

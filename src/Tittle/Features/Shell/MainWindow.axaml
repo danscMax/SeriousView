@@ -22,14 +22,6 @@
         TransparencyLevelHint="None"
         DragDrop.AllowDrop="True">
   <wnd:AppWindow.Styles>
-    <!-- Compact flat buttons for the editor controls that now live in the status bar (wrap/numbers/zoom). -->
-    <!-- Background/BorderThickness come from the shared Button.flat base in Themes/Controls.axaml. -->
-    <Style Selector="Button.statusbtn">
-      <Setter Property="MinWidth" Value="0"/>
-      <Setter Property="Padding" Value="6,1"/>
-      <Setter Property="FontSize" Value="11.5"/>
-      <Setter Property="Foreground" Value="{DynamicResource StatusBarForegroundBrush}"/>
-    </Style>
     <!-- At a phone-width window the status strip cannot fit every optional metric and action without
          making the DockPanel overlap. The commands remain available through shortcuts/palette; hide
          only this secondary chrome while preserving the strip itself and its height. -->

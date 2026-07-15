@@ -44,10 +44,10 @@
        has no Mica backdrop, so a semi-transparent backing would show the desktop through it). -->
   <Border Classes="modalcard" Padding="6">
     <DockPanel>
-      <TextBox x:Name="QueryBox" DockPanel.Dock="Top" Text="{Binding Query, Mode=TwoWay}"
+      <TextBox x:Name="QueryBox" Classes="palette-query" DockPanel.Dock="Top" Text="{Binding Query, Mode=TwoWay}"
                AutomationProperties.Name="Поиск команды"
                Watermark="Команда…   ↑↓ выбрать · Enter выполнить · Esc закрыть"
-               BorderThickness="0" Background="Transparent" FontSize="15" Padding="6,4" Margin="2,2,2,6"/>
+               Margin="2,2,2,6"/>
       <ListBox x:Name="ResultsList" Classes="palette-list" ItemsSource="{Binding Results}"
                SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
                Background="Transparent" BorderThickness="0" MaxHeight="400"

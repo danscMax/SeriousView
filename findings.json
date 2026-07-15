@@ -1,0 +1,49 @@
+[
+  {
+    "id": "visual-semantic-tokens",
+    "severity": "low",
+    "kind": "drift",
+    "category": "Visual",
+    "sites": [
+      "src/Tittle/Themes/Colors/*.axaml",
+      "src/Tittle/Themes/Tokens.axaml",
+      "src/Tittle/Themes/Controls.axaml"
+    ],
+    "canon": "Feature views consume semantic DynamicResource colours, surfaces, shadows, and motion tokens; theme dictionaries are the only colour definition home.",
+    "fix_approach": "Conform existing feature markup; keep theme-specific values in Themes/Colors and shared shape/motion values in Themes/Tokens.",
+    "guard": "Tittle.Tests.Features.DesignSystemAdoptionTests.FeatureViews_UseSemanticVisualTokens",
+    "baseline": 0,
+    "measured_at": "2026-07-15"
+  },
+  {
+    "id": "shared-motion-tokens",
+    "severity": "low",
+    "kind": "drift",
+    "category": "Visual",
+    "sites": [
+      "src/Tittle/Themes/Tokens.axaml",
+      "src/Tittle/Themes/Animations.axaml",
+      "src/Tittle/Themes/Controls.axaml"
+    ],
+    "canon": "DurFast and DurBase are the shared motion vocabulary for hover, focus, recolour, and content fades.",
+    "fix_approach": "Replace literal transition durations with DynamicResource DurFast/DurBase.",
+    "guard": "Tittle.Tests.Features.DesignSystemAdoptionTests.FeatureViews_UseSharedMotionTokens",
+    "baseline": 0,
+    "measured_at": "2026-07-15"
+  },
+  {
+    "id": "status-button-single-home",
+    "severity": "low",
+    "kind": "drift",
+    "category": "Visual",
+    "sites": [
+      "src/Tittle/Themes/Controls.axaml",
+      "src/Tittle/Features/Shell/MainWindow.axaml"
+    ],
+    "canon": "The compact status-bar button contract lives once in Themes/Controls.axaml; feature views opt in with Classes=\"statusbtn\".",
+    "fix_approach": "Delete local statusbtn selectors and extend the shared style when a new state is genuinely common.",
+    "guard": "Tittle.Tests.Features.DesignSystemAdoptionTests.StatusButton_HasOneSharedStyleHome",
+    "baseline": 0,
+    "measured_at": "2026-07-15"
+  }
+]

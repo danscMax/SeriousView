@@ -18,11 +18,13 @@
           <Style Selector="TextBlock.key">
             <Setter Property="FontFamily" Value="Cascadia Code,Consolas,monospace"/>
             <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
+            <Setter Property="FontSize" Value="11.5"/>
           </Style>
         </ItemsControl.Styles>
       </ItemsControl>
 
-      <Button Content="Закрыть" HorizontalAlignment="Right" Click="OnCloseClick"/>
+      <Button Classes="modal-dismiss" Content="Закрыть" HorizontalAlignment="Right"
+              AutomationProperties.Name="Закрыть справку" Click="OnCloseClick"/>
     </StackPanel>
   </Border>
 </shared:ModalWindow>

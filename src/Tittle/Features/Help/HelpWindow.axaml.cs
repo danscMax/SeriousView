@@ -29,9 +29,16 @@ public partial class HelpWindow : ModalWindow
             var row = new Grid { ColumnDefinitions = new ColumnDefinitions("210,*"), Margin = new(0, 3) };
             var key = new TextBlock { Text = keys };
             key.Classes.Add("key");
+            var keycap = new Border
+            {
+                Child = key,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+            };
+            keycap.Classes.Add("keycap");
             var label = new TextBlock { Text = action };
             Grid.SetColumn(label, 1);
-            row.Children.Add(key);
+            row.Children.Add(keycap);
             row.Children.Add(label);
             ShortcutList.Items.Add(row);
         }

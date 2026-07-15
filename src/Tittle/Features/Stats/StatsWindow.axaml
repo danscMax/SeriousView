@@ -37,7 +37,8 @@
         <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding FleschRu}"/>
       </Grid>
 
-      <Button Content="Закрыть" HorizontalAlignment="Right" Click="OnCloseClick"/>
+      <Button Classes="modal-dismiss" Content="Закрыть" HorizontalAlignment="Right"
+              AutomationProperties.Name="Закрыть статистику" Click="OnCloseClick"/>
     </StackPanel>
   </Border>
 </shared:ModalWindow>

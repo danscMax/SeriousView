@@ -44,7 +44,7 @@
               <Button.Transitions>
                 <!-- Fade the ✕ in/out on hover (= DurFast token). -->
                 <Transitions>
-                  <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+                  <DoubleTransition Property="Opacity" Duration="{DynamicResource DurFast}" />
                 </Transitions>
               </Button.Transitions>
             </Button>

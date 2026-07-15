@@ -48,7 +48,7 @@
     <Setter Property="CornerRadius" Value="4" />
     <Setter Property="Transitions">
       <Transitions>
-        <BrushTransition Property="Background" Duration="0:0:0.12" />
+        <BrushTransition Property="Background" Duration="{DynamicResource DurFast}" />
       </Transitions>
     </Setter>
   </Style>

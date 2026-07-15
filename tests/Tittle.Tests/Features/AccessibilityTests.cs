@@ -106,6 +106,7 @@ public class AccessibilityTests
             "WorkspaceHoverBrush",
             "WorkspaceSelectedBrush",
             "WorkspaceSeparatorBrush",
+            "PdfPageSurfaceBrush",
         ];
 
         foreach (var theme in ThemeCatalog.All)

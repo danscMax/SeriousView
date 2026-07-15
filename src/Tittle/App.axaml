@@ -50,7 +50,7 @@
         <fa:FluentAvaloniaTheme PreferSystemTheme="False" PreferUserAccentColor="True" />
         <!-- AvaloniaEdit control theme — required for TextEditor to render; must come AFTER. -->
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
-        <!-- App animations (theme recolor transitions, fade-in). -->
+        <!-- App animations and theme recolor transitions. -->
         <StyleInclude Source="avares://Tittle/Themes/Animations.axaml" />
         <!-- Custom control styles (accent button, recent-item hover) — after FA to override it. -->
         <StyleInclude Source="avares://Tittle/Themes/Controls.axaml" />

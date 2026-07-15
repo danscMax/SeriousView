@@ -48,7 +48,7 @@ public partial class MacroRowViewModel : ObservableObject
     public IReadOnlyList<IEditorIntent> Steps { get; }
 
     /// <summary>The capture button's caption: a prompt mid-capture, the gesture when bound, else a hint.</summary>
-    public string ShortcutLabel => Capturing ? "нажмите…" : string.IsNullOrEmpty(Shortcut) ? "⌨ задать" : Shortcut;
+    public string ShortcutLabel => Capturing ? "нажмите…" : string.IsNullOrEmpty(Shortcut) ? "Задать" : Shortcut;
 
     /// <summary>Whether the «clear» button shows (a gesture is bound and we're not mid-capture).</summary>
     public bool HasShortcut => !string.IsNullOrEmpty(Shortcut) && !Capturing;

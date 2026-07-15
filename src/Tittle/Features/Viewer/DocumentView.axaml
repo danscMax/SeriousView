@@ -26,7 +26,7 @@
          so they're never visible at once. Both carry a short fade for polish. -->
     <Style Selector="Label.LangInfo">
       <Setter Property="Transitions">
-        <Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.12"/></Transitions>
+        <Transitions><DoubleTransition Property="Opacity" Duration="{DynamicResource DurFast}"/></Transitions>
       </Setter>
     </Style>
     <Style Selector=".CodeBlock:pointerover Label.LangInfo">
@@ -35,7 +35,7 @@
     <Style Selector="Button.code-copy">
       <Setter Property="Opacity" Value="0"/>
       <Setter Property="Transitions">
-        <Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.12"/></Transitions>
+        <Transitions><DoubleTransition Property="Opacity" Duration="{DynamicResource DurFast}"/></Transitions>
       </Setter>
     </Style>
     <Style Selector=".CodeBlock:pointerover Button.code-copy">

@@ -16,11 +16,11 @@
                  Margin="0,0,0,4"/>
       <TextBlock DockPanel.Dock="Top" Margin="0,0,0,12" FontSize="12" TextWrapping="Wrap"
                  Foreground="{DynamicResource ChromeForegroundMutedBrush}"
-                 Text="Первые 9 макросов запускаются с Ctrl+Shift+1…9. Кнопкой «⌨ задать» можно назначить своё сочетание (Ctrl/Alt + …)."/>
+                 Text="Первые 9 макросов запускаются с Ctrl+Shift+1…9. Кнопкой «Задать» можно назначить своё сочетание (Ctrl/Alt + …)."/>
       <Button DockPanel.Dock="Bottom" Content="Готово" HorizontalAlignment="Right" Classes="accent"
               Margin="0,12,0,0" AutomationProperties.Name="Закрыть" Click="OnCloseClick"/>
       <TextBlock DockPanel.Dock="Bottom" IsVisible="{Binding IsEmpty}"
-                 Text="Пока нет записанных макросов. ☰ Инструменты ▸ Записать макрос."
+                 Text="Пока нет записанных макросов. Откройте меню «Инструменты» и выберите «Записать макрос»."
                  TextWrapping="Wrap" Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
       <ScrollViewer HorizontalScrollBarVisibility="Disabled">
         <ItemsControl ItemsSource="{Binding Rows}">
@@ -30,12 +30,12 @@
                       BorderBrush="{DynamicResource ChromeBorderBrush}" BorderThickness="1"
                       Padding="8" Margin="0,0,0,8">
                 <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto" VerticalAlignment="Center">
-                  <TextBox Grid.Column="0" Text="{Binding Name, Mode=TwoWay}" Watermark="Имя макроса"
+                  <TextBox Grid.Column="0" Classes="modal-field" Text="{Binding Name, Mode=TwoWay}" Watermark="Имя макроса"
                            VerticalContentAlignment="Center" Margin="0,0,8,0"/>
                   <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="12"
                              Foreground="{DynamicResource ChromeForegroundMutedBrush}"
                              Text="{Binding StepCount, StringFormat='{}{0} шаг.'}"/>
-                  <NumericUpDown Grid.Column="2" Value="{Binding Count, Mode=TwoWay}" Minimum="1" Maximum="9999"
+                  <NumericUpDown Grid.Column="2" Classes="modal-field" Value="{Binding Count, Mode=TwoWay}" Minimum="1" Maximum="9999"
                                  Width="96" Margin="0,0,8,0" ToolTip.Tip="Сколько раз повторить"
                                  AutomationProperties.Name="Число повторов"/>
                   <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="0,0,8,0" VerticalAlignment="Center">
@@ -44,20 +44,31 @@
                             AutomationProperties.Name="Назначить горячую клавишу"
                             Command="{Binding $parent[ItemsControl].DataContext.BeginCaptureCommand}"
                             CommandParameter="{Binding}"/>
-                    <Button Content="&#x2715;" Margin="2,0,0,0" IsVisible="{Binding HasShortcut}"
+                    <Button Margin="2,0,0,0" IsVisible="{Binding HasShortcut}"
                             ToolTip.Tip="Снять привязку" AutomationProperties.Name="Снять привязку"
                             Command="{Binding $parent[ItemsControl].DataContext.ClearShortcutCommand}"
-                            CommandParameter="{Binding}"/>
+                            CommandParameter="{Binding}">
+                      <PathIcon Data="{StaticResource IconClose}" Width="10" Height="10"/>
+                    </Button>
                   </StackPanel>
-                  <Button Grid.Column="4" Content="▶ ×N" Margin="0,0,4,0" ToolTip.Tip="Воспроизвести N раз"
+                  <Button Grid.Column="4" Margin="0,0,4,0" ToolTip.Tip="Воспроизвести N раз"
+                          AutomationProperties.Name="Воспроизвести макрос указанное число раз"
                           Command="{Binding $parent[ItemsControl].DataContext.PlayTimesCommand}"
-                          CommandParameter="{Binding}"/>
-                  <Button Grid.Column="5" Content="▶▶" Margin="0,0,4,0" ToolTip.Tip="До конца файла"
+                          CommandParameter="{Binding}">
+                    <PathIcon Data="{StaticResource IconPlay}" Width="12" Height="12"/>
+                  </Button>
+                  <Button Grid.Column="5" Margin="0,0,4,0" ToolTip.Tip="До конца файла"
+                          AutomationProperties.Name="Воспроизвести макрос до конца файла"
                           Command="{Binding $parent[ItemsControl].DataContext.PlayToEndCommand}"
-                          CommandParameter="{Binding}"/>
-                  <Button Grid.Column="6" Content="&#x2715;" ToolTip.Tip="Удалить"
+                          CommandParameter="{Binding}">
+                    <PathIcon Data="{StaticResource IconSkipEnd}" Width="13" Height="13"/>
+                  </Button>
+                  <Button Grid.Column="6" ToolTip.Tip="Удалить"
+                          AutomationProperties.Name="Удалить макрос"
                           Command="{Binding $parent[ItemsControl].DataContext.DeleteCommand}"
-                          CommandParameter="{Binding}"/>
+                          CommandParameter="{Binding}">
+                    <PathIcon Data="{StaticResource IconClose}" Width="11" Height="11"/>
+                  </Button>
                 </Grid>
               </Border>
             </DataTemplate>
