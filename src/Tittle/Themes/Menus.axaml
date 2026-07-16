@@ -21,14 +21,9 @@
     <Setter Property="Padding" Value="4"/>
   </Style>
 
-  <!-- Submenus are hosted by a plain FlyoutPresenter/Popup rather than the MenuFlyoutPresenter above —
-       that mismatch is exactly what made a submenu a different colour from its parent. Same tokens. -->
-  <Style Selector="FlyoutPresenter">
-    <Setter Property="Background" Value="{DynamicResource EditorSurfaceBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource ChromeBorderBrush}"/>
-    <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="CornerRadius" Value="8"/>
-  </Style>
+  <!-- NB a SUBMENU is not this presenter: it is an unnamed Border inside FluentAvalonia's MenuItem
+       template, so no selector reaches it. It is themed by the MenuFlyoutPresenter* RESOURCE keys each
+       theme file restates (guarded by EveryTheme_PaintsMenusInTheChromeColours). -->
 
   <!-- Rows: our text colour, our hover overlay, comfortable hit height. -->
   <Style Selector="MenuItem">
@@ -47,10 +42,10 @@
       </Transitions>
     </Setter>
   </Style>
-  <Style Selector="MenuItem:pointerover /template/ Border#PART_LayoutRoot">
-    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
-  </Style>
-  <Style Selector="MenuItem:selected /template/ Border#PART_LayoutRoot">
+  <!-- A menu highlights on hover by SELECTING the row (that is the state FA's own theme styles), so both
+       states get the one overlay — :pointerover alone would miss keyboard navigation. -->
+  <Style Selector="MenuItem:pointerover /template/ Border#PART_LayoutRoot,
+                   MenuItem:selected /template/ Border#PART_LayoutRoot">
     <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
   </Style>
   <!-- A disabled row must read as unavailable, not as "muted body text". -->
@@ -63,10 +58,8 @@
   <Style Selector="MenuItem /template/ TextBlock#PART_InputGestureText">
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
   </Style>
-  <!-- The submenu chevron follows the label, not FA's own accent. -->
-  <Style Selector="MenuItem /template/ Path#PART_ChevronPath">
-    <Setter Property="Fill" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
-  </Style>
+  <!-- (No chevron style: FA's PART_ChevronPath is a FASymbolIcon, not a Path — it inherits the row's
+       Foreground already, and a `Path#PART_ChevronPath` selector silently matches nothing.) -->
 
   <!-- Group separators: the same hairline token as every other divider in the app. (Avalonia menus use
        a plain Separator — MenuFlyoutSeparator is a WinUI type and does not exist here.) -->
