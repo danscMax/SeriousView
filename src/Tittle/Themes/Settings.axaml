@@ -1,0 +1,107 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:settings="using:Tittle.Features.Settings">
+
+  <!-- ═══ Settings ════════════════════════════════════════════════════════════════════════════════
+       The settings window was a single 460px column of bordered cards, each holding a stack of radio
+       buttons and no explanation of what anything did — so it scrolled, the scrollbar cut across the
+       cards, and a nested card inside the modal card gave every group a double frame.
+
+       The shape here instead (after SweetWhisper's settings, which solved the same problem):
+         · categories on the left, one page at a time on the right — nothing scrolls in the common case;
+         · a section is a title + a hairline, NOT a card — the modal card is already the only frame;
+         · a row is label + description on the left, the control on the right (SettingRow);
+         · a choice is a dropdown, so a row stays one line and the page stays short.
+       ═════════════════════════════════════════════════════════════════════════════════════════════ -->
+
+  <!-- The row primitive: one template, so label/description/control rhythm can never drift per row. -->
+  <Style Selector="settings|SettingRow">
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="Margin" Value="0,0,0,18"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+          <StackPanel VerticalAlignment="Center" Spacing="3">
+            <TextBlock Text="{TemplateBinding Label}" FontSize="13.5"
+                       Foreground="{DynamicResource ChromeForegroundBrush}"
+                       TextWrapping="Wrap"/>
+            <!-- Collapsed (not just hidden) when empty, so a self-evident row keeps its single-line height. -->
+            <TextBlock Text="{TemplateBinding Description}" FontSize="11.5"
+                       Foreground="{DynamicResource ChromeForegroundMutedBrush}"
+                       TextWrapping="Wrap"
+                       IsVisible="{TemplateBinding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+          </StackPanel>
+          <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}"
+                            VerticalAlignment="Center" HorizontalAlignment="Right"/>
+        </Grid>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+
+  <!-- Section heading: a quiet all-caps label over a hairline. Replaces the nested card frames. -->
+  <Style Selector="TextBlock.settings-heading">
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
+    <Setter Property="Margin" Value="0,0,0,2"/>
+  </Style>
+  <Style Selector="Border.settings-rule">
+    <Setter Property="Height" Value="1"/>
+    <Setter Property="Background" Value="{DynamicResource ChromeBorderBrush}"/>
+    <Setter Property="Margin" Value="0,0,0,16"/>
+  </Style>
+
+  <!-- Dropdowns carry the value, so they get a predictable width and the quiet inset field surface the
+       omnibar / modal fields already use, instead of Fluent's louder default. -->
+  <!-- A fixed width, not MinWidth: the dropdowns are right-aligned, so sizing each to its own longest
+       option left their LEFT edges ragged down the page. One width = one clean column of controls. -->
+  <Style Selector="ComboBox.settings-pick">
+    <Setter Property="Width" Value="268"/>
+    <Setter Property="MinHeight" Value="32"/>
+    <Setter Property="HorizontalAlignment" Value="Right"/>
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHeaderBackgroundBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource WorkspaceSeparatorBrush}"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}"/>
+  </Style>
+
+  <!-- Category rail: a plain list, not tabs with a strip. TabControl gives the selection + one-page-at-a
+       time behaviour for free (no extra view-model state); these styles remove its tab look. -->
+  <Style Selector="TabControl.settings-nav">
+    <Setter Property="Padding" Value="0"/>
+  </Style>
+  <Style Selector="TabControl.settings-nav /template/ ItemsPresenter#PART_ItemsPresenter">
+    <Setter Property="Margin" Value="0,0,18,0"/>
+  </Style>
+  <!-- NB the class sits on the TabItem, not on the TabControl: `/template/` does not resolve through a
+       descendant combinator (`TabControl.settings-nav TabItem /template/ …` silently matches nothing),
+       so the parts have to be reached from a selector that targets the templated control directly. -->
+  <Style Selector="TabItem.settings-tab">
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="FontWeight" Value="Normal"/>
+    <Setter Property="MinHeight" Value="34"/>
+    <Setter Property="Padding" Value="12,6"/>
+    <Setter Property="Margin" Value="0,0,0,2"/>
+    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
+  </Style>
+  <!-- Own the rest background BEFORE the hover: the same FluentAvalonia trap the chrome buttons hit —
+       leave rest to FA and it paints its own hover first, flashing under ours. FA's accent pipe stays as
+       the selection cue (it reads well and needs no tile behind it). -->
+  <Style Selector="TabItem.settings-tab /template/ Border#PART_LayoutRoot">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="TabItem.settings-tab:pointerover /template/ Border#PART_LayoutRoot">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceHoverBrush}"/>
+  </Style>
+  <Style Selector="TabItem.settings-tab:selected">
+    <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+  </Style>
+
+</Styles>

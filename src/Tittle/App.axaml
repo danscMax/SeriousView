@@ -56,6 +56,8 @@
         <StyleInclude Source="avares://Tittle/Themes/Controls.axaml" />
         <!-- Menu surfaces themed from OUR tokens: FA does not match them to the chrome by itself. -->
         <StyleInclude Source="avares://Tittle/Themes/Menus.axaml" />
+        <!-- Settings window: the SettingRow primitive + the category rail. -->
+        <StyleInclude Source="avares://Tittle/Themes/Settings.axaml" />
         <!-- Markdown admonition callouts (GitHub alerts). -->
         <StyleInclude Source="avares://Tittle/Themes/Admonitions.axaml" />
         <!-- Block math (M11). -->

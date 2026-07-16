@@ -1,96 +1,135 @@
 <shared:ModalWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shared="using:Tittle.Shared"
+        xmlns:settings="using:Tittle.Features.Settings"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="320"
+        mc:Ignorable="d" d:DesignWidth="720" d:DesignHeight="520"
         x:Class="Tittle.Features.Settings.LayoutSettingsWindow"
         x:DataType="shared:LayoutOptions"
-        Title="Раскладка"
-        Width="460" SizeToContent="Height" MaxHeight="720" CanResize="False">
-  <!-- Bound to the shared LayoutOptions, so every toggle persists and re-renders the chrome live. Stays
+        Title="Настройки"
+        Width="720" Height="520" CanResize="False">
+  <!-- Bound to the shared LayoutOptions, so every change persists and re-renders the chrome live. Stays
        open (no click-away close) so the user can watch the changes; Esc / Готово close it.
-       Chrome = ModalWindow + Border.modalcard (the card also sets the default text colour). -->
-  <Border Classes="modalcard" Padding="22">
-    <!-- Default text colour comes from Border.modalcard; CheckBox/RadioButton from the scoped styles in
-         Controls.axaml. Only the muted section labels set an explicit (muted) Foreground. -->
-    <ScrollViewer MaxHeight="660" VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Disabled">
-    <StackPanel Spacing="14">
-      <StackPanel Spacing="4">
-        <TextBlock Text="Раскладка интерфейса" FontSize="18" FontWeight="SemiBold"/>
+       Chrome = ModalWindow + Border.modalcard. Layout rationale lives in Themes/Settings.axaml. -->
+  <Border Classes="modalcard" Padding="24">
+    <DockPanel>
+
+      <StackPanel DockPanel.Dock="Top" Spacing="3" Margin="0,0,0,18">
+        <TextBlock Text="Настройки" FontSize="18" FontWeight="SemiBold"/>
         <TextBlock Text="Соберите рабочее пространство под свой ритм чтения и редактирования."
-                   TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
+                   TextWrapping="Wrap" FontSize="12"
+                   Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
       </StackPanel>
 
-      <Border Classes="settings-group">
-        <CheckBox IsChecked="{Binding ShowOmnibar, Mode=TwoWay}"
-                  Content="Омнибар (путь · открыть · палитра)"/>
-      </Border>
-
-      <Border Classes="settings-group">
-        <StackPanel Spacing="4">
-        <TextBlock Text="Панель инструментов" Classes="settings-section"/>
-        <RadioButton GroupName="Toolbar" Content="Контекстная (в режиме «Исходник»)"
-                     IsChecked="{Binding ToolbarMode, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Contextual}"/>
-        <RadioButton GroupName="Toolbar" Content="Всегда показывать"
-                     IsChecked="{Binding ToolbarMode, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Fixed}"/>
-        <RadioButton GroupName="Toolbar" Content="Выключена"
-                     IsChecked="{Binding ToolbarMode, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Off}"/>
-        </StackPanel>
-      </Border>
-
-      <Border Classes="settings-group">
-        <StackPanel Spacing="4">
-        <TextBlock Text="Ширина колонки чтения" Classes="settings-section"/>
-        <RadioButton GroupName="ReadingWidth" Content="Полная"
-                     IsChecked="{Binding ReadingWidth, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Full}"/>
-        <RadioButton GroupName="ReadingWidth" Content="Средняя (760 px)"
-                     IsChecked="{Binding ReadingWidth, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Comfort}"/>
-        <RadioButton GroupName="ReadingWidth" Content="Узкая (620 px)"
-                     IsChecked="{Binding ReadingWidth, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Narrow}"/>
-        </StackPanel>
-      </Border>
-
-      <Border Classes="settings-group">
-        <StackPanel Spacing="4">
-        <TextBlock Text="Разреженность текста" Classes="settings-section"/>
-        <RadioButton GroupName="ReadingDensity" Content="Плотно"
-                     IsChecked="{Binding ReadingDensity, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Compact}"/>
-        <RadioButton GroupName="ReadingDensity" Content="Обычно"
-                     IsChecked="{Binding ReadingDensity, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Normal}"/>
-        <RadioButton GroupName="ReadingDensity" Content="Просторно"
-                     IsChecked="{Binding ReadingDensity, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Relaxed}"/>
-        </StackPanel>
-      </Border>
-
-      <Border Classes="settings-group">
-        <StackPanel Spacing="4">
-        <TextBlock Text="Ориентация разделённого вида" Classes="settings-section"/>
-        <RadioButton GroupName="SplitOrientation" Content="Горизонтальная (рядом)"
-                     IsChecked="{Binding SplitOrientation, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Horizontal}"/>
-        <RadioButton GroupName="SplitOrientation" Content="Вертикальная (друг над другом)"
-                     IsChecked="{Binding SplitOrientation, Mode=TwoWay, Converter={x:Static shared:EnumRadioConverter.Instance}, ConverterParameter=Vertical}"/>
-        </StackPanel>
-      </Border>
-
-      <!-- Diagrams (M12). DataContext is the shared DiagramOptions, assigned in code-behind. -->
-      <Border Classes="settings-group">
-        <StackPanel x:Name="DiagramSection" x:DataType="shared:DiagramOptions" Spacing="6">
-        <TextBlock Text="Диаграммы" Classes="settings-section"/>
-        <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay}"
-                  Content="Рендерить диаграммы через Kroki"/>
-        <TextBox Text="{Binding KrokiUrl, Mode=TwoWay}" IsEnabled="{Binding Enabled}"
-                 Watermark="https://kroki.io" AutomationProperties.Name="Адрес сервера Kroki"/>
-        <TextBlock TextWrapping="Wrap" FontSize="11.5"
-                   Foreground="{DynamicResource ChromeForegroundMutedBrush}"
-                   Text="Текст диаграммы (```mermaid, ```plantuml, ```dot …) отправляется на указанный сервер. По умолчанию выключено; можно указать свой self-hosted Kroki."/>
-        </StackPanel>
-      </Border>
-
-      <Button Content="Готово" HorizontalAlignment="Right" Classes="accent"
+      <Button DockPanel.Dock="Bottom" Content="Готово" HorizontalAlignment="Right" Classes="accent"
+              Margin="0,18,0,0"
               AutomationProperties.Name="Закрыть настройки" Click="OnCloseClick"/>
-    </StackPanel>
-    </ScrollViewer>
+
+      <!-- Categories left, one page right. Only the page scrolls, and only if it has to — so the
+           scrollbar can never cut across the content the way it did in the old single column. -->
+      <TabControl Classes="settings-nav" TabStripPlacement="Left"
+                  AutomationProperties.AutomationId="SettingsCategories">
+
+        <TabItem Classes="settings-tab" Header="Раскладка">
+          <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                        Padding="0,0,10,0">
+            <StackPanel>
+              <TextBlock Text="ОКНО" Classes="settings-heading"/>
+              <Border Classes="settings-rule"/>
+
+              <settings:SettingRow Label="Омнибар"
+                                   Description="Строка с путём к файлу, кнопкой «Открыть» и палитрой команд.">
+                <CheckBox IsChecked="{Binding ShowOmnibar, Mode=TwoWay}"
+                          AutomationProperties.Name="Омнибар"/>
+              </settings:SettingRow>
+
+              <settings:SettingRow Label="Панель инструментов"
+                                   Description="Ряд кнопок под вкладками: поиск, перенос строк, номера строк.">
+                <ComboBox Classes="settings-pick"
+                          ItemsSource="{x:Static settings:SettingChoices.ToolbarModes}"
+                          DisplayMemberBinding="{Binding Label}"
+                          SelectedValueBinding="{Binding Value}"
+                          SelectedValue="{Binding ToolbarMode, Mode=TwoWay}"
+                          AutomationProperties.Name="Панель инструментов"/>
+              </settings:SettingRow>
+
+              <settings:SettingRow Label="Разделённый вид"
+                                   Description="Как располагать исходник и предпросмотр рядом друг с другом.">
+                <ComboBox Classes="settings-pick"
+                          ItemsSource="{x:Static settings:SettingChoices.SplitOrientations}"
+                          DisplayMemberBinding="{Binding Label}"
+                          SelectedValueBinding="{Binding Value}"
+                          SelectedValue="{Binding SplitOrientation, Mode=TwoWay}"
+                          AutomationProperties.Name="Ориентация разделённого вида"/>
+              </settings:SettingRow>
+            </StackPanel>
+          </ScrollViewer>
+        </TabItem>
+
+        <TabItem Classes="settings-tab" Header="Чтение">
+          <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                        Padding="0,0,10,0">
+            <StackPanel>
+              <TextBlock Text="ТЕКСТ" Classes="settings-heading"/>
+              <Border Classes="settings-rule"/>
+
+              <settings:SettingRow Label="Ширина колонки"
+                                   Description="Сколько текста умещается в строке. Узкая колонка читается легче.">
+                <ComboBox Classes="settings-pick"
+                          ItemsSource="{x:Static settings:SettingChoices.ReadingWidths}"
+                          DisplayMemberBinding="{Binding Label}"
+                          SelectedValueBinding="{Binding Value}"
+                          SelectedValue="{Binding ReadingWidth, Mode=TwoWay}"
+                          AutomationProperties.Name="Ширина колонки чтения"/>
+              </settings:SettingRow>
+
+              <settings:SettingRow Label="Разрежённость текста"
+                                   Description="Интервал между строками внутри абзаца.">
+                <ComboBox Classes="settings-pick"
+                          ItemsSource="{x:Static settings:SettingChoices.ReadingDensities}"
+                          DisplayMemberBinding="{Binding Label}"
+                          SelectedValueBinding="{Binding Value}"
+                          SelectedValue="{Binding ReadingDensity, Mode=TwoWay}"
+                          AutomationProperties.Name="Разрежённость текста"/>
+              </settings:SettingRow>
+            </StackPanel>
+          </ScrollViewer>
+        </TabItem>
+
+        <!-- Diagrams (M12). DataContext is the shared DiagramOptions, assigned in code-behind. -->
+        <TabItem Classes="settings-tab" Header="Диаграммы">
+          <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                        Padding="0,0,10,0">
+            <StackPanel x:Name="DiagramSection" x:DataType="shared:DiagramOptions">
+              <TextBlock Text="KROKI" Classes="settings-heading"/>
+              <Border Classes="settings-rule"/>
+
+              <settings:SettingRow Label="Рендерить диаграммы"
+                                   Description="Блоки ```mermaid, ```plantuml, ```dot … превращаются в картинки.">
+                <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay}"
+                          AutomationProperties.Name="Рендерить диаграммы через Kroki"/>
+              </settings:SettingRow>
+
+              <settings:SettingRow Label="Адрес сервера"
+                                   Description="Можно указать свой self-hosted Kroki.">
+                <!-- Same width as the dropdowns: the controls form one column down the page. -->
+                <TextBox Classes="modal-field" Width="268"
+                         Text="{Binding KrokiUrl, Mode=TwoWay}" IsEnabled="{Binding Enabled}"
+                         Watermark="https://kroki.io"
+                         AutomationProperties.Name="Адрес сервера Kroki"/>
+              </settings:SettingRow>
+
+              <!-- The privacy consequence is the whole point of this being opt-in: say it plainly, and
+                   keep it in the section rather than hiding it in a row description. -->
+              <TextBlock TextWrapping="Wrap" FontSize="11.5" Margin="0,2,0,0"
+                         Foreground="{DynamicResource ChromeForegroundMutedBrush}"
+                         Text="Текст диаграммы отправляется на указанный сервер. По умолчанию выключено."/>
+            </StackPanel>
+          </ScrollViewer>
+        </TabItem>
+
+      </TabControl>
+    </DockPanel>
   </Border>
 </shared:ModalWindow>
