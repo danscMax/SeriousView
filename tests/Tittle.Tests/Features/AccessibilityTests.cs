@@ -121,6 +121,65 @@ public class AccessibilityTests
         }
     }
 
+    /// <summary>A tinted theme must tint its whole shell, not just the few tokens it happened to override.
+    /// The Workspace* family arrived after the ported palettes and none of them redefined it, so every
+    /// custom theme silently fell through to Dark's NEUTRAL greys — which put a grey tab-strip band and
+    /// grey panels inside an otherwise deep-blue (or nord, or dracula…) app. Rule: if a theme's window is
+    /// chromatic, its shell surfaces must be chromatic too. Neutral-grey themes (Gruvbox) are exempt by
+    /// construction — their window has no tint either, so the premise never fires.</summary>
+    [AvaloniaFact]
+    public void EveryTintedTheme_TintsItsShell()
+    {
+        var app = Application.Current!;
+        var service = new ThemeService(new AppSettingsService(new FakeSettingsStore()));
+        // Surfaces that must track the WINDOW's tint (they are the window's own family).
+        string[] windowFamily =
+        [
+            "WorkspaceRailBackgroundBrush",
+            "WorkspaceSidebarBackgroundBrush",
+            "WorkspaceHeaderBackgroundBrush",
+            "WorkspaceHoverBrush",
+        ];
+
+        static int Chroma(Color c) => Math.Max(c.R, Math.Max(c.G, c.B)) - Math.Min(c.R, Math.Min(c.G, c.B));
+
+        Color Resolve(string key)
+        {
+            Assert.True(app.TryGetResource(key, app.RequestedThemeVariant, out var value), $"{key} unresolved");
+            return Assert.IsAssignableFrom<ISolidColorBrush>(value).Color;
+        }
+
+        foreach (var theme in ThemeCatalog.All)
+        {
+            if (theme.Mode == ThemeMode.Auto)
+                continue;
+
+            service.SetMode(theme.Mode);
+            var windowChroma = Chroma(Resolve("WindowBackgroundBrush"));
+            if (windowChroma < 6)
+                continue; // a deliberately neutral palette: nothing to match.
+
+            // Relative, not a flat floor: Dark's grey header (#18181C) still has a chroma of 4, so any
+            // small absolute threshold would have waved the original bug straight through. A shell
+            // surface has to be tinted in the same LEAGUE as the window it sits in.
+            var floor = windowChroma / 2;
+            foreach (var key in windowFamily)
+            {
+                var chroma = Chroma(Resolve(key));
+                Assert.True(chroma >= floor,
+                    $"{theme.Mode}: {key} chroma {chroma} is washed out beside its own window " +
+                    $"(chroma {windowChroma}, needs >= {floor}) — the theme is not tinting its own shell");
+            }
+
+            // The selected tile is ACCENT-tinted by design, so it carries the accent's hue, not the
+            // window's — comparing its chroma to the window would be the wrong question (a desaturated
+            // accent is a legitimate palette choice). It only has to not be grey.
+            var selected = Chroma(Resolve("WorkspaceSelectedBrush"));
+            Assert.True(selected >= 10,
+                $"{theme.Mode}: WorkspaceSelectedBrush is grey (chroma {selected}) in a tinted theme");
+        }
+    }
+
     /// <summary>A submenu is painted by an unnamed Border inside FluentAvalonia's MenuItem template, which
     /// reads the MenuFlyoutPresenter* RESOURCE keys — no selector can reach it, so every theme file has to
     /// restate its own surface/border under those keys (Themes/Menus.axaml covers what selectors CAN

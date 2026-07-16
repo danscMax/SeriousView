@@ -32,4 +32,19 @@
          matches its parent flyout and the chrome; ThemeMenuResourceTests guards the pair from drifting. -->
     <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#073642" />
     <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#0E4954" />
+
+    <!-- Workspace shell + document tints, derived from THIS theme's own Window/Editor/Border/Accent so the
+         whole app reads in one hue. They used to be absent here and fell through to Dark's neutral greys,
+         which put a grey band (tab strip / header) and grey panels inside a tinted app.
+         EveryTintedTheme_TintsItsShell guards that from coming back. -->
+    <SolidColorBrush x:Key="WorkspaceRailBackgroundBrush" Color="#001C23" />
+    <SolidColorBrush x:Key="WorkspaceSidebarBackgroundBrush" Color="#04303C" />
+    <SolidColorBrush x:Key="WorkspaceHeaderBackgroundBrush" Color="#0B353F" />
+    <SolidColorBrush x:Key="WorkspaceHoverBrush" Color="#1C434C" />
+    <SolidColorBrush x:Key="WorkspaceSelectedBrush" Color="#304731" />
+    <SolidColorBrush x:Key="WorkspaceSeparatorBrush" Color="#0E4954" />
+    <SolidColorBrush x:Key="InlineCodeBgBrush" Color="#18444F" />
+    <SolidColorBrush x:Key="TableHeaderBgBrush" Color="#183E3B" />
+    <SolidColorBrush x:Key="TableRowAltBgBrush" Color="#103D49" />
+    <SolidColorBrush x:Key="TableBorderBrush" Color="#0C4450" />
 </ResourceDictionary>
