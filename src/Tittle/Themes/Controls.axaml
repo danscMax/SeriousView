@@ -114,18 +114,6 @@
     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
   </Style>
-  <Style Selector="Border.settings-group">
-    <Setter Property="Background" Value="{DynamicResource WorkspaceHeaderBackgroundBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource WorkspaceSeparatorBrush}"/>
-    <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="CornerRadius" Value="{DynamicResource PanelCornerRadius}"/>
-    <Setter Property="Padding" Value="12"/>
-  </Style>
-  <Style Selector="TextBlock.settings-section">
-    <Setter Property="FontSize" Value="11.5"/>
-    <Setter Property="FontWeight" Value="SemiBold"/>
-    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-  </Style>
 
   <!-- Welcome workspace: one restrained document mark, a useful drop target and compact shortcut
        keycaps. Everything reuses semantic shell surfaces so all fourteen themes inherit the same

@@ -13,8 +13,9 @@ public sealed class EnumToBoolConverter : IValueConverter
 {
     public static readonly EnumToBoolConverter Instance = new();
 
-    /// <summary>True when the bound value's name equals the parameter name (Ordinal). Shared with
-    /// <see cref="EnumRadioConverter"/> so the two converters' forward direction can never drift.</summary>
+    /// <summary>True when the bound value's name equals the parameter name (Ordinal). (Was shared with a
+    /// two-way EnumRadioConverter; that went with the settings window's radio buttons — the settings
+    /// dropdowns bind the enum directly through ComboBox SelectedValue, no converter needed.)</summary>
     internal static bool NameMatches(object? value, object? parameter)
         => value is not null && parameter is not null
            && string.Equals(value.ToString(), parameter.ToString(), StringComparison.Ordinal);
