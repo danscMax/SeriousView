@@ -306,7 +306,9 @@ ListMarkersInPlace` rewrites `-`/`+` list markers to `*` so every bullet renders
 hollow `○`; (c) **nicer table header** — the library's pale grey is tinted via `TableHeaderBgBrush`/
 `TableBorderBrush` tokens, applied in code (`PreviewTableSorter`, local resource bindings — the library's
 table styles beat an app/UserControl Setter); (d) **configurable text density** — `ReadingDensity` preset
-(Плотно/Обычно/Просторно in Настройки ▸ Раскладка) drives `CTextBlock.LineSpacing`, applied in the reflow.
+(Плотно/Обычно/Просторно in Настройки ▸ Раскладка) drives both `CTextBlock.LineSpacing` (leading inside a
+block) and the bottom-Margin gap BETWEEN top-level blocks (`ApplyBlockSpacing` — the VS-Code paragraph
+rhythm, 2026-07-18; skips headings + the H1/H2 divider so those keep their own spacing), applied in the reflow.
 **H1/H2 divider lines DONE** (`ebcb54e`): GitHub-style rule under H1/H2 (a Border inserted into the content
 StackPanel after each such heading during the reflow — `CTextBlock` has no border of its own).
 

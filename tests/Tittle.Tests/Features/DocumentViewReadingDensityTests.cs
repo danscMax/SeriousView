@@ -13,10 +13,10 @@ namespace Tittle.Tests.Features;
 
 /// <summary>Pins the live "Разреженность текста" (ReadingDensity) path end to end: changing the shared
 /// LayoutOptions must schedule a preview reflow (the Layout subscription stays live), and that reflow
-/// must actually re-space the wrapped text. Note what density does and does NOT do: LineSpacingFor maps
-/// Compact/Normal/Relaxed to 0/4/9 extra px BETWEEN WRAPPED LINES inside a block — it does not change the
-/// gaps between paragraphs or headings, so on a document whose lines never wrap it is invisible by
-/// design. Written while chasing a "density does nothing" report; the path itself measures correct.</summary>
+/// must actually re-space the wrapped text AND re-gap the blocks. Density now drives two things:
+/// LineSpacingFor (extra px between WRAPPED LINES inside a block) and BlockSpacingFor (the bottom Margin
+/// between TOP-LEVEL blocks — the paragraph rhythm added 2026-07-18 for the VS-Code look). Written while
+/// chasing a "density does nothing" report; the path itself measures correct.</summary>
 public class DocumentViewReadingDensityTests
 {
     private const string Sample = """
@@ -78,6 +78,36 @@ public class DocumentViewReadingDensityTests
         Assert.True(
             TotalTextHeight() > compactHeight,
             $"relaxed spacing must grow the wrapped text (was {compactHeight})");
+
+        window.Close();
+    }
+
+    /// <summary>The block rhythm: a top-level paragraph's bottom Margin (the gap to the next block) must
+    /// widen with density — the paragraph spacing the render lacked entirely before 2026-07-18.</summary>
+    [AvaloniaFact]
+    public void ReadingDensity_Reflow_WidensTheGapBetweenBlocks()
+    {
+        var (window, view, vm) = Open(ReadingDensity.Compact);
+
+        // Max bottom Margin over the NON-heading text blocks = the top-level paragraph's block gap.
+        double BlockGap() => view.GetVisualDescendants()
+            .OfType<ColorTextBlock.Avalonia.CTextBlock>()
+            .Where(t => !t.Classes.Any(c => c.StartsWith("Heading")))
+            .Select(t => t.Margin.Bottom)
+            .DefaultIfEmpty(0)
+            .Max();
+
+        view.RunPreviewReflowPassesForTest();
+        var compactGap = BlockGap();
+        Assert.True(compactGap > 0, "even Compact must gap paragraphs (no more butting blocks)");
+
+        vm.Layout!.ReadingDensity = ReadingDensity.Relaxed;
+        view.RunPreviewReflowPassesForTest();
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.True(
+            BlockGap() > compactGap,
+            $"relaxed density must widen the block gap (compact was {compactGap})");
 
         window.Close();
     }

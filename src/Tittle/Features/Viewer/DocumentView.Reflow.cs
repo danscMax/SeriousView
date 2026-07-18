@@ -88,9 +88,10 @@ public partial class DocumentView
         var tables = new List<Grid>();
         var headings = new List<Control>();
         var taskGlyphs = new List<ColorTextBlock.Avalonia.CTextBlock>();
-        // Reading density (configurable line spacing): applied here in code because the preview's
-        // CTextBlocks have no VM DataContext to bind to, and a style can't carry the live setting.
-        var lineSpacing = LineSpacingFor(_vm?.Layout?.ReadingDensity ?? Tittle.Core.Settings.ReadingDensity.Normal);
+        // Reading density (configurable line spacing + block gaps): applied here in code because the
+        // preview's CTextBlocks have no VM DataContext to bind to, and a style can't carry the live setting.
+        var density = _vm?.Layout?.ReadingDensity ?? Tittle.Core.Settings.ReadingDensity.Normal;
+        var lineSpacing = LineSpacingFor(density);
         foreach (var visual in Preview.GetVisualDescendants())
         {
             if (visual is ColorTextBlock.Avalonia.CTextBlock textBlock)
@@ -118,6 +119,7 @@ public partial class DocumentView
         PreviewTableSorter.AttachAll(tables); // ported click-to-sort, idempotent
         PreviewSectionCollapser.AttachAll(Preview); // ported collapsible sections (top-level, idempotent)
         PreviewHeadingDivider.AttachAll(Preview); // GitHub-style rule under H1/H2 (idempotent)
+        ApplyBlockSpacing(BlockSpacingFor(density)); // paragraph rhythm — after dividers exist (they're skipped)
         // Warm the heading-Y cache from the SAME pass, AFTER the code-editor heights are pinned
         // (pinning shifts heading positions) — same ordering the lazy path had.
         _previewHeadingTops = ComputePreviewHeadingTops(headings);
@@ -125,15 +127,46 @@ public partial class DocumentView
     }
 
     // Extra pixels between wrapped lines per reading-density preset (ColorTextBlock.LineSpacing, 0 = the
-    // font's natural leading). Tuned against the ~14-15px preview font. Shifted one step up (2026-07-15,
-    // user call): the old scale bottomed out at the font's raw leading and read cramped, so what used to
-    // be Relaxed is now the Normal default and each preset moved up a notch.
+    // font's natural leading). Tuned against the ~14-15px preview font. Widened 2026-07-18 (user call, the
+    // VS-Code fidelity pass): Relaxed was not airy enough and Compact read flat, so the range spreads.
     private static double LineSpacingFor(Tittle.Core.Settings.ReadingDensity density) => density switch
     {
-        Tittle.Core.Settings.ReadingDensity.Compact => 4,
-        Tittle.Core.Settings.ReadingDensity.Relaxed => 14,
-        _ => 9,
+        Tittle.Core.Settings.ReadingDensity.Compact => 5,
+        Tittle.Core.Settings.ReadingDensity.Relaxed => 16,
+        _ => 10,
     };
+
+    // Vertical gap between TOP-LEVEL blocks (paragraphs, lists, tables, code, blockquotes) per density —
+    // the paragraph rhythm VS Code has and we lacked entirely (blocks used to butt together at every
+    // density). Set as each block's bottom Margin in ApplyBlockSpacing. It COMPOUNDS with the fixed heading
+    // top-margins (Avalonia doesn't collapse margins), so the gap BEFORE a section heading is this plus the
+    // heading's own margin — bigger, the GitHub/VS-Code proportion the user asked for.
+    private static double BlockSpacingFor(Tittle.Core.Settings.ReadingDensity density) => density switch
+    {
+        Tittle.Core.Settings.ReadingDensity.Compact => 8,
+        Tittle.Core.Settings.ReadingDensity.Relaxed => 24,
+        _ => 14,
+    };
+
+    // Give every top-level block a bottom gap, EXCEPT headings (they keep their asymmetric XAML rhythm —
+    // big space above, tight below) and the H1/H2 divider (it must hug its heading, not float away). Only
+    // the bottom is touched; the block's own top/left/right margins (blockquote tint, rule) are preserved.
+    private void ApplyBlockSpacing(double gap)
+    {
+        foreach (var panel in PreviewSectionCollapser.TopLevelPanels(Preview))
+        {
+            foreach (var child in panel.Children)
+            {
+                if (child is not Control c
+                    || PreviewSectionCollapser.HeadingLevel(c) != 0
+                    || c.Classes.Contains("heading-divider"))
+                    continue;
+                var m = c.Margin;
+                if (Math.Abs(m.Bottom - gap) > 0.1)
+                    c.Margin = new Thickness(m.Left, m.Top, m.Right, gap);
+            }
+        }
+    }
 
     /// <summary>If a debounced reflow is pending, run it now — so an explicit navigation (TOC jump,
     /// mode-toggle sync) reads a fresh heading-Y cache instead of stale mid-drag positions.</summary>
