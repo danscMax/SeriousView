@@ -19,6 +19,12 @@
     <SolidColorBrush x:Key="WorkspaceSidebarBackgroundBrush" Color="#1B1B1F" />
     <SolidColorBrush x:Key="WorkspaceHeaderBackgroundBrush" Color="#18181C" />
     <SolidColorBrush x:Key="WorkspaceHoverBrush" Color="#29282F" />
+    <!-- Transparent-SURFACE base for hover fades. A hover overlay fades Background from its rest state to
+         WorkspaceHover/ChromeOverlay; if the rest state is `Transparent` (= #00FFFFFF, transparent WHITE)
+         the BrushTransition lerps RGB through white while alpha ramps → a white flash before the dark
+         overlay settles. Fading from this dark-at-alpha-0 brush keeps the whole sweep dark. Dark variants
+         inherit it (all have dark surfaces); Light.axaml restates it light. -->
+    <SolidColorBrush x:Key="HoverFadeBaseBrush" Color="#29282F" Opacity="0" />
     <SolidColorBrush x:Key="WorkspaceSelectedBrush" Color="#35303F" />
     <SolidColorBrush x:Key="WorkspaceSeparatorBrush" Color="#303036" />
 

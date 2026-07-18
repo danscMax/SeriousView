@@ -32,7 +32,10 @@
     <Setter Property="CornerRadius" Value="4"/>
   </Style>
   <Style Selector="MenuItem /template/ Border#PART_LayoutRoot">
-    <Setter Property="Background" Value="Transparent"/>
+    <!-- Transparent-SURFACE base (not `Transparent` = transparent-white): the hover fades Background to
+         WorkspaceHover, and fading from transparent-white sweeps the RGB through white → a white flash on
+         the menu row before the dark overlay lands. Fading from the dark-at-alpha-0 base keeps it dark. -->
+    <Setter Property="Background" Value="{DynamicResource HoverFadeBaseBrush}"/>
     <Setter Property="CornerRadius" Value="4"/>
     <!-- Background only, and owned at rest: the same FluentAvalonia trap as the chrome buttons — leave
          the rest state to FA and it paints its own hover first, flashing before ours lands. -->

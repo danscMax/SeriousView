@@ -98,7 +98,7 @@
        light ButtonBackgroundPointerOver on hover — the first-light-then-dark double flash. Every flat
        chrome button below follows this base-then-states shape (as Button.accent already did). -->
   <Style Selector="Button.modal-dismiss /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Background" Value="{DynamicResource HoverFadeBaseBrush}"/>
     <!-- Background only — a BorderBrush transition would fade the keyboard-focus ring in from FA's
          gradient border instead of snapping, and the hover never touches the border. -->
     <Setter Property="Transitions">
@@ -180,7 +180,7 @@
     <!-- Rest background is ours (transparent over the welcome card), not FA's — see modal-dismiss.
          Background only: a BorderBrush transition faded the keyboard-focus ring in from FA's gradient
          border instead of snapping, and the hover never recolours the border. -->
-    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Background" Value="{DynamicResource HoverFadeBaseBrush}"/>
     <Setter Property="Transitions">
       <Transitions>
         <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
@@ -257,7 +257,7 @@
        "first light, then dark" double flash. Pinning rest transparent makes our hover brush the only
        colour that ever shows, so the hover is a single clean fade. -->
   <Style Selector="Button.statusbtn /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Background" Value="{DynamicResource HoverFadeBaseBrush}"/>
     <Setter Property="Transitions">
       <Transitions>
         <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
@@ -297,7 +297,7 @@
          the setters above via TemplateBinding, so the rail is unchanged geometrically. -->
     <Setter Property="Template">
       <ControlTemplate>
-        <Border x:Name="PART_Bg" Background="Transparent"
+        <Border x:Name="PART_Bg" Background="{DynamicResource HoverFadeBaseBrush}"
                 BorderBrush="Transparent" BorderThickness="0"
                 CornerRadius="{TemplateBinding CornerRadius}">
           <Border.Transitions>
@@ -365,7 +365,7 @@
   </Style>
   <!-- Rest background + transition are ours, ahead of the states (see modal-dismiss). -->
   <Style Selector="Button.header-action /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Background" Value="{DynamicResource HoverFadeBaseBrush}"/>
     <Setter Property="Transitions">
       <Transitions>
         <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
@@ -414,7 +414,7 @@
   <!-- Rest background + transition are ours, ahead of the states (see modal-dismiss). The seg-on tab
        below still wins over the hover because it comes later in document order — unchanged. -->
   <Style Selector="Button.segment /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Background" Value="{DynamicResource HoverFadeBaseBrush}"/>
     <Setter Property="Transitions">
       <Transitions>
         <BrushTransition Property="Background" Duration="{DynamicResource DurFast}"/>
@@ -493,7 +493,7 @@
   <Style Selector="Button.recent">
     <Setter Property="Template">
       <ControlTemplate>
-        <Border x:Name="PART_Bg" Background="Transparent" Padding="{TemplateBinding Padding}"
+        <Border x:Name="PART_Bg" Background="{DynamicResource HoverFadeBaseBrush}" Padding="{TemplateBinding Padding}"
                 BorderThickness="1" BorderBrush="Transparent"
                 CornerRadius="{DynamicResource ControlCornerRadius}">
           <Border.Transitions>

@@ -13,6 +13,9 @@
     <SolidColorBrush x:Key="WorkspaceSidebarBackgroundBrush" Color="#F0EFF4" />
     <SolidColorBrush x:Key="WorkspaceHeaderBackgroundBrush" Color="#F4F3F7" />
     <SolidColorBrush x:Key="WorkspaceHoverBrush" Color="#E5E2ED" />
+    <!-- Transparent-surface base for hover fades — see Dark.axaml. Light-at-alpha-0 so the fade stays
+         light instead of sweeping through white; light variants inherit it. -->
+    <SolidColorBrush x:Key="HoverFadeBaseBrush" Color="#E5E2ED" Opacity="0" />
     <SolidColorBrush x:Key="WorkspaceSelectedBrush" Color="#DED8F2" />
     <SolidColorBrush x:Key="WorkspaceSeparatorBrush" Color="#D8D6DE" />
 
