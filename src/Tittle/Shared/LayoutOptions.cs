@@ -43,6 +43,69 @@ public partial class LayoutOptions : ObservableObject
     [ObservableProperty]
     private ReadingDensity _readingDensity = ReadingDensity.Normal;
 
+    // Fine-grain reading typography. The density preset above is a shortcut: picking one writes concrete
+    // numbers into LineSpacing/ParagraphSpacing (OnReadingDensityChanged), which the preview reads directly.
+    // A manual tweak leaves the dropdown showing the last-picked preset — acceptable (preset + custom).
+    public const double MinLineSpacing = 0, MaxLineSpacing = 40;
+    public const double MinParagraphSpacing = 0, MaxParagraphSpacing = 48;
+    public const double MinHeadingScale = 0.7, MaxHeadingScale = 1.8;
+
+    [ObservableProperty]
+    private double _lineSpacing = 10;
+
+    partial void OnLineSpacingChanged(double value)
+    {
+        var clamped = Math.Clamp(double.IsNaN(value) ? 10 : value, MinLineSpacing, MaxLineSpacing);
+        if (clamped != value)
+            LineSpacing = clamped;
+    }
+
+    [ObservableProperty]
+    private double _paragraphSpacing = 14;
+
+    partial void OnParagraphSpacingChanged(double value)
+    {
+        var clamped = Math.Clamp(double.IsNaN(value) ? 14 : value, MinParagraphSpacing, MaxParagraphSpacing);
+        if (clamped != value)
+            ParagraphSpacing = clamped;
+    }
+
+    [ObservableProperty]
+    private double _headingScale = 1.0;
+
+    partial void OnHeadingScaleChanged(double value)
+    {
+        var clamped = Math.Clamp(double.IsNaN(value) ? 1.0 : value, MinHeadingScale, MaxHeadingScale);
+        if (clamped != value)
+            HeadingScale = clamped;
+    }
+
+    [ObservableProperty]
+    private TextAlign _textAlignment = TextAlign.Left;
+
+    // Picking a density preset writes its concrete spacing numbers (the fine-grain fields are the truth the
+    // preview reads). Guarded so loading persisted settings (which set the numbers explicitly) isn't clobbered.
+    private bool _suppressPresetApply;
+
+    partial void OnReadingDensityChanged(ReadingDensity value)
+    {
+        if (_suppressPresetApply)
+            return;
+        var (line, para) = DensityPreset(value);
+        LineSpacing = line;
+        ParagraphSpacing = para;
+    }
+
+    /// <summary>The concrete (line spacing, paragraph spacing) numbers behind each density preset.
+    /// Widened 2026-07-18 for the VS-Code paragraph rhythm; the single source both the preset dropdown
+    /// and the fine-grain fields agree on.</summary>
+    public static (double LineSpacing, double ParagraphSpacing) DensityPreset(ReadingDensity density) => density switch
+    {
+        ReadingDensity.Compact => (5, 8),
+        ReadingDensity.Relaxed => (16, 24),
+        _ => (10, 14),
+    };
+
     [ObservableProperty]
     private SplitOrientation _splitOrientation = SplitOrientation.Horizontal;
 
@@ -92,24 +155,39 @@ public partial class LayoutOptions : ObservableObject
         OutlineWidth = OutlineWidth,
         ReadingWidth = ReadingWidth,
         ReadingDensity = ReadingDensity,
+        LineSpacing = LineSpacing,
+        ParagraphSpacing = ParagraphSpacing,
+        HeadingScale = HeadingScale,
+        TextAlignment = TextAlignment,
         SplitOrientation = SplitOrientation,
         SplitRatio = SplitRatio,
     };
 
-    /// <summary>Build options from persisted settings, or the etalon defaults when none are saved.</summary>
-    public static LayoutOptions FromSettings(LayoutSettings? s) => s is null
-        ? new LayoutOptions()
-        : new LayoutOptions
-        {
-            MenuPlacement = s.MenuPlacement,
-            ToolbarMode = s.ToolbarMode,
-            ShowOmnibar = s.ShowOmnibar,
-            IsWorkspaceSidebarOpen = s.IsWorkspaceSidebarOpen,
-            WorkspaceSection = NormalizeWorkspaceSection(s.WorkspaceSection),
-            OutlineWidth = s.OutlineWidth,
-            ReadingWidth = s.ReadingWidth,
-            ReadingDensity = s.ReadingDensity,
-            SplitOrientation = s.SplitOrientation,
-            SplitRatio = s.SplitRatio,
-        };
+    /// <summary>Build options from persisted settings, or the etalon defaults when none are saved.
+    /// The density-preset auto-apply is suppressed DURING load so a saved CUSTOM spacing isn't overwritten
+    /// by the preset that ReadingDensity would otherwise re-apply; it's re-enabled so later interactive
+    /// preset picks work.</summary>
+    public static LayoutOptions FromSettings(LayoutSettings? s)
+    {
+        if (s is null)
+            return new LayoutOptions();
+
+        var o = new LayoutOptions { _suppressPresetApply = true };
+        o.MenuPlacement = s.MenuPlacement;
+        o.ToolbarMode = s.ToolbarMode;
+        o.ShowOmnibar = s.ShowOmnibar;
+        o.IsWorkspaceSidebarOpen = s.IsWorkspaceSidebarOpen;
+        o.WorkspaceSection = NormalizeWorkspaceSection(s.WorkspaceSection);
+        o.OutlineWidth = s.OutlineWidth;
+        o.ReadingWidth = s.ReadingWidth;
+        o.ReadingDensity = s.ReadingDensity;
+        o.LineSpacing = s.LineSpacing;
+        o.ParagraphSpacing = s.ParagraphSpacing;
+        o.HeadingScale = s.HeadingScale;
+        o.TextAlignment = s.TextAlignment;
+        o.SplitOrientation = s.SplitOrientation;
+        o.SplitRatio = s.SplitRatio;
+        o._suppressPresetApply = false;
+        return o;
+    }
 }

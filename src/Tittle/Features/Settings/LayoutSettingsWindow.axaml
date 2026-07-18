@@ -85,13 +85,59 @@
               </settings:SettingRow>
 
               <settings:SettingRow Label="Разрежённость текста"
-                                   Description="Интервал между строками внутри абзаца.">
+                                   Description="Готовый пресет: задаёт интервал между строками и отступ между абзацами.">
                 <ComboBox Classes="settings-pick"
                           ItemsSource="{x:Static settings:SettingChoices.ReadingDensities}"
                           DisplayMemberBinding="{Binding Label}"
                           SelectedValueBinding="{Binding Value}"
                           SelectedValue="{Binding ReadingDensity, Mode=TwoWay}"
                           AutomationProperties.Name="Разрежённость текста"/>
+              </settings:SettingRow>
+
+              <settings:SettingRow Label="Выравнивание"
+                                   Description="Как выключен текст в предпросмотре: по левому краю или по центру.">
+                <ComboBox Classes="settings-pick"
+                          ItemsSource="{x:Static settings:SettingChoices.TextAlignments}"
+                          DisplayMemberBinding="{Binding Label}"
+                          SelectedValueBinding="{Binding Value}"
+                          SelectedValue="{Binding TextAlignment, Mode=TwoWay}"
+                          AutomationProperties.Name="Выравнивание текста"/>
+              </settings:SettingRow>
+
+              <TextBlock Text="ТОНКАЯ НАСТРОЙКА" Classes="settings-heading" Margin="0,8,0,2"/>
+              <Border Classes="settings-rule"/>
+
+              <settings:SettingRow Label="Интервал между строками"
+                                   Description="Доп. пиксели между перенесёнными строками внутри абзаца.">
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                  <Slider Width="196" Minimum="0" Maximum="40" TickFrequency="1" IsSnapToTickEnabled="True"
+                          VerticalAlignment="Center" Value="{Binding LineSpacing, Mode=TwoWay}"
+                          AutomationProperties.Name="Интервал между строками"/>
+                  <TextBlock Width="30" TextAlignment="Right" VerticalAlignment="Center"
+                             Text="{Binding LineSpacing, StringFormat={}{0:0}}"/>
+                </StackPanel>
+              </settings:SettingRow>
+
+              <settings:SettingRow Label="Отступ между абзацами"
+                                   Description="Вертикальный зазор до и после каждого абзаца, списка, таблицы.">
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                  <Slider Width="196" Minimum="0" Maximum="48" TickFrequency="1" IsSnapToTickEnabled="True"
+                          VerticalAlignment="Center" Value="{Binding ParagraphSpacing, Mode=TwoWay}"
+                          AutomationProperties.Name="Отступ между абзацами"/>
+                  <TextBlock Width="30" TextAlignment="Right" VerticalAlignment="Center"
+                             Text="{Binding ParagraphSpacing, StringFormat={}{0:0}}"/>
+                </StackPanel>
+              </settings:SettingRow>
+
+              <settings:SettingRow Label="Размер заголовков"
+                                   Description="Насколько названия секций крупнее обычного текста.">
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                  <Slider Width="196" Minimum="0.7" Maximum="1.8" TickFrequency="0.05" IsSnapToTickEnabled="True"
+                          VerticalAlignment="Center" Value="{Binding HeadingScale, Mode=TwoWay}"
+                          AutomationProperties.Name="Размер заголовков"/>
+                  <TextBlock Width="34" TextAlignment="Right" VerticalAlignment="Center"
+                             Text="{Binding HeadingScale, StringFormat={}{0:0.00}×}"/>
+                </StackPanel>
               </settings:SettingRow>
             </StackPanel>
           </ScrollViewer>

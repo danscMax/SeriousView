@@ -37,6 +37,15 @@ public static class SettingChoices
         new(ReadingDensity.Relaxed, "Просторно"),
     ];
 
+    // Justify is deliberately NOT offered: ColorTextBlock.Avalonia's text engine mis-lays-out justified
+    // WRAPPED lines (a non-last line collapses to a fragment). The enum value is kept for the day the
+    // renderer supports it; Left + Center both render cleanly.
+    public static IReadOnlyList<SettingChoice> TextAlignments { get; } =
+    [
+        new(TextAlign.Left, "По левому краю"),
+        new(TextAlign.Center, "По центру"),
+    ];
+
     public static IReadOnlyList<SettingChoice> SplitOrientations { get; } =
     [
         new(SplitOrientation.Horizontal, "Рядом"),

@@ -111,4 +111,48 @@ public class DocumentViewReadingDensityTests
 
         window.Close();
     }
+
+    /// <summary>Text alignment propagates to the preview's text blocks on reflow.</summary>
+    [AvaloniaFact]
+    public void TextAlignment_Reflow_AppliesToTextBlocks()
+    {
+        var (window, view, vm) = Open(ReadingDensity.Normal);
+
+        vm.Layout!.TextAlignment = TextAlign.Center;
+        view.RunPreviewReflowPassesForTest();
+        Dispatcher.UIThread.RunJobs();
+
+        var blocks = view.GetVisualDescendants().OfType<ColorTextBlock.Avalonia.CTextBlock>().ToList();
+        Assert.NotEmpty(blocks);
+        Assert.All(blocks, b => Assert.Equal(Avalonia.Media.TextAlignment.Center, b.TextAlignment));
+
+        window.Close();
+    }
+
+    /// <summary>Heading scale multiplies the section-heading font size against its captured base (so 1.0 is
+    /// the renderer's own size and a larger scale grows it).</summary>
+    [AvaloniaFact]
+    public void HeadingScale_Reflow_ResizesHeadings()
+    {
+        var (window, view, vm) = Open(ReadingDensity.Normal);
+
+        double HeadingSize() => view.GetVisualDescendants()
+            .OfType<ColorTextBlock.Avalonia.CTextBlock>()
+            .Where(b => b.Classes.Any(c => c.StartsWith("Heading")))
+            .Select(b => b.FontSize)
+            .DefaultIfEmpty(0)
+            .Max();
+
+        var baseSize = HeadingSize();
+        Assert.True(baseSize > 0, "sample must render a heading");
+
+        vm.Layout!.HeadingScale = 1.5;
+        view.RunPreviewReflowPassesForTest();
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.True(HeadingSize() > baseSize + 1,
+            $"HeadingScale 1.5 must grow the heading (base was {baseSize})");
+
+        window.Close();
+    }
 }

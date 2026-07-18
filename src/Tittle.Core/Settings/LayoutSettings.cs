@@ -53,7 +53,9 @@ public enum ReadingWidth
     Narrow,
 }
 
-/// <summary>Text density (line spacing) of the markdown preview — how airy the prose reads.</summary>
+/// <summary>Text density (line spacing) of the markdown preview — how airy the prose reads.
+/// A preset; picking one writes concrete numbers into the fine-grain spacing fields
+/// (<see cref="LayoutSettings.LineSpacing"/> / <see cref="LayoutSettings.ParagraphSpacing"/>).</summary>
 public enum ReadingDensity
 {
     /// <summary>Tight line spacing — more text on screen.</summary>
@@ -64,6 +66,21 @@ public enum ReadingDensity
 
     /// <summary>Roomy, airy line spacing — easiest to scan.</summary>
     Relaxed,
+}
+
+/// <summary>How the preview's prose is justified. Core-side twin of Avalonia's TextAlignment (Core has no
+/// Avalonia dependency); mapped to the real property in the view.</summary>
+public enum TextAlign
+{
+    /// <summary>Ragged right — the default.</summary>
+    Left,
+
+    /// <summary>Even both edges (book-like). NOT exposed in settings — ColorTextBlock.Avalonia mis-lays-out
+    /// justified wrapped lines; kept for the day the renderer supports it.</summary>
+    Justify,
+
+    /// <summary>Centred.</summary>
+    Center,
 }
 
 /// <summary>Orientation of the split view (source + preview shown together).</summary>
@@ -110,6 +127,20 @@ public sealed record LayoutSettings
 
     /// <summary>Text density (line spacing) of the preview. Default: comfortable.</summary>
     public ReadingDensity ReadingDensity { get; init; } = ReadingDensity.Normal;
+
+    /// <summary>Extra px between wrapped lines inside a block (the fine-grain twin of the density preset).
+    /// Default = the Normal preset.</summary>
+    public double LineSpacing { get; init; } = 10;
+
+    /// <summary>Px gap between top-level blocks (paragraphs, lists, tables …). Default = the Normal preset.</summary>
+    public double ParagraphSpacing { get; init; } = 14;
+
+    /// <summary>Multiplier on section-heading font sizes (their size relative to body text). 1.0 = the
+    /// renderer's own sizes.</summary>
+    public double HeadingScale { get; init; } = 1.0;
+
+    /// <summary>How the preview's prose is justified. Default: left (ragged right).</summary>
+    public TextAlign TextAlignment { get; init; } = TextAlign.Left;
 
     /// <summary>Orientation of the split view (source + preview together). Default: horizontal.</summary>
     public SplitOrientation SplitOrientation { get; init; } = SplitOrientation.Horizontal;

@@ -34,11 +34,48 @@ public class LayoutOptionsTests
             WorkspaceSection = WorkspaceSection.Bookmarks,
             OutlineWidth = 320,
             ReadingWidth = ReadingWidth.Narrow,
+            ReadingDensity = ReadingDensity.Relaxed, // preset set, but the CUSTOM numbers below must survive
+            LineSpacing = 22,                        // (not clobbered by the Relaxed preset's 16 on load)
+            ParagraphSpacing = 33,
+            HeadingScale = 1.35,
+            TextAlignment = TextAlign.Center,
             SplitOrientation = SplitOrientation.Vertical,
             SplitRatio = 0.7,
         };
 
         Assert.Equal(s, LayoutOptions.FromSettings(s).ToSettings());
+    }
+
+    [Fact]
+    public void PickingADensityPreset_WritesTheConcreteSpacingNumbers()
+    {
+        var o = new LayoutOptions();
+
+        o.ReadingDensity = ReadingDensity.Relaxed;
+        Assert.Equal(16, o.LineSpacing);
+        Assert.Equal(24, o.ParagraphSpacing);
+
+        o.ReadingDensity = ReadingDensity.Compact;
+        Assert.Equal(5, o.LineSpacing);
+        Assert.Equal(8, o.ParagraphSpacing);
+    }
+
+    [Theory]
+    [InlineData(-5, 0)]      // below min → clamped
+    [InlineData(100, 40)]    // above max → clamped
+    [InlineData(12, 12)]     // in range → unchanged
+    public void LineSpacing_IsClampedToRange(double set, double expected)
+    {
+        Assert.Equal(expected, new LayoutOptions { LineSpacing = set }.LineSpacing);
+    }
+
+    [Theory]
+    [InlineData(0.1, 0.7)]   // below min → clamped
+    [InlineData(9, 1.8)]     // above max → clamped
+    [InlineData(1.25, 1.25)] // in range → unchanged
+    public void HeadingScale_IsClampedToRange(double set, double expected)
+    {
+        Assert.Equal(expected, new LayoutOptions { HeadingScale = set }.HeadingScale);
     }
 
     [Fact]

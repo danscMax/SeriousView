@@ -88,14 +88,21 @@ public partial class DocumentView
         var tables = new List<Grid>();
         var headings = new List<Control>();
         var taskGlyphs = new List<ColorTextBlock.Avalonia.CTextBlock>();
-        // Reading density (configurable line spacing + block gaps): applied here in code because the
-        // preview's CTextBlocks have no VM DataContext to bind to, and a style can't carry the live setting.
-        var density = _vm?.Layout?.ReadingDensity ?? Tittle.Core.Settings.ReadingDensity.Normal;
-        var lineSpacing = LineSpacingFor(density);
+        // Reading typography (line spacing, block gaps, alignment, heading scale): applied here in code
+        // because the preview's CTextBlocks have no VM DataContext to bind to, and a style can't carry the
+        // live setting. The fine-grain fields ARE the truth (a density preset just writes into them).
+        var layout = _vm?.Layout;
+        var lineSpacing = layout?.LineSpacing ?? 10;
+        var blockSpacing = layout?.ParagraphSpacing ?? 14;
+        var headingScale = layout?.HeadingScale ?? 1.0;
+        var textAlign = MapAlign(layout?.TextAlignment ?? Tittle.Core.Settings.TextAlign.Left);
         foreach (var visual in Preview.GetVisualDescendants())
         {
             if (visual is ColorTextBlock.Avalonia.CTextBlock textBlock)
+            {
                 textBlock.LineSpacing = lineSpacing;
+                textBlock.TextAlignment = textAlign;
+            }
 
             switch (visual)
             {
@@ -110,6 +117,7 @@ public partial class DocumentView
                     break;
                 case Control control when IsTopLevelHeading(control):
                     headings.Add(control);
+                    ApplyHeadingScale(control, headingScale);
                     break;
             }
         }
@@ -119,34 +127,38 @@ public partial class DocumentView
         PreviewTableSorter.AttachAll(tables); // ported click-to-sort, idempotent
         PreviewSectionCollapser.AttachAll(Preview); // ported collapsible sections (top-level, idempotent)
         PreviewHeadingDivider.AttachAll(Preview); // GitHub-style rule under H1/H2 (idempotent)
-        ApplyBlockSpacing(BlockSpacingFor(density)); // paragraph rhythm — after dividers exist (they're skipped)
+        ApplyBlockSpacing(blockSpacing); // paragraph rhythm — after dividers exist (they're skipped)
         // Warm the heading-Y cache from the SAME pass, AFTER the code-editor heights are pinned
         // (pinning shifts heading positions) — same ordering the lazy path had.
         _previewHeadingTops = ComputePreviewHeadingTops(headings);
         RecomputeActiveHeading(); // marker/breadcrumbs correct against the fresh cache (guards internally)
     }
 
-    // Extra pixels between wrapped lines per reading-density preset (ColorTextBlock.LineSpacing, 0 = the
-    // font's natural leading). Tuned against the ~14-15px preview font. Widened 2026-07-18 (user call, the
-    // VS-Code fidelity pass): Relaxed was not airy enough and Compact read flat, so the range spreads.
-    private static double LineSpacingFor(Tittle.Core.Settings.ReadingDensity density) => density switch
+    // Core TextAlign → Avalonia's TextAlignment (Core has no Avalonia reference, so the enum is mirrored).
+    private static Avalonia.Media.TextAlignment MapAlign(Tittle.Core.Settings.TextAlign align) => align switch
     {
-        Tittle.Core.Settings.ReadingDensity.Compact => 5,
-        Tittle.Core.Settings.ReadingDensity.Relaxed => 16,
-        _ => 10,
+        Tittle.Core.Settings.TextAlign.Justify => Avalonia.Media.TextAlignment.Justify,
+        Tittle.Core.Settings.TextAlign.Center => Avalonia.Media.TextAlignment.Center,
+        _ => Avalonia.Media.TextAlignment.Left,
     };
 
-    // Vertical gap between TOP-LEVEL blocks (paragraphs, lists, tables, code, blockquotes) per density —
-    // the paragraph rhythm VS Code has and we lacked entirely (blocks used to butt together at every
-    // density). Set as each block's bottom Margin in ApplyBlockSpacing. It COMPOUNDS with the fixed heading
-    // top-margins (Avalonia doesn't collapse margins), so the gap BEFORE a section heading is this plus the
-    // heading's own margin — bigger, the GitHub/VS-Code proportion the user asked for.
-    private static double BlockSpacingFor(Tittle.Core.Settings.ReadingDensity density) => density switch
+    // Each heading's ORIGINAL (renderer-set) font size, captured once per control the first time it's seen —
+    // so HeadingScale multiplies a stable base instead of compounding across reflows. Weak keys: entries
+    // die with the CTextBlock (a tab-VM swap builds fresh controls). scale 1.0 ⇒ the renderer's own size.
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<Control, StrongBoxD> _headingBaseSize = new();
+
+    private sealed class StrongBoxD { public double Value; }
+
+    private void ApplyHeadingScale(Control heading, double scale)
     {
-        Tittle.Core.Settings.ReadingDensity.Compact => 8,
-        Tittle.Core.Settings.ReadingDensity.Relaxed => 24,
-        _ => 14,
-    };
+        if (heading is not ColorTextBlock.Avalonia.CTextBlock h)
+            return;
+        // Capture the base BEFORE we ever write FontSize (first pass reads the renderer's own size).
+        var box = _headingBaseSize.GetValue(h, _ => new StrongBoxD { Value = h.FontSize });
+        var target = box.Value * scale;
+        if (Math.Abs(h.FontSize - target) > 0.1)
+            h.FontSize = target;
+    }
 
     // Give every top-level block a bottom gap, EXCEPT headings (they keep their asymmetric XAML rhythm —
     // big space above, tight below) and the H1/H2 divider (it must hug its heading, not float away). Only
