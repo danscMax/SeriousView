@@ -88,7 +88,9 @@
        leave rest to FA and it paints its own hover first, flashing under ours. FA's accent pipe stays as
        the selection cue (it reads well and needs no tile behind it). -->
   <Style Selector="TabItem.settings-tab /template/ Border#PART_LayoutRoot">
-    <Setter Property="Background" Value="Transparent"/>
+    <!-- Transparent-SURFACE base, not `Transparent` (= transparent-white): fading Background from white to
+         the dark WorkspaceHover sweeps through white — the same flash the chrome rows had. See Dark.axaml. -->
+    <Setter Property="Background" Value="{DynamicResource HoverFadeBaseBrush}"/>
     <Setter Property="CornerRadius" Value="6"/>
     <Setter Property="Transitions">
       <Transitions>
