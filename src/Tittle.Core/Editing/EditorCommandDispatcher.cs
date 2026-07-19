@@ -22,6 +22,14 @@ public static class EditorCommandDispatcher
             case ConvertEolIntent c:
                 ApplyConvertEol(actions, c.Target);
                 return true;
+            case MarkdownFormatIntent mf:
+                {
+                    var (start, length) = actions.Selection;
+                    var edit = MarkdownFormatting.Apply(actions.Text, start, length, mf.Kind);
+                    actions.Replace(edit.Start, edit.Length, edit.NewText);
+                    actions.SetSelection(edit.SelectionStart, edit.SelectionLength);
+                    return true;
+                }
             case InsertTextIntent ins:
                 {
                     var (start, length) = actions.Selection;

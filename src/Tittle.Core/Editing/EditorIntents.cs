@@ -34,6 +34,10 @@ public sealed record TransformLinesIntent(LineOp Op) : IEditorIntent;
 /// it is a text transform; the editor buffer holds the result and a save writes it.</summary>
 public sealed record ConvertEolIntent(Eol Target) : IEditorIntent;
 
+/// <summary>Wrap/prefix the selection with markdown syntax (the editor toolbar's format buttons). Pure
+/// text transform, so it records/replays as a macro like every other intent.</summary>
+public sealed record MarkdownFormatIntent(MarkdownFormatKind Kind) : IEditorIntent;
+
 /// <summary>Caret movements a macro can record/replay. Computed from the document text + offset (logical
 /// lines), so replay is deterministic; Up/Down preserve the column on the target logical line.</summary>
 public enum CaretMotion

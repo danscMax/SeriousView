@@ -383,6 +383,50 @@
                     AutomationProperties.Name="Найти" Classes="header-action">
               <PathIcon Data="{StaticResource IconSearch}" Width="15" Height="15"/>
             </Button>
+
+            <!-- Markdown formatting cluster (part ④): wrap/prefix the selection with markdown syntax via the
+                 command-intent backbone (so it's macro-recordable). Markdown-only — the buttons are meaningless
+                 in .json/.txt source. NB no alignment buttons: markdown has no paragraph-alignment syntax. -->
+            <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center"
+                        IsVisible="{Binding SelectedTab.IsMarkdown, FallbackValue=False}">
+              <Button Classes="statusbtn" Command="{Binding SelectedTab.MarkdownFormatCommand}"
+                      CommandParameter="{x:Static text:MarkdownFormatKind.Bold}"
+                      ToolTip.Tip="Жирный" AutomationProperties.Name="Жирный">
+                <TextBlock Text="Ж" FontWeight="Bold" FontSize="13"/>
+              </Button>
+              <Button Classes="statusbtn" Command="{Binding SelectedTab.MarkdownFormatCommand}"
+                      CommandParameter="{x:Static text:MarkdownFormatKind.Italic}"
+                      ToolTip.Tip="Курсив" AutomationProperties.Name="Курсив">
+                <TextBlock Text="К" FontStyle="Italic" FontSize="13"/>
+              </Button>
+              <Button Classes="statusbtn" Command="{Binding SelectedTab.MarkdownFormatCommand}"
+                      CommandParameter="{x:Static text:MarkdownFormatKind.Code}"
+                      ToolTip.Tip="Моноширинный код" AutomationProperties.Name="Код">
+                <PathIcon Data="{StaticResource IconCode}" Width="15" Height="15"/>
+              </Button>
+              <Button Classes="statusbtn" Command="{Binding SelectedTab.MarkdownFormatCommand}"
+                      CommandParameter="{x:Static text:MarkdownFormatKind.Link}"
+                      ToolTip.Tip="Ссылка" AutomationProperties.Name="Ссылка">
+                <PathIcon Data="{StaticResource IconExternalLink}" Width="15" Height="15"/>
+              </Button>
+              <Button Classes="statusbtn" Command="{Binding SelectedTab.MarkdownFormatCommand}"
+                      CommandParameter="{x:Static text:MarkdownFormatKind.Heading}"
+                      ToolTip.Tip="Заголовок (уровень +1)" AutomationProperties.Name="Заголовок">
+                <TextBlock Text="#" FontWeight="SemiBold" FontSize="14"/>
+              </Button>
+              <Button Classes="statusbtn" Command="{Binding SelectedTab.MarkdownFormatCommand}"
+                      CommandParameter="{x:Static text:MarkdownFormatKind.Quote}"
+                      ToolTip.Tip="Цитата" AutomationProperties.Name="Цитата">
+                <TextBlock Text="„" FontSize="16"/>
+              </Button>
+              <Button Classes="statusbtn" Command="{Binding SelectedTab.MarkdownFormatCommand}"
+                      CommandParameter="{x:Static text:MarkdownFormatKind.BulletList}"
+                      ToolTip.Tip="Маркированный список" AutomationProperties.Name="Список">
+                <TextBlock Text="•" FontSize="15"/>
+              </Button>
+              <Border Width="1" Margin="4,3" Background="{DynamicResource WorkspaceSeparatorBrush}"/>
+            </StackPanel>
+
             <vm:EditorToggleCluster/>
             <Button Command="{Binding SelectedTab.TogglePrettyPrintCommand}"
                     ToolTip.Tip="Форматировать (JSON / XML / NDJSON)"

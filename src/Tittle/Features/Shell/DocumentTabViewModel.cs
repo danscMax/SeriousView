@@ -928,6 +928,15 @@ public partial class DocumentTabViewModel : ViewModelBase, IDisposable
             DispatchRecorded(actions, new TransformLinesIntent(op));
     }
 
+    /// <summary>Apply a markdown-formatting action (bold / italic / code / link / heading / quote / bullet)
+    /// from the editor toolbar, through the same command-intent backbone. No-op without an editor.</summary>
+    [RelayCommand]
+    private void MarkdownFormat(MarkdownFormatKind kind)
+    {
+        if (EditorActions is { } actions)
+            DispatchRecorded(actions, new MarkdownFormatIntent(kind));
+    }
+
     // Record the intent into the shell's macro recorder (a no-op unless recording), then apply it.
     private void DispatchRecorded(IEditorActions actions, IEditorIntent intent)
     {
