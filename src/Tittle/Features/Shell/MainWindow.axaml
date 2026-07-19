@@ -4,6 +4,7 @@
         xmlns:workspace="using:Tittle.Features.Shell.Workspace"
         xmlns:controls="using:Tittle.Features.Viewer"
         xmlns:views="using:Tittle.Features.Welcome"
+        xmlns:settings="using:Tittle.Features.Settings"
         xmlns:conv="using:Tittle.Shared"
         xmlns:core="using:Tittle.Core.Abstractions"
         xmlns:editing="using:Tittle.Core.Editing"
@@ -309,12 +310,27 @@
       <DockPanel Grid.Column="3" LastChildFill="True">
 
     <!-- Tabs and contextual document actions share one compact header: no extra toolbar band. -->
-    <Border DockPanel.Dock="Top" IsVisible="{Binding HasTabs}"
+    <Border DockPanel.Dock="Top" IsVisible="{Binding IsDocumentHeaderVisible}"
             AutomationProperties.AutomationId="DocumentHeader"
             Background="{DynamicResource WorkspaceHeaderBackgroundBrush}"
             BorderBrush="{DynamicResource WorkspaceSeparatorBrush}" BorderThickness="0,0,0,1">
-      <Grid ColumnDefinitions="*,Auto">
-        <ListBox x:Name="TabStrip" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}"
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <!-- Settings "tab" chip: sits in the tab strip while the settings page is open, styled like an
+             active VS-Code tab (accent top border). ✕ closes it; clicking any document tab also closes it. -->
+        <Border Grid.Column="0" IsVisible="{Binding IsSettingsOpen}"
+                VerticalAlignment="Bottom" Margin="4,0,2,0" Padding="10,6,6,6"
+                Background="{DynamicResource EditorSurfaceBrush}"
+                BorderBrush="{DynamicResource AccentBrush}" BorderThickness="0,2,0,0"
+                AutomationProperties.AutomationId="SettingsTab">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <PathIcon Data="{StaticResource IconSettings}" Width="14" Height="14" VerticalAlignment="Center"/>
+            <TextBlock Text="Настройки" VerticalAlignment="Center"/>
+            <Button Classes="statusbtn" Command="{Binding CloseSettingsCommand}"
+                    ToolTip.Tip="Закрыть настройки" AutomationProperties.Name="Закрыть настройки"
+                    Content="✕" FontSize="11" Padding="4,0" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Border>
+        <ListBox x:Name="TabStrip" Grid.Column="1" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}"
                ItemContainerTheme="{StaticResource VsCodeTab}"
                Background="Transparent" BorderThickness="0" Padding="0"
                HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
@@ -368,9 +384,11 @@
         </ListBox.ItemTemplate>
         </ListBox>
 
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4"
-                    VerticalAlignment="Center" Margin="6,2,8,2">
-          <!-- Source-only tools occupy the same row as tabs. Off mode keeps wrap/numbers in status. -->
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4"
+                    VerticalAlignment="Center" Margin="6,2,8,2"
+                    IsVisible="{Binding !IsSettingsOpen}">
+          <!-- Source-only tools occupy the same row as tabs. Off mode keeps wrap/numbers in status.
+               Hidden while the settings page is open (those actions target the hidden document). -->
           <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
             <StackPanel.IsVisible>
               <MultiBinding Converter="{x:Static conv:ToolbarVisibilityConverter.Instance}" ConverterParameter="toolbar">
@@ -643,12 +661,12 @@
 
         <Panel x:Name="DocumentHost" AutomationProperties.AutomationId="DocumentHost">
           <Border Background="{DynamicResource EditorSurfaceBrush}" IsHitTestVisible="False"/>
-        <!-- Welcome view shown when no tabs are open. -->
-        <views:WelcomeView IsVisible="{Binding !HasTabs}"/>
+        <!-- Welcome view shown when no tabs are open (and not in settings). -->
+        <views:WelcomeView IsVisible="{Binding IsWelcomeVisible}"/>
         <!-- Every open tab's DocumentView stays realized (overlapping in a Panel); only the active tab's
              is visible. Switching tabs toggles IsActive instead of re-templating, so the editor + TextMate
              install + the markdown visual tree survive across switches (no rebuild hitch on Ctrl+Tab). -->
-        <ItemsControl ItemsSource="{Binding Tabs}" IsVisible="{Binding HasTabs}">
+        <ItemsControl ItemsSource="{Binding Tabs}" IsVisible="{Binding IsDocumentAreaVisible}">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
               <Panel/>
@@ -661,6 +679,9 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
+        <!-- Settings as an inline page. Mutually exclusive with Welcome/Tabs above (only one is visible at a
+             time), so it never overlays a live AvaloniaEdit surface — which wouldn't repaint under an overlay. -->
+        <settings:SettingsView IsVisible="{Binding IsSettingsOpen}"/>
         </Panel>
 
       </DockPanel>

@@ -139,8 +139,14 @@ Done since: **audit quick-wins + a11y** (background GC, 8 KB-head binary classif
 **Replace → M15** (editing + save), **preview text-highlight** a research item (Markdown.Avalonia has no
 API). Then **M7.5 chrome COMPLETE** — phase 6 contextual editor toolbar (`ToolbarMode`-driven Find · wrap ·
 numbers; pure `ToolbarVisibilityConverter`; wrap/numbers relocate from the status bar with an Off-fallback,
-zoom stays) + phase 8 Settings ▸ Раскладка (☰/palette → a window bound to the shared `LayoutOptions`;
-ShowOmnibar/ReadingMode/ToolbarMode toggle the chrome live + persist; two-way `EnumRadioConverter`).
+zoom stays) + phase 8 Settings ▸ Раскладка (☰/palette/rail ⚙ → the shared `LayoutOptions`; ShowOmnibar/
+ReadingMode/ToolbarMode toggle the chrome live + persist; two-way `EnumRadioConverter`). **Settings is an
+inline page, not a floating window** (`Features/Settings/SettingsView`, DataContext = the shell VM, Раскладка/
+Чтение scoped to `Layout`, Диаграммы to `Diagrams`): `MainWindowViewModel.IsSettingsOpen` flips the content
+area between Welcome/Tabs/SettingsView (mutually exclusive → never overlays a live AvaloniaEdit), with a
+VS-Code-style settings "tab" chip in the strip (accent top border, ✕) and the right-side contextual actions
+hidden while open; selecting any document tab returns from it. The reading etalon defaults are line-spacing 5,
+paragraph-gap 20, heading-scale 0.80× (owner-tuned 2026-07-19), with per-slider fine-tuning under Чтение.
 Then **M8 tabs ergonomics core DONE**: reuse-tab on reopen (#11, pure `Core/Services/FilePathEquality`,
 `OpenPathAsync` activates the open tab); tab context menu (#25 close/others/right/all via a `ContextFlyout`,
 commands on the shell VM reached through a tab `Shell` back-ref — a flyout is a popup, so it can't walk the

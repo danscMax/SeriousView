@@ -129,15 +129,16 @@ public sealed record LayoutSettings
     public ReadingDensity ReadingDensity { get; init; } = ReadingDensity.Normal;
 
     /// <summary>Extra px between wrapped lines inside a block (the fine-grain twin of the density preset).
-    /// Default = the Normal preset.</summary>
-    public double LineSpacing { get; init; } = 10;
+    /// Default: the owner-tuned reading etalon (5).</summary>
+    public double LineSpacing { get; init; } = 5;
 
-    /// <summary>Px gap between top-level blocks (paragraphs, lists, tables …). Default = the Normal preset.</summary>
-    public double ParagraphSpacing { get; init; } = 14;
+    /// <summary>Px gap between top-level blocks (paragraphs, lists, tables …). Default: the etalon (20 — a
+    /// clear VS-Code-style gap between paragraphs).</summary>
+    public double ParagraphSpacing { get; init; } = 20;
 
     /// <summary>Multiplier on section-heading font sizes (their size relative to body text). 1.0 = the
-    /// renderer's own sizes.</summary>
-    public double HeadingScale { get; init; } = 1.0;
+    /// renderer's own sizes; default 0.80 keeps headings restrained next to the body.</summary>
+    public double HeadingScale { get; init; } = 0.80;
 
     /// <summary>How the preview's prose is justified. Default: left (ragged right).</summary>
     public TextAlign TextAlignment { get; init; } = TextAlign.Left;

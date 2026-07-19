@@ -20,6 +20,11 @@ public class LayoutOptionsTests
         Assert.Equal(ReadingWidth.Comfort, o.ReadingWidth); // comfortable centered column by default
         Assert.Equal(SplitOrientation.Horizontal, o.SplitOrientation); // side-by-side by default
         Assert.Equal(0.5, o.SplitRatio); // even split by default
+        // Owner-tuned reading etalon (screenshot 2026-07-19): tight lines, a clear paragraph gap, restrained headings.
+        Assert.Equal(5, o.LineSpacing);
+        Assert.Equal(20, o.ParagraphSpacing);
+        Assert.Equal(0.80, o.HeadingScale);
+        Assert.Equal(TextAlign.Left, o.TextAlignment);
     }
 
     [Fact]

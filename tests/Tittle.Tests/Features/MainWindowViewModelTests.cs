@@ -56,6 +56,40 @@ public class MainWindowViewModelTests
     }
 
     [AvaloniaFact]
+    public void OpenLayoutSettings_ShowsInlinePage_AndYieldsDocumentArea()
+    {
+        var vm = CreateVm();
+        Assert.False(vm.IsSettingsOpen);
+        Assert.True(vm.IsWelcomeVisible);
+
+        vm.OpenLayoutSettingsCommand.Execute(null);
+        Assert.True(vm.IsSettingsOpen);
+        Assert.False(vm.IsWelcomeVisible);         // settings takes over the content area
+        Assert.False(vm.IsDocumentAreaVisible);
+        Assert.True(vm.IsDocumentHeaderVisible);    // header stays to host the settings "tab" chip
+
+        vm.CloseSettingsCommand.Execute(null);
+        Assert.False(vm.IsSettingsOpen);
+        Assert.True(vm.IsWelcomeVisible);
+    }
+
+    [AvaloniaFact]
+    public void SelectingADocumentTab_ReturnsFromTheSettingsPage()
+    {
+        var vm = CreateVm();
+        vm.Tabs.Add(DocumentTabViewModel.FromFile("x", "/docs/a.md"));
+        vm.Tabs.Add(DocumentTabViewModel.FromFile("y", "/docs/b.md"));
+        vm.SelectedTab = vm.Tabs[1];
+
+        vm.OpenLayoutSettingsCommand.Execute(null);
+        Assert.True(vm.IsSettingsOpen);
+
+        vm.SelectedTab = vm.Tabs[0];   // clicking another document tab closes settings (VS-Code-style)
+        Assert.False(vm.IsSettingsOpen);
+        Assert.True(vm.IsDocumentAreaVisible);
+    }
+
+    [AvaloniaFact]
     public void ToggleSplitOrientation_FlipsTheSharedLayout()
     {
         var vm = CreateVm();

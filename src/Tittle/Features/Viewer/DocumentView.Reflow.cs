@@ -92,9 +92,9 @@ public partial class DocumentView
         // because the preview's CTextBlocks have no VM DataContext to bind to, and a style can't carry the
         // live setting. The fine-grain fields ARE the truth (a density preset just writes into them).
         var layout = _vm?.Layout;
-        var lineSpacing = layout?.LineSpacing ?? 10;
-        var blockSpacing = layout?.ParagraphSpacing ?? 14;
-        var headingScale = layout?.HeadingScale ?? 1.0;
+        var lineSpacing = layout?.LineSpacing ?? 5;
+        var blockSpacing = layout?.ParagraphSpacing ?? 20;
+        var headingScale = layout?.HeadingScale ?? 0.80;
         var textAlign = MapAlign(layout?.TextAlignment ?? Tittle.Core.Settings.TextAlign.Left);
         foreach (var visual in Preview.GetVisualDescendants())
         {

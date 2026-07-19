@@ -303,25 +303,6 @@ public partial class MainWindow : AppWindow
             OpenCommandPalette(vm);
     }
 
-    // Layout settings window (☰ ▸ Раскладка / palette). A single instance, kept open while the user toggles
-    // knobs and watches the chrome update live; reactivated rather than re-created.
-    private LayoutSettingsWindow? _layoutSettings;
-
-    private void OpenLayoutSettings()
-    {
-        if (DataContext is not MainWindowViewModel vm)
-            return;
-        if (_layoutSettings is not null)
-        {
-            _layoutSettings.Activate();
-            return;
-        }
-
-        _layoutSettings = new LayoutSettingsWindow { DataContext = vm.Layout, Diagrams = vm.Diagrams };
-        _layoutSettings.Closed += (_, _) => _layoutSettings = null;
-        _layoutSettings.Show(this);
-    }
-
     private void OnStatsRequested(Tittle.Core.Text.TextStats stats)
         => new Features.Stats.StatsWindow { DataContext = stats }.ShowDialog(this);
 
@@ -508,7 +489,6 @@ public partial class MainWindow : AppWindow
         WireWorkspaceSidebar(viewModel);
         // Named handlers (not lambdas) so SaveOnClose can detach them before disposing the VM —
         // harmless today (both are app-lifetime singletons) but a leak if the window ever recycles.
-        viewModel.LayoutSettingsRequested += OpenLayoutSettings;
         viewModel.StatsRequested += OnStatsRequested;
         viewModel.HelpRequested += OnHelpRequested;
         viewModel.DonateRequested += OnDonateRequested;
@@ -799,7 +779,6 @@ public partial class MainWindow : AppWindow
         // Detach the VM->window event subscriptions wired in the constructor before disposing it.
         if (vm is not null)
         {
-            vm.LayoutSettingsRequested -= OpenLayoutSettings;
             vm.StatsRequested -= OnStatsRequested;
             vm.HelpRequested -= OnHelpRequested;
             vm.DonateRequested -= OnDonateRequested;

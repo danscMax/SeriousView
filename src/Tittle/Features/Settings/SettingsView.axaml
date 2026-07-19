@@ -1,40 +1,41 @@
-<shared:ModalWindow xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:shared="using:Tittle.Shared"
-        xmlns:settings="using:Tittle.Features.Settings"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="720" d:DesignHeight="520"
-        x:Class="Tittle.Features.Settings.LayoutSettingsWindow"
-        x:DataType="shared:LayoutOptions"
-        Title="Настройки"
-        Width="720" Height="520" CanResize="False">
-  <!-- Bound to the shared LayoutOptions, so every change persists and re-renders the chrome live. Stays
-       open (no click-away close) so the user can watch the changes; Esc / Готово close it.
-       Chrome = ModalWindow + Border.modalcard. Layout rationale lives in Themes/Settings.axaml. -->
-  <Border Classes="modalcard" Padding="24">
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:shared="using:Tittle.Shared"
+             xmlns:settings="using:Tittle.Features.Settings"
+             xmlns:vm="using:Tittle.Features.Shell"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="640"
+             x:Class="Tittle.Features.Settings.SettingsView"
+             x:DataType="vm:MainWindowViewModel"
+             Background="{DynamicResource EditorSurfaceBrush}">
+  <!-- Settings shown INLINE as a full page (a "tab"), not a floating window: it fills the content area, so
+       nothing clips. DataContext is the shell VM — the Раскладка/Чтение pages scope to Layout, Диаграммы to
+       Diagrams, and Готово closes the page. Mutually exclusive with the document view (never overlays a live
+       editor). Reuses the same settings styles as before (Themes/Settings.axaml). -->
+  <Grid HorizontalAlignment="Center" VerticalAlignment="Stretch"
+        MaxWidth="940" Margin="24,20,24,20">
     <DockPanel>
 
       <StackPanel DockPanel.Dock="Top" Spacing="3" Margin="0,0,0,18">
-        <TextBlock Text="Настройки" FontSize="18" FontWeight="SemiBold"/>
+        <TextBlock Text="Настройки" FontSize="20" FontWeight="SemiBold"/>
         <TextBlock Text="Соберите рабочее пространство под свой ритм чтения и редактирования."
-                   TextWrapping="Wrap" FontSize="12"
+                   TextWrapping="Wrap" FontSize="12.5"
                    Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
       </StackPanel>
 
       <Button DockPanel.Dock="Bottom" Content="Готово" HorizontalAlignment="Right" Classes="accent"
-              Margin="0,18,0,0"
-              AutomationProperties.Name="Закрыть настройки" Click="OnCloseClick"/>
+              Margin="0,18,0,0" Command="{Binding CloseSettingsCommand}"
+              AutomationProperties.Name="Закрыть настройки"/>
 
-      <!-- Categories left, one page right. Only the page scrolls, and only if it has to — so the
-           scrollbar can never cut across the content the way it did in the old single column. -->
+      <!-- Categories left, one page right. Only the page scrolls, and only if it has to. -->
       <TabControl Classes="settings-nav" TabStripPlacement="Left"
                   AutomationProperties.AutomationId="SettingsCategories">
 
         <TabItem Classes="settings-tab" Header="Раскладка">
           <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
                         Padding="0,0,10,0">
-            <StackPanel>
+            <StackPanel DataContext="{Binding Layout}" x:DataType="shared:LayoutOptions">
               <TextBlock Text="ОКНО" Classes="settings-heading"/>
               <Border Classes="settings-rule"/>
 
@@ -70,7 +71,7 @@
         <TabItem Classes="settings-tab" Header="Чтение">
           <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
                         Padding="0,0,10,0">
-            <StackPanel>
+            <StackPanel DataContext="{Binding Layout}" x:DataType="shared:LayoutOptions">
               <TextBlock Text="ТЕКСТ" Classes="settings-heading"/>
               <Border Classes="settings-rule"/>
 
@@ -143,11 +144,11 @@
           </ScrollViewer>
         </TabItem>
 
-        <!-- Diagrams (M12). DataContext is the shared DiagramOptions, assigned in code-behind. -->
+        <!-- Diagrams (M12): scoped to the shared DiagramOptions. -->
         <TabItem Classes="settings-tab" Header="Диаграммы">
           <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
                         Padding="0,0,10,0">
-            <StackPanel x:Name="DiagramSection" x:DataType="shared:DiagramOptions">
+            <StackPanel DataContext="{Binding Diagrams}" x:DataType="shared:DiagramOptions">
               <TextBlock Text="KROKI" Classes="settings-heading"/>
               <Border Classes="settings-rule"/>
 
@@ -159,15 +160,12 @@
 
               <settings:SettingRow Label="Адрес сервера"
                                    Description="Можно указать свой self-hosted Kroki.">
-                <!-- Same width as the dropdowns: the controls form one column down the page. -->
                 <TextBox Classes="modal-field" Width="268"
                          Text="{Binding KrokiUrl, Mode=TwoWay}" IsEnabled="{Binding Enabled}"
                          Watermark="https://kroki.io"
                          AutomationProperties.Name="Адрес сервера Kroki"/>
               </settings:SettingRow>
 
-              <!-- The privacy consequence is the whole point of this being opt-in: say it plainly, and
-                   keep it in the section rather than hiding it in a row description. -->
               <TextBlock TextWrapping="Wrap" FontSize="11.5" Margin="0,2,0,0"
                          Foreground="{DynamicResource ChromeForegroundMutedBrush}"
                          Text="Текст диаграммы отправляется на указанный сервер. По умолчанию выключено."/>
@@ -177,5 +175,5 @@
 
       </TabControl>
     </DockPanel>
-  </Border>
-</shared:ModalWindow>
+  </Grid>
+</UserControl>

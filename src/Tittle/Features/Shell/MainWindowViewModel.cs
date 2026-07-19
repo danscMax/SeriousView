@@ -396,6 +396,24 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     /// <summary>True when at least one document tab is open (drives the empty placeholder).</summary>
     public bool HasTabs => Tabs.Count > 0;
 
+    /// <summary>Settings shown as an in-app page (a "tab") that takes over the document area — not a floating
+    /// window. Mutually exclusive with the document/welcome views, so the settings surface never overlaps a
+    /// live AvaloniaEdit (which wouldn't repaint under an overlay — see project memory).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsWelcomeVisible))]
+    [NotifyPropertyChangedFor(nameof(IsDocumentAreaVisible))]
+    [NotifyPropertyChangedFor(nameof(IsDocumentHeaderVisible))]
+    private bool _isSettingsOpen;
+
+    /// <summary>Welcome placeholder: no tabs and not in settings.</summary>
+    public bool IsWelcomeVisible => !HasTabs && !IsSettingsOpen;
+
+    /// <summary>The document body (open tabs) is shown when there are tabs and settings isn't taking over.</summary>
+    public bool IsDocumentAreaVisible => HasTabs && !IsSettingsOpen;
+
+    /// <summary>The tab-strip header shows for open documents OR to host the settings "tab" chip.</summary>
+    public bool IsDocumentHeaderVisible => HasTabs || IsSettingsOpen;
+
     [ObservableProperty]
     private DocumentTabViewModel? _selectedTab;
 
@@ -633,10 +651,6 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void OpenSearch() => SelectedTab?.OpenSearchCommand.Execute(null);
 
-    /// <summary>Raised when the user opens layout settings (☰ ▸ Раскладка or the palette); the window is
-    /// a view concern, so the shell's code-behind shows it.</summary>
-    public event Action? LayoutSettingsRequested;
-
     /// <summary>Raised with the computed stats when the user asks for document statistics
     /// (ported stats panel); the window is shown by the shell's code-behind.</summary>
     public event Action<TextStats>? StatsRequested;
@@ -662,10 +676,14 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             StatsRequested?.Invoke(TextStatistics.Compute(tab.DocumentText));
     }
 
-    /// <summary>Open the Settings ▸ Layout window — it binds to the shared <see cref="Layout"/>, so its
-    /// toggles persist and re-render the chrome live.</summary>
+    /// <summary>Open Settings as an in-app page (☰ ▸ Раскладка / palette / rail ⚙). It binds to the shared
+    /// <see cref="Layout"/> / <see cref="Diagrams"/>, so its toggles persist and re-render the chrome live.</summary>
     [RelayCommand]
-    private void OpenLayoutSettings() => LayoutSettingsRequested?.Invoke();
+    private void OpenLayoutSettings() => IsSettingsOpen = true;
+
+    /// <summary>Close the settings page and return to the document/welcome area.</summary>
+    [RelayCommand]
+    private void CloseSettings() => IsSettingsOpen = false;
 
     /// <summary>Flip the split-view orientation (side-by-side ⟷ stacked). A shared-layout knob, so it
     /// applies to every split tab and persists.</summary>
@@ -782,6 +800,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(HasTabs));
+        OnPropertyChanged(nameof(IsWelcomeVisible));
+        OnPropertyChanged(nameof(IsDocumentAreaVisible));
+        OnPropertyChanged(nameof(IsDocumentHeaderVisible));
         SyncWatchedPaths();
     }
 
@@ -1284,6 +1305,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             oldValue.IsActive = false;
         if (newValue is not null)
             newValue.IsActive = true;
+
+        // Selecting a document tab returns from the settings page (VS-Code-style: the settings "tab" yields).
+        if (newValue is not null)
+            IsSettingsOpen = false;
 
         Title = newValue is null ? "Tittle" : newValue.Header + " — Tittle";
         // Status bar is segmented: the left segment shows messages — the welcome hint when no tab is

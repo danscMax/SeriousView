@@ -51,31 +51,31 @@ public partial class LayoutOptions : ObservableObject
     public const double MinHeadingScale = 0.7, MaxHeadingScale = 1.8;
 
     [ObservableProperty]
-    private double _lineSpacing = 10;
+    private double _lineSpacing = 5;
 
     partial void OnLineSpacingChanged(double value)
     {
-        var clamped = Math.Clamp(double.IsNaN(value) ? 10 : value, MinLineSpacing, MaxLineSpacing);
+        var clamped = Math.Clamp(double.IsNaN(value) ? 5 : value, MinLineSpacing, MaxLineSpacing);
         if (clamped != value)
             LineSpacing = clamped;
     }
 
     [ObservableProperty]
-    private double _paragraphSpacing = 14;
+    private double _paragraphSpacing = 20;
 
     partial void OnParagraphSpacingChanged(double value)
     {
-        var clamped = Math.Clamp(double.IsNaN(value) ? 14 : value, MinParagraphSpacing, MaxParagraphSpacing);
+        var clamped = Math.Clamp(double.IsNaN(value) ? 20 : value, MinParagraphSpacing, MaxParagraphSpacing);
         if (clamped != value)
             ParagraphSpacing = clamped;
     }
 
     [ObservableProperty]
-    private double _headingScale = 1.0;
+    private double _headingScale = 0.80;
 
     partial void OnHeadingScaleChanged(double value)
     {
-        var clamped = Math.Clamp(double.IsNaN(value) ? 1.0 : value, MinHeadingScale, MaxHeadingScale);
+        var clamped = Math.Clamp(double.IsNaN(value) ? 0.80 : value, MinHeadingScale, MaxHeadingScale);
         if (clamped != value)
             HeadingScale = clamped;
     }

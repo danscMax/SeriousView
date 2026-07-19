@@ -77,6 +77,8 @@ var screens = new (string Name, Func<Control> Build)[]
         tab.CsvAsTableEnabled = true;
         return new DocumentView { DataContext = tab };
     }),
+    // Settings is now an inline page (a "tab"), not a modal — bound to the shell VM (Layout + Diagrams).
+    ("settings", () => new SettingsView { DataContext = BuildWelcomeVm() }),
 };
 
 // Standalone modal windows. Each IS a Window (the transparent ModalWindow card chrome is the thing
@@ -88,7 +90,6 @@ var modals = new (string Name, Func<Window> Build)[]
     ("help", () => new HelpWindow()),
     ("donate", () => new DonateWindow()),
     ("stats", () => new StatsWindow { DataContext = TextStatistics.Compute(sampleMd) }),
-    ("layout", () => new LayoutSettingsWindow { DataContext = new LayoutOptions(), Diagrams = new DiagramOptions() }),
     ("palette", () => new CommandPaletteWindow { DataContext = new CommandPaletteViewModel(SamplePaletteItems()) }),
     ("macros", () => new MacroManagerWindow { DataContext = new MacroManagerViewModel(new RenderMacroLibrary()) }),
 };
