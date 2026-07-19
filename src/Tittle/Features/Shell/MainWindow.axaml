@@ -4,7 +4,6 @@
         xmlns:workspace="using:Tittle.Features.Shell.Workspace"
         xmlns:controls="using:Tittle.Features.Viewer"
         xmlns:views="using:Tittle.Features.Welcome"
-        xmlns:settings="using:Tittle.Features.Settings"
         xmlns:conv="using:Tittle.Shared"
         xmlns:core="using:Tittle.Core.Abstractions"
         xmlns:editing="using:Tittle.Core.Editing"
@@ -17,7 +16,7 @@
         x:Class="Tittle.Features.Shell.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="{Binding Title}"
-        Icon="/Assets/tittle.png"
+        Icon="/Assets/tittle.ico"
         Width="1100" Height="750"
         Background="{DynamicResource WindowBackgroundBrush}"
         TransparencyLevelHint="None"
@@ -680,8 +679,9 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
         <!-- Settings as an inline page. Mutually exclusive with Welcome/Tabs above (only one is visible at a
-             time), so it never overlays a live AvaloniaEdit surface — which wouldn't repaint under an overlay. -->
-        <settings:SettingsView IsVisible="{Binding IsSettingsOpen}"/>
+             time), so it never overlays a live AvaloniaEdit surface. Content is created LAZILY on first open
+             (MainWindow.axaml.cs) so the SettingsView subtree isn't inflated at startup when it's never shown. -->
+        <ContentControl x:Name="SettingsHost" IsVisible="{Binding IsSettingsOpen}"/>
         </Panel>
 
       </DockPanel>

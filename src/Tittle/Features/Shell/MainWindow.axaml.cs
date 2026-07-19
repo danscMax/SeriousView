@@ -303,6 +303,19 @@ public partial class MainWindow : AppWindow
             OpenCommandPalette(vm);
     }
 
+    // Defer the settings page's XAML inflation until it's first opened: the whole SettingsView subtree
+    // (TabControl + SettingRows + combos/sliders) would otherwise be built during MainWindow inflation
+    // though it's never seen unless the user opens Settings. Created once, then cached in SettingsHost.
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainWindowViewModel.IsSettingsOpen)
+            && sender is MainWindowViewModel { IsSettingsOpen: true }
+            && SettingsHost.Content is null)
+        {
+            SettingsHost.Content = new SettingsView();
+        }
+    }
+
     private void OnStatsRequested(Tittle.Core.Text.TextStats stats)
         => new Features.Stats.StatsWindow { DataContext = stats }.ShowDialog(this);
 
@@ -489,6 +502,8 @@ public partial class MainWindow : AppWindow
         WireWorkspaceSidebar(viewModel);
         // Named handlers (not lambdas) so SaveOnClose can detach them before disposing the VM —
         // harmless today (both are app-lifetime singletons) but a leak if the window ever recycles.
+        // Lazily inflate the settings page the first time it's opened (see OnViewModelPropertyChanged).
+        viewModel.PropertyChanged += OnViewModelPropertyChanged;
         viewModel.StatsRequested += OnStatsRequested;
         viewModel.HelpRequested += OnHelpRequested;
         viewModel.DonateRequested += OnDonateRequested;
@@ -779,6 +794,7 @@ public partial class MainWindow : AppWindow
         // Detach the VM->window event subscriptions wired in the constructor before disposing it.
         if (vm is not null)
         {
+            vm.PropertyChanged -= OnViewModelPropertyChanged;
             vm.StatsRequested -= OnStatsRequested;
             vm.HelpRequested -= OnHelpRequested;
             vm.DonateRequested -= OnDonateRequested;
