@@ -71,20 +71,24 @@ public sealed partial class MarkdownCodeRegions
     public static string ReplaceOutsideCode(
         string line, Regex pattern, MatchEvaluator evaluator, params Regex[] extraMasks)
     {
-        var masked = new List<(int Start, int End)>();
-        CollectMatches(InlineCodeSpan(), line, masked);
+        // Allocate the mask list ONLY when something actually needs masking (most trigger-lines carry no
+        // inline code / link / autolink), and skip the inline-code regex entirely on backtick-free lines —
+        // it cannot match without a backtick. Saves a per-line List alloc + one regex run in the common case.
+        List<(int Start, int End)>? masked = null;
+        if (line.IndexOf('`') >= 0)
+            CollectMatches(InlineCodeSpan(), line, ref masked);
         foreach (var mask in extraMasks)
-            CollectMatches(mask, line, masked);
+            CollectMatches(mask, line, ref masked);
 
-        return masked.Count == 0
+        return masked is null
             ? pattern.Replace(line, evaluator)
-            : pattern.Replace(line, m => Overlaps(masked, m.Index, m.Index + m.Length) ? m.Value : evaluator(m));
+            : pattern.Replace(line, m => Overlaps(masked!, m.Index, m.Index + m.Length) ? m.Value : evaluator(m));
     }
 
-    private static void CollectMatches(Regex regex, string line, List<(int Start, int End)> into)
+    private static void CollectMatches(Regex regex, string line, ref List<(int Start, int End)>? into)
     {
         foreach (Match m in regex.Matches(line))
-            into.Add((m.Index, m.Index + m.Length));
+            (into ??= new List<(int Start, int End)>()).Add((m.Index, m.Index + m.Length));
     }
 
     private static bool Overlaps(List<(int Start, int End)> intervals, int start, int end)

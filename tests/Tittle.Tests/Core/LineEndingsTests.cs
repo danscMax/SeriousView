@@ -44,4 +44,30 @@ public class LineEndingsTests
     [InlineData("no breaks", Eol.CrLf, "no breaks")]
     public void ConvertTo_RewritesEveryLineEndingToTarget(string input, Eol eol, string expected)
         => Assert.Equal(expected, LineEndings.ConvertTo(input, eol));
+
+    [Theory]
+    [InlineData("a\nb")]
+    [InlineData("a\r\nb")]
+    [InlineData("a\rb")]
+    [InlineData("a\r\nb\nc")]
+    [InlineData("no breaks")]
+    [InlineData("")]
+    public void NormalizeAndDetect_MatchesTheSeparatePasses(string input)
+    {
+        // The combined one-scan method must return exactly what Detect + NormalizeToLf did separately.
+        var (text, eol) = LineEndings.NormalizeAndDetect(input);
+        Assert.Equal(LineEndings.NormalizeToLf(input), text);
+        Assert.Equal(LineEndings.Detect(input), eol);
+    }
+
+    [Theory]
+    [InlineData("a\nb\nc")]
+    [InlineData("no breaks at all")]
+    [InlineData("")]
+    public void NormalizeAndDetect_LfOnly_ReturnsSameReference(string input)
+    {
+        // LF-only (or break-free) input must keep the zero-copy fast path through the combined method.
+        var (text, _) = LineEndings.NormalizeAndDetect(input);
+        Assert.Same(input, text);
+    }
 }

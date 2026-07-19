@@ -50,8 +50,9 @@ public sealed class FileReader : IFileReader
             await stream.ReadExactlyAsync(bytes.AsMemory(headLength), cancellationToken).ConfigureAwait(false);
 
         var (decoded, encodingName) = TextEncodingDetector.Decode(bytes);
-        var lineEnding = LineEndings.Detect(decoded);
-        return FileLoadResult.ForText(LineEndings.NormalizeToLf(decoded), encodingName, lineEnding, size);
+        // One walk for both the EOL label and the LF normalization (Detect + NormalizeToLf were two scans).
+        var (normalized, lineEnding) = LineEndings.NormalizeAndDetect(decoded);
+        return FileLoadResult.ForText(normalized, encodingName, lineEnding, size);
     }
 
     public async Task<string> ReloadTextAsync(string path, string encodingName, CancellationToken cancellationToken = default)

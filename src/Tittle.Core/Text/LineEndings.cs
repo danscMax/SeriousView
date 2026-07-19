@@ -46,6 +46,39 @@ public static class LineEndings
             ? text
             : text.Replace("\r\n", "\n").Replace('\r', '\n');
 
+    /// <summary>Detect the EOL label AND normalize to LF in ONE scan — the file loader needs both, and
+    /// running <see cref="Detect"/> then <see cref="NormalizeToLf"/> walks the whole document twice.
+    /// The LF-only fast path is preserved: with no '\r' the same reference is returned (no copy).</summary>
+    public static (string Text, string Eol) NormalizeAndDetect(string text)
+    {
+        int crlf = 0, cr = 0, lf = 0;
+        var hasCr = false;
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (text[i] == '\r')
+            {
+                hasCr = true;
+                if (i + 1 < text.Length && text[i + 1] == '\n') { crlf++; i++; }
+                else cr++;
+            }
+            else if (text[i] == '\n')
+            {
+                lf++;
+            }
+        }
+
+        var kinds = (crlf > 0 ? 1 : 0) + (cr > 0 ? 1 : 0) + (lf > 0 ? 1 : 0);
+        var label = kinds switch
+        {
+            0 => "",
+            > 1 => "Mixed",
+            _ => crlf > 0 ? "CRLF" : cr > 0 ? "CR" : "LF",
+        };
+        // No '\r' → already LF-only: return the same reference (the NormalizeToLf fast path).
+        var normalized = hasCr ? text.Replace("\r\n", "\n").Replace('\r', '\n') : text;
+        return (normalized, label);
+    }
+
     /// <summary>Rewrite every line ending to a single target style — normalize to LF first (so mixed
     /// input becomes uniform), then expand to the target. The <see cref="Eol.Lf"/> case is the
     /// normalization itself.</summary>
