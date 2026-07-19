@@ -397,6 +397,17 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     /// <summary>True when at least one document tab is open (drives the empty placeholder).</summary>
     public bool HasTabs => Tabs.Count > 0;
 
+    /// <summary>Select a tab by 1-based digit for Ctrl+1..9: 1..8 pick that tab; 9 jumps to the LAST
+    /// tab (Chrome convention). Out-of-range (fewer tabs than the digit) is a no-op.</summary>
+    public void SelectTabByDigit(int digit)
+    {
+        if (Tabs.Count == 0)
+            return;
+        var index = digit >= 9 ? Tabs.Count - 1 : digit - 1;
+        if (index >= 0 && index < Tabs.Count)
+            SelectedTab = Tabs[index];
+    }
+
     /// <summary>Settings shown as an in-app page (a "tab") that takes over the document area — not a floating
     /// window. Mutually exclusive with the document/welcome views, so the settings surface never overlaps a
     /// live AvaloniaEdit (which wouldn't repaint under an overlay — see project memory).</summary>
@@ -929,7 +940,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             new("Закрыть вкладку", CloseActiveTabCommand, "Ctrl+W"),
             new("Следующая вкладка", SelectNextTabCommand, "Ctrl+Tab"),
             new("Предыдущая вкладка", SelectPreviousTabCommand, "Ctrl+Shift+Tab"),
-            new("Оглавление", ToggleOutlineCommand),
+            new("Оглавление", ToggleOutlineCommand, "Ctrl+B"),
             new("Статистика документа", ShowStatsCommand),
             new("Найти…", OpenSearchCommand, "Ctrl+F"),
             new("Перейти к строке…", OpenGoToLineCommand, "Ctrl+G"),
@@ -938,7 +949,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             new("Масштаб: больше", ZoomInCommand, "Ctrl++"),
             new("Масштаб: меньше", ZoomOutCommand, "Ctrl+−"),
             new("Масштаб: сбросить", ZoomResetCommand, "Ctrl+0"),
-            new("Настройки: раскладка…", OpenLayoutSettingsCommand),
+            new("Настройки: раскладка…", OpenLayoutSettingsCommand, "Ctrl+,"),
             new("Настройки: экспорт…", ExportSettingsCommand),
             new("Настройки: импорт…", ImportSettingsCommand),
             new("Приватный режим (вкл/выкл)", TogglePrivateModeCommand),
@@ -956,7 +967,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
         if (SelectedTab is { IsMarkdown: true } tab)
         {
-            items.Add(new PaletteItem("Переключить предпросмотр / исходник", tab.ToggleViewModeCommand));
+            items.Add(new PaletteItem("Переключить предпросмотр / исходник", tab.ToggleViewModeCommand, "Ctrl+E"));
             items.Add(new PaletteItem("Разделённый вид (вкл/выкл)", tab.ToggleSplitCommand, "Ctrl+\\"));
             items.Add(new PaletteItem("Ориентация разделения (гориз./верт.)", ToggleSplitOrientationCommand));
             items.Add(new PaletteItem("Экспорт в HTML…", ExportHtmlCommand));

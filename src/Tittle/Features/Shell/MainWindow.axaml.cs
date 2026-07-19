@@ -168,6 +168,15 @@ public partial class MainWindow : AppWindow
             return;
         }
 
+        // Ctrl+1..9 jump straight to a tab by position (Ctrl+9 = last, Chrome convention; the 9=last and
+        // out-of-range rules live in the VM so they're unit-tested). Ctrl+Shift+1..9 is macros (above).
+        if (ctrl && !shift && !alt && DigitForKey(e.Key) is { } digit)
+        {
+            vm.SelectTabByDigit(digit);
+            e.Handled = true;
+            return;
+        }
+
         // Line operations carry a LineOp parameter, so they bypass the parameterless command switch below.
         var lineOp = (ctrl, shift, alt, e.Key) switch
         {
@@ -205,6 +214,11 @@ public partial class MainWindow : AppWindow
             (true, false, false, Key.G) => vm.OpenGoToLineCommand,
             (true, false, false, Key.F) => vm.OpenSearchCommand,
             (true, false, false, Key.H) => vm.SelectedTab?.OpenReplaceCommand, // find + replace (CanExecute gates)
+            (true, false, false, Key.B) => vm.ToggleOutlineCommand, // toggle TOC/outline (ported Ctrl+B)
+            (true, false, false, Key.OemComma) => vm.OpenLayoutSettingsCommand, // open settings (ported Ctrl+,)
+            (true, false, false, Key.E) => vm.SelectedTab?.ToggleViewModeCommand, // preview<->source (markdown; CanExecute gates)
+            (false, false, false, Key.F3) => vm.SelectedTab?.NextMatchCommand, // find next (CanExecute gates)
+            (false, true, false, Key.F3) => vm.SelectedTab?.PreviousMatchCommand, // find prev (CanExecute gates)
             // The physical "\|" key reports as Key.OemPipe on Windows (VK_OEM_5); OemBackslash is the
             // separate VK_OEM_102 "<>" key. Accept both so Ctrl+\ works across layouts.
             (true, false, false, Key.OemPipe or Key.OemBackslash) => vm.SelectedTab?.ToggleSplitCommand, // split (markdown; CanExecute gates)
@@ -264,6 +278,22 @@ public partial class MainWindow : AppWindow
             _ => null,
         };
     }
+
+    // Ctrl+1..9 → a 1-based digit (digit row or NumPad); null for any other key. D0/NumPad0 is Ctrl+0
+    // zoom-reset (handled in the command switch), so 0 is deliberately not mapped here.
+    private static int? DigitForKey(Key key) => key switch
+    {
+        Key.D1 or Key.NumPad1 => 1,
+        Key.D2 or Key.NumPad2 => 2,
+        Key.D3 or Key.NumPad3 => 3,
+        Key.D4 or Key.NumPad4 => 4,
+        Key.D5 or Key.NumPad5 => 5,
+        Key.D6 or Key.NumPad6 => 6,
+        Key.D7 or Key.NumPad7 => 7,
+        Key.D8 or Key.NumPad8 => 8,
+        Key.D9 or Key.NumPad9 => 9,
+        _ => null,
+    };
 
     // Ctrl+Shift+1..9 → a 1-based saved-macro slot (digit row or NumPad).
     private static int? MacroSlotForKey(Key key) => key switch

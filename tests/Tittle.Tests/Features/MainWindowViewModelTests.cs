@@ -90,6 +90,26 @@ public class MainWindowViewModelTests
     }
 
     [AvaloniaFact]
+    public void SelectTabByDigit_PicksNthTab_9JumpsToLast_OutOfRangeIsNoOp()
+    {
+        var vm = CreateVm();
+        vm.Tabs.Add(DocumentTabViewModel.FromFile("a", "/docs/a.md"));
+        vm.Tabs.Add(DocumentTabViewModel.FromFile("b", "/docs/b.md"));
+        vm.Tabs.Add(DocumentTabViewModel.FromFile("c", "/docs/c.md"));
+        vm.SelectedTab = vm.Tabs[0];
+
+        vm.SelectTabByDigit(2);
+        Assert.Same(vm.Tabs[1], vm.SelectedTab);   // 1-based → second tab
+
+        vm.SelectTabByDigit(9);
+        Assert.Same(vm.Tabs[2], vm.SelectedTab);   // 9 → last (Chrome convention)
+
+        vm.SelectedTab = vm.Tabs[1];
+        vm.SelectTabByDigit(7);                     // only 3 tabs → out of range
+        Assert.Same(vm.Tabs[1], vm.SelectedTab);   // unchanged (no-op)
+    }
+
+    [AvaloniaFact]
     public void ToggleSplitOrientation_FlipsTheSharedLayout()
     {
         var vm = CreateVm();
