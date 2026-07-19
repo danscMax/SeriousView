@@ -20,9 +20,13 @@ public static class PreviewSectionCollapser
 
     /// <summary>Wires every not-yet-wired top-level heading (idempotent; called from the
     /// preview's reflow pass alongside the table sorter and code-block fixups).</summary>
-    public static void AttachAll(Visual previewRoot)
+    public static void AttachAll(Visual previewRoot) => AttachAll(TopLevelPanels(previewRoot).ToList());
+
+    /// <summary>Same, from a pre-collected panel set — lets the reflow pass share one tree traversal
+    /// across the collapser / divider / block-spacing passes instead of walking the tree three times.</summary>
+    public static void AttachAll(IReadOnlyList<StackPanel> panels)
     {
-        foreach (var panel in TopLevelPanels(previewRoot))
+        foreach (var panel in panels)
         {
             foreach (var child in panel.Children.OfType<Control>().ToList())
             {

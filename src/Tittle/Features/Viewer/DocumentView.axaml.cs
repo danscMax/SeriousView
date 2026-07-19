@@ -273,6 +273,7 @@ public partial class DocumentView : UserControl
         _previewReflowTimer.Stop();
         _previewReflowPrimed = false; // new content re-primes its first reflow immediately
         _copyHostEditors.Clear(); // new content rebuilds the preview tree — re-wire copy buttons
+        _previewGrammarApplied.Clear(); // new editors — re-install TextMate grammar once each
         _taskGlyphs = null; // new content rebuilds the glyph cache on the next reflow/click
         _resizeSettleTimer.Stop();
         UnfreezePreviewWidth(); // new content must start from auto width, not a stale pin

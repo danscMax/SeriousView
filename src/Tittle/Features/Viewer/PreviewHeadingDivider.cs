@@ -20,8 +20,12 @@ public static class PreviewHeadingDivider
     /// <summary>Inserts the rule after every not-yet-divided H1/H2 (idempotent; called from the
     /// preview reflow pass alongside the table sorter and section collapser).</summary>
     public static void AttachAll(Visual previewRoot)
+        => AttachAll(PreviewSectionCollapser.TopLevelPanels(previewRoot).ToList());
+
+    /// <summary>Same, from a pre-collected panel set — shares the reflow pass's single tree traversal.</summary>
+    public static void AttachAll(IReadOnlyList<StackPanel> panels)
     {
-        foreach (var panel in PreviewSectionCollapser.TopLevelPanels(previewRoot))
+        foreach (var panel in panels)
         {
             // Snapshot: we mutate panel.Children while deciding what to insert.
             foreach (var child in panel.Children.OfType<Control>().ToList())

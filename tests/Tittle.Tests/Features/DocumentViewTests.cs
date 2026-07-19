@@ -1075,6 +1075,27 @@ public class DocumentViewTests
     }
 
     [AvaloniaFact]
+    public void ReflowReruns_DoNotReApplyPreviewGrammar()
+    {
+        // R1: ApplyPreviewGrammar (a full language-catalog scan + tokenize) runs from FixupEmbeddedCodeEditors
+        // on every reflow tick. Once installed for an editor, later passes must skip it — a theme switch
+        // re-applies via the independent ActualThemeVariantChanged path, not the reflow.
+        var vm = DocumentTabViewModel.FromFile(Sample, "/docs/readme.md"); // has a ```cs fence
+        var view = new DocumentView { DataContext = vm };
+        var window = new Window { Content = view };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+
+        var firstApplies = view.PreviewGrammarApplyCount;
+        Assert.True(firstApplies >= 1); // grammar installed on the first reflow pass
+
+        view.RunPreviewReflowPassesForTest();
+        view.RunPreviewReflowPassesForTest();
+        Assert.Equal(firstApplies, view.PreviewGrammarApplyCount); // no re-apply on repeat reflows
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public async Task PerformCodeCopy_ClipboardFailure_DoesNotThrow()
     {
         // R6/Q16: a clipboard failure inside the copy-button handler must not escape as an

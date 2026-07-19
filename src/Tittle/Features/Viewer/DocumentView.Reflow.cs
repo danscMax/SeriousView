@@ -26,6 +26,15 @@ public partial class DocumentView
     // P4: embedded editors that already carry a copy button. EnsureCodeCopyButton runs every reflow
     // tick; once an editor is wired, skip the 3-parent walk + class check. Reset per content.
     private readonly HashSet<AvaloniaEdit.TextEditor> _copyHostEditors = new();
+
+    // Preview code editors whose TextMate grammar is already installed. Grammar resolution (a full
+    // language-catalog scan) + tokenize is one-time here — a theme switch re-applies via the INDEPENDENT
+    // ActualThemeVariantChanged path, not the reflow — so later reflow ticks (resize/split-drag/density)
+    // must skip it, exactly like the copy-button wiring. Reset in Unsubscribe when content rebuilds.
+    private readonly HashSet<AvaloniaEdit.TextEditor> _previewGrammarApplied = new();
+
+    // Seam (like CopyButtonWalkCount): counts how often ApplyPreviewGrammar actually runs past the guard.
+    internal int PreviewGrammarApplyCount { get; private set; }
     // P5: document-ordered toggleable task-glyph blocks, built in the reflow pass that already walks
     // the tree. A checkbox click then indexes into this instead of re-walking. Reset per content.
     private List<ColorTextBlock.Avalonia.CTextBlock>? _taskGlyphs;
@@ -125,9 +134,13 @@ public partial class DocumentView
         _taskGlyphs = taskGlyphs;
         FixupEmbeddedCodeEditors(editors);
         PreviewTableSorter.AttachAll(tables); // ported click-to-sort, idempotent
-        PreviewSectionCollapser.AttachAll(Preview); // ported collapsible sections (top-level, idempotent)
-        PreviewHeadingDivider.AttachAll(Preview); // GitHub-style rule under H1/H2 (idempotent)
-        ApplyBlockSpacing(blockSpacing); // paragraph rhythm — after dividers exist (they're skipped)
+        // Compute the top-level document panel(s) ONCE and share across the collapser / divider / block-
+        // spacing passes instead of each re-walking the whole preview tree (mirrors the table-sorter list
+        // overload). Panel identities are stable across the passes — dividers/margins mutate only children.
+        var topPanels = PreviewSectionCollapser.TopLevelPanels(Preview).ToList();
+        PreviewSectionCollapser.AttachAll(topPanels); // ported collapsible sections (top-level, idempotent)
+        PreviewHeadingDivider.AttachAll(topPanels); // GitHub-style rule under H1/H2 (idempotent)
+        ApplyBlockSpacing(topPanels, blockSpacing); // paragraph rhythm — after dividers exist (they're skipped)
         // Warm the heading-Y cache from the SAME pass, AFTER the code-editor heights are pinned
         // (pinning shifts heading positions) — same ordering the lazy path had.
         _previewHeadingTops = ComputePreviewHeadingTops(headings);
@@ -163,9 +176,9 @@ public partial class DocumentView
     // Give every top-level block a bottom gap, EXCEPT headings (they keep their asymmetric XAML rhythm —
     // big space above, tight below) and the H1/H2 divider (it must hug its heading, not float away). Only
     // the bottom is touched; the block's own top/left/right margins (blockquote tint, rule) are preserved.
-    private void ApplyBlockSpacing(double gap)
+    private void ApplyBlockSpacing(IReadOnlyList<StackPanel> panels, double gap)
     {
-        foreach (var panel in PreviewSectionCollapser.TopLevelPanels(Preview))
+        foreach (var panel in panels)
         {
             foreach (var child in panel.Children)
             {
@@ -335,8 +348,14 @@ public partial class DocumentView
             EnsureCodeCopyButton(editor);
             // Rich TextMate highlighting for preview code blocks (SyntaxHigh's built-in is near-monochrome).
             // The fence language SyntaxHigh stashed in editor.Tag drives the grammar; install BEFORE the
-            // height-pin below so the line metrics reflect the highlighted render.
-            EditorBehavior.ApplyPreviewGrammar(editor);
+            // height-pin below so the line metrics reflect the highlighted render. ONCE per editor — the
+            // catalog scan + tokenize is wasted on every later reflow tick (fence/theme unchanged); mark
+            // only once the fence language is present so a not-yet-tagged editor retries next pass.
+            if (editor.Tag is string tag && !string.IsNullOrWhiteSpace(tag) && _previewGrammarApplied.Add(editor))
+            {
+                PreviewGrammarApplyCount++;
+                EditorBehavior.ApplyPreviewGrammar(editor);
+            }
             if (editor.Document is not { LineCount: > 0 } doc)
                 continue;
 
