@@ -120,6 +120,12 @@
                           AutomationProperties.Name="Выравнивание текста"/>
               </settings:SettingRow>
 
+              <settings:SettingRow Label="Нумеровать заголовки"
+                                   Description="Показывать иерархические номера (1, 1.1, 1.1.1) перед заголовками в предпросмотре.">
+                <CheckBox IsChecked="{Binding NumberHeadings, Mode=TwoWay}"
+                          AutomationProperties.Name="Нумеровать заголовки"/>
+              </settings:SettingRow>
+
               <TextBlock Text="ТОНКАЯ НАСТРОЙКА" Classes="settings-heading" Margin="0,8,0,2"/>
               <Border Classes="settings-rule"/>
 

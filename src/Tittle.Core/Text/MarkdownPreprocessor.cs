@@ -33,7 +33,7 @@ public static partial class MarkdownPreprocessor
     /// every <c>[[name]]</c> degrades to plain text. <paramref name="diagramsEnabled"/> (M12,
     /// opt-in) turns ```mermaid/```plantuml/… fences into <c>::: diagram</c> containers the viewer
     /// renders via Kroki; when off, those fences stay as ordinary code blocks.</summary>
-    public static string Transform(string? markdown, Func<string, bool>? wikiLinkResolver, bool diagramsEnabled = false)
+    public static string Transform(string? markdown, Func<string, bool>? wikiLinkResolver, bool diagramsEnabled = false, bool numberHeadings = false)
     {
         if (string.IsNullOrEmpty(markdown))
             return markdown ?? string.Empty;
@@ -60,6 +60,11 @@ public static partial class MarkdownPreprocessor
         var regions = MarkdownCodeRegions.Scan(lines);
         lines = ConvertMathBlocks(lines, regions);
         regions = MarkdownCodeRegions.Scan(lines);
+
+        // Hierarchical heading numbers (ported numberHeadings), display-only + fence-guarded. Runs on the
+        // math-settled lines before the inline passes, preserving line count so the fence bitmap stays valid.
+        if (numberHeadings)
+            HeadingNumbering.Apply(lines, regions.IsFencedLine);
 
         ConvertWikiLinksInPlace(lines, regions, Memoize(wikiLinkResolver));
         ConvertUnderscoreEmphasisInPlace(lines, regions);

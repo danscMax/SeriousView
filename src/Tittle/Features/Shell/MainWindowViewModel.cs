@@ -834,6 +834,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         _settings.Update(_settings.Current with { Layout = Layout.ToSettings() });
         if (e.PropertyName == nameof(LayoutOptions.FontFamily))
             ApplyPreviewFont();
+        if (e.PropertyName == nameof(LayoutOptions.NumberHeadings))
+            foreach (var tab in Tabs)
+                tab.InvalidatePreviewMarkdown();
         if (e.PropertyName is nameof(LayoutOptions.IsWorkspaceSidebarOpen)
             or nameof(LayoutOptions.WorkspaceSection))
         {

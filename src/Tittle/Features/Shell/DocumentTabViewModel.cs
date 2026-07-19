@@ -408,7 +408,19 @@ public partial class DocumentTabViewModel : ViewModelBase, IDisposable
     /// commands (close-others / close-to-right / close-all, and copy / reveal) through it — a context
     /// flyout opens in a popup, so its bindings can't walk the visual tree up to the shell. Null in
     /// unit fixtures that don't add the tab through the shell.</summary>
-    public MainWindowViewModel? Shell { get; set; }
+    public MainWindowViewModel? Shell
+    {
+        get => _shell;
+        set
+        {
+            _shell = value;
+            // If heading numbering is on, a warm (un-numbered) preview computed before Shell was assigned
+            // is stale — drop it so the next read numbers correctly (mirrors the Diagrams-assign warm-fix).
+            if (value?.Layout.NumberHeadings == true)
+                InvalidatePreviewMarkdown();
+        }
+    }
+    private MainWindowViewModel? _shell;
 
     /// <summary>True for markdown files — drives whether a rendered preview is offered.</summary>
     public bool IsMarkdown => MarkdownFile.IsMarkdownExtension(GrammarExtension);
@@ -773,8 +785,18 @@ public partial class DocumentTabViewModel : ViewModelBase, IDisposable
     /// re-checks; M14 live-reload will refresh naturally).</summary>
     public string PreviewMarkdown =>
         _previewMarkdown ??= IsMarkdown
-            ? MarkdownPreprocessor.Transform(DocumentText, BuildWikiResolver(), Diagrams?.Enabled ?? false)
+            ? MarkdownPreprocessor.Transform(DocumentText, BuildWikiResolver(), Diagrams?.Enabled ?? false, Shell?.Layout.NumberHeadings ?? false)
             : "";
+
+    /// <summary>Drop the cached preview markdown and re-emit, so a shell-level setting that changes the
+    /// preprocessed string (heading numbering) rebuilds this tab's preview live.</summary>
+    public void InvalidatePreviewMarkdown()
+    {
+        if (!IsMarkdown || _previewMarkdown is null)
+            return;
+        _previewMarkdown = null;
+        OnPropertyChanged(nameof(PreviewMarkdown));
+    }
 
     /// <summary>Wiki-name resolver for the preprocessor and the HTML exporter: a sibling
     /// <c>&lt;name&gt;.md</c> next to this document. Null for path-less tabs (sample) — nothing

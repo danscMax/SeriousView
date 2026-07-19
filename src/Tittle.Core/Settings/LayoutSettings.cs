@@ -160,6 +160,9 @@ public sealed record LayoutSettings
     /// <summary>Preview body font family (ported). Default: bundled Inter sans.</summary>
     public ReadingFont FontFamily { get; init; } = ReadingFont.Sans;
 
+    /// <summary>Number the preview's headings hierarchically (1, 1.1, …). Ported. Default: off.</summary>
+    public bool NumberHeadings { get; init; }
+
     /// <summary>Orientation of the split view (source + preview together). Default: horizontal.</summary>
     public SplitOrientation SplitOrientation { get; init; } = SplitOrientation.Horizontal;
 
