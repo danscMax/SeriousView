@@ -135,6 +135,19 @@
                         Command="{Binding SetAccentCommand}" CommandParameter="#EC4899"/>
               </WrapPanel>
 
+              <TextBlock Text="РАЗМЕР" Classes="settings-heading"/>
+              <Border Classes="settings-rule"/>
+              <settings:SettingRow Label="Размер текста"
+                                   Description="Масштаб предпросмотра и редактора (Ctrl+± и Ctrl+колесо тоже меняют).">
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                  <Slider Width="196" Minimum="8" Maximum="32" TickFrequency="1" IsSnapToTickEnabled="True"
+                          VerticalAlignment="Center" Value="{Binding Editor.FontSize, Mode=TwoWay}"
+                          AutomationProperties.Name="Размер текста"/>
+                  <TextBlock Width="40" TextAlignment="Right" VerticalAlignment="Center"
+                             Text="{Binding Editor.FontSize, StringFormat={}{0:0} px}"/>
+                </StackPanel>
+              </settings:SettingRow>
+
             <StackPanel DataContext="{Binding Layout}" x:DataType="shared:LayoutOptions">
               <TextBlock Text="ТЕКСТ" Classes="settings-heading"/>
               <Border Classes="settings-rule"/>
