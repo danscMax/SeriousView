@@ -392,27 +392,58 @@
                     IsVisible="{Binding SelectedTab.IsMarkdown, FallbackValue=False}"/>
           </StackPanel>
 
-          <!-- One labelled three-way mode control: Reading / Source / Split. -->
+          <!-- One three-way mode control: Reading / Source / Split — icon + label (VS-Code-ish). -->
           <Border Classes="segmented" AutomationProperties.AutomationId="ViewModeSwitch"
                   IsVisible="{Binding SelectedTab.IsMarkdown, FallbackValue=False}">
             <StackPanel Orientation="Horizontal">
-              <Button Classes="segment" Content="Чтение"
+              <Button Classes="segment"
                       AutomationProperties.AutomationId="ViewModePreview"
-                      AutomationProperties.Name="Режим чтения"
+                      AutomationProperties.Name="Режим чтения" ToolTip.Tip="Чтение"
                       Classes.seg-on="{Binding SelectedTab.ShowPreview, FallbackValue=False}"
-                      Command="{Binding SelectedTab.ShowPreviewModeCommand}"/>
-              <Button Classes="segment" Content="Исходник"
+                      Command="{Binding SelectedTab.ShowPreviewModeCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <PathIcon Data="{StaticResource IconDocument}" Width="13" Height="13"/>
+                  <TextBlock Text="Чтение"/>
+                </StackPanel>
+              </Button>
+              <Button Classes="segment"
                       AutomationProperties.AutomationId="ViewModeSource"
-                      AutomationProperties.Name="Режим исходника"
+                      AutomationProperties.Name="Режим исходника" ToolTip.Tip="Исходник"
                       Classes.seg-on="{Binding SelectedTab.ShowSource, FallbackValue=False}"
-                      Command="{Binding SelectedTab.ShowSourceModeCommand}"/>
-              <Button Classes="segment" Content="Разделённый"
+                      Command="{Binding SelectedTab.ShowSourceModeCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <PathIcon Data="{StaticResource IconCode}" Width="13" Height="13"/>
+                  <TextBlock Text="Исходник"/>
+                </StackPanel>
+              </Button>
+              <Button Classes="segment"
                       AutomationProperties.AutomationId="ViewModeSplit"
-                      AutomationProperties.Name="Разделённый вид"
+                      AutomationProperties.Name="Разделённый вид" ToolTip.Tip="Разделённый"
                       Classes.seg-on="{Binding SelectedTab.ShowSplit, FallbackValue=False}"
-                      Command="{Binding SelectedTab.ToggleSplitCommand}"/>
+                      Command="{Binding SelectedTab.ToggleSplitCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <PathIcon Data="{StaticResource IconSplitColumns}" Width="13" Height="13"/>
+                  <TextBlock Text="Разделённый"/>
+                </StackPanel>
+              </Button>
             </StackPanel>
           </Border>
+
+          <!-- Split-orientation flip (VS-Code layout icon): shown only in split mode; the glyph reflects the
+               current orientation and clicking toggles it. Command is on the shell VM (Layout is shared). -->
+          <Button Classes="header-action" Margin="6,0,0,0"
+                  IsVisible="{Binding SelectedTab.ShowSplit, FallbackValue=False}"
+                  Command="{Binding ToggleSplitOrientationCommand}"
+                  AutomationProperties.AutomationId="SplitOrientationFlip"
+                  AutomationProperties.Name="Повернуть разделение"
+                  ToolTip.Tip="Повернуть разделение (рядом ↔ друг над другом)">
+            <Panel>
+              <PathIcon Data="{StaticResource IconSplitColumns}" Width="15" Height="15"
+                        IsVisible="{Binding SelectedTab.Layout.SplitOrientation, Converter={x:Static conv:EnumToBoolConverter.Instance}, ConverterParameter=Horizontal, FallbackValue=True}"/>
+              <PathIcon Data="{StaticResource IconSplitRows}" Width="15" Height="15"
+                        IsVisible="{Binding SelectedTab.Layout.SplitOrientation, Converter={x:Static conv:EnumToBoolConverter.Instance}, ConverterParameter=Vertical, FallbackValue=False}"/>
+            </Panel>
+          </Button>
         </StackPanel>
       </Grid>
     </Border>

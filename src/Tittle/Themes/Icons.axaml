@@ -113,6 +113,20 @@
     <PathGeometry Figures="M14.6,15.8 L15.8,14.6 L21,19.8 L19.8,21 Z"/>
   </GeometryGroup>
 
+  <!-- Split layout: a framed pane with a centre divider (EvenOdd: outer frame minus inner hole, then the
+       divider bar fills back in). Columns = side-by-side panes; Rows = stacked. The view-mode "Разделённый"
+       button and the split-orientation flip use these. -->
+  <GeometryGroup x:Key="IconSplitColumns" FillRule="EvenOdd">
+    <PathGeometry Figures="M3,4 C3,3.4 3.4,3 4,3 L20,3 C20.6,3 21,3.4 21,4 L21,20 C21,20.6 20.6,21 20,21 L4,21 C3.4,21 3,20.6 3,20 Z"/>
+    <RectangleGeometry Rect="4.8,4.8,14.4,14.4" RadiusX="0.4" RadiusY="0.4"/>
+    <RectangleGeometry Rect="11.25,4.8,1.5,14.4" RadiusX="0.5" RadiusY="0.5"/>
+  </GeometryGroup>
+  <GeometryGroup x:Key="IconSplitRows" FillRule="EvenOdd">
+    <PathGeometry Figures="M3,4 C3,3.4 3.4,3 4,3 L20,3 C20.6,3 21,3.4 21,4 L21,20 C21,20.6 20.6,21 20,21 L4,21 C3.4,21 3,20.6 3,20 Z"/>
+    <RectangleGeometry Rect="4.8,4.8,14.4,14.4" RadiusX="0.4" RadiusY="0.4"/>
+    <RectangleGeometry Rect="4.8,11.25,14.4,1.5" RadiusX="0.5" RadiusY="0.5"/>
+  </GeometryGroup>
+
   <!-- Code / "&lt; &gt;": two solid chevrons (the universal source-view affordance). -->
   <GeometryGroup x:Key="IconCode">
     <PathGeometry Figures="M9.4,6.6 L11,8.2 L7.2,12 L11,15.8 L9.4,17.4 L4,12 Z"/>
