@@ -35,14 +35,24 @@ public sealed class ViewStateStore
     private readonly Dictionary<string, Entry> _files = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Test seam: number of files held in memory (capped to <see cref="MaxFiles"/> on Flush).</summary>
-    internal int TrackedCount => _files.Count;
+    internal int TrackedCount { get { EnsureLoaded(); return _files.Count; } }
     private long _touchCounter;
     private bool _dirty;
+    private bool _loaded;
 
-    public ViewStateStore(ISettingsStore store)
+    public ViewStateStore(ISettingsStore store) => _store = store;
+
+    /// <summary>Read + deserialize viewstate.json on FIRST access, not in the ctor. The store is
+    /// constructed during window/VM construction — before first paint — so eagerly loading (and
+    /// rebuilding up to <see cref="MaxFiles"/> entries) there is work on the startup path. Every access
+    /// happens after construction (a bookmark/visited query, or Flush at session save), so lazy load
+    /// keeps the deserialize off the pre-paint path with no behaviour change.</summary>
+    private void EnsureLoaded()
     {
-        _store = store;
-        var loaded = store.Load<ViewStateFile>(Key);
+        if (_loaded)
+            return;
+        _loaded = true;
+        var loaded = _store.Load<ViewStateFile>(Key);
         if (loaded is null)
             return;
 
@@ -58,14 +68,23 @@ public sealed class ViewStateStore
     }
 
     public bool IsVisited(string path, int ordinal)
-        => _files.TryGetValue(Normalize(path), out var e) && e.Visited.Contains(ordinal);
+    {
+        EnsureLoaded();
+        return _files.TryGetValue(Normalize(path), out var e) && e.Visited.Contains(ordinal);
+    }
 
     public bool IsBookmarked(string path, int ordinal)
-        => _files.TryGetValue(Normalize(path), out var e) && e.Bookmarks.Contains(ordinal);
+    {
+        EnsureLoaded();
+        return _files.TryGetValue(Normalize(path), out var e) && e.Bookmarks.Contains(ordinal);
+    }
 
     /// <summary>Bookmarked ordinals for a document, ascending.</summary>
     public IReadOnlyList<int> BookmarksFor(string path)
-        => _files.TryGetValue(Normalize(path), out var e) ? e.Bookmarks.ToList() : Array.Empty<int>();
+    {
+        EnsureLoaded();
+        return _files.TryGetValue(Normalize(path), out var e) ? e.Bookmarks.ToList() : Array.Empty<int>();
+    }
 
     /// <summary>Returns true only when the ordinal was NEWLY recorded — callers gate their
     /// change notifications on it (a revisit per scroll tick must not refresh the TOC).</summary>
@@ -73,6 +92,7 @@ public sealed class ViewStateStore
     {
         if (ordinal is < 0 or > MaxOrdinal)
             return false;
+        EnsureLoaded();
         var added = TouchEntry(path).Visited.Add(ordinal);
         _dirty |= added;
         return added;
@@ -83,6 +103,7 @@ public sealed class ViewStateStore
     {
         if (ordinal is < 0 or > MaxOrdinal)
             return false;
+        EnsureLoaded();
         var entry = TouchEntry(path);
         _dirty = true;
         if (entry.Bookmarks.Remove(ordinal))

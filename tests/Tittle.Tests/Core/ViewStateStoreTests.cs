@@ -12,14 +12,47 @@ public class ViewStateStoreTests
     {
         public Dictionary<string, object?> Data { get; } = new();
         public int Saves;
+        public int Loads;
 
-        public T? Load<T>(string key) => Data.TryGetValue(key, out var v) ? (T?)v : default;
+        public T? Load<T>(string key)
+        {
+            Loads++;
+            return Data.TryGetValue(key, out var v) ? (T?)v : default;
+        }
 
         public void Save<T>(string key, T value)
         {
             Data[key] = value;
             Saves++;
         }
+    }
+
+    [Fact]
+    public void Load_IsDeferredToFirstAccess_ThenLoadsOnce()
+    {
+        // The store is constructed pre-first-paint; the viewstate.json read must not happen in the ctor.
+        var backing = new FakeStore();
+        backing.Data["viewstate"] = new ViewStateFile
+        {
+            Files = new Dictionary<string, DocumentViewState>
+            {
+                [System.IO.Path.GetFullPath("/docs/a.md")] = new()
+                {
+                    Visited = new List<int>(),
+                    Bookmarks = new List<int> { 3 },
+                    Touch = 1,
+                },
+            },
+        };
+
+        var store = new ViewStateStore(backing);
+        Assert.Equal(0, backing.Loads);              // nothing read at construction
+
+        Assert.True(store.IsBookmarked("/docs/a.md", 3)); // first access loads + reflects the seed
+        Assert.Equal(1, backing.Loads);
+
+        _ = store.IsVisited("/docs/a.md", 0);        // later accesses reuse the loaded map
+        Assert.Equal(1, backing.Loads);
     }
 
     [Fact]
