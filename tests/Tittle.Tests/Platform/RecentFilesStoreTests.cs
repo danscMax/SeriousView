@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Tittle.Platform;
 using Xunit;
 
@@ -14,19 +15,22 @@ public class RecentFilesStoreTests
         Path.Combine(Path.GetTempPath(), "sv-recent-nonmatch-" + Guid.NewGuid().ToString("N"));
 
     [Fact]
-    public void Ctor_DropsMissingFiles_AndPrunesPersistence()
+    public void Ctor_SeedsRawList_WithoutProbingExistence()
     {
+        // Existence pruning moved OFF the construction path (it can block on a dead network share) into
+        // PruneMissingAsync — so the ctor must surface even a missing entry and not rewrite persistence.
         var real = Path.GetTempFileName();
         try
         {
             var missing = real + ".gone"; // never created
             var store = new FakeSettingsStore();
             store.Save("recent", new List<string> { missing, real });
+            var before = store.SaveCount;
 
             var recent = new RecentFilesStore(store, tempRoot: NonMatchingTempRoot());
 
-            Assert.Equal(new[] { real }, recent.Items);                          // dead path dropped
-            Assert.Equal(new[] { real }, store.Load<List<string>>("recent"));    // persistence pruned
+            Assert.Equal(new[] { missing, real }, recent.Items); // both kept — no File.Exists in ctor
+            Assert.Equal(before, store.SaveCount);               // nothing temp to prune → no write
         }
         finally
         {
@@ -35,18 +39,47 @@ public class RecentFilesStoreTests
     }
 
     [Fact]
-    public void Ctor_AllExisting_DoesNotRewritePersistence()
+    public async Task PruneMissingAsync_DropsMissingFiles_AndPrunesPersistence()
+    {
+        var real = Path.GetTempFileName();
+        try
+        {
+            var missing = real + ".gone"; // never created
+            var store = new FakeSettingsStore();
+            store.Save("recent", new List<string> { missing, real });
+            var recent = new RecentFilesStore(store, tempRoot: NonMatchingTempRoot());
+            var raised = false;
+            recent.Changed += (_, _) => raised = true;
+
+            await recent.PruneMissingAsync();
+
+            Assert.Equal(new[] { real }, recent.Items);                       // dead path dropped
+            Assert.Equal(new[] { real }, store.Load<List<string>>("recent")); // persistence pruned
+            Assert.True(raised);                                              // list refreshed
+        }
+        finally
+        {
+            File.Delete(real);
+        }
+    }
+
+    [Fact]
+    public async Task PruneMissingAsync_AllExisting_DoesNotRewriteOrRaise()
     {
         var real = Path.GetTempFileName();
         try
         {
             var store = new FakeSettingsStore();
             store.Save("recent", new List<string> { real });
+            var recent = new RecentFilesStore(store, tempRoot: NonMatchingTempRoot());
             var before = store.SaveCount;
+            var raised = false;
+            recent.Changed += (_, _) => raised = true;
 
-            _ = new RecentFilesStore(store, tempRoot: NonMatchingTempRoot());
+            await recent.PruneMissingAsync();
 
-            Assert.Equal(before, store.SaveCount); // nothing to prune → no extra write
+            Assert.Equal(before, store.SaveCount); // nothing dead → no extra write
+            Assert.False(raised);
         }
         finally
         {

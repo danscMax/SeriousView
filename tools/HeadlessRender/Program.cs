@@ -191,6 +191,8 @@ sealed class RenderRecentFilesStore(IEnumerable<string> items) : IRecentFilesSto
         _items.Insert(0, path);
         Changed?.Invoke(this, EventArgs.Empty);
     }
+
+    public Task PruneMissingAsync() => Task.CompletedTask;
 }
 
 sealed class RenderSettingsStore : ISettingsStore

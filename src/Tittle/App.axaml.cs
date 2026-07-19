@@ -37,6 +37,12 @@ public partial class App : Application
             // swallows offline errors, surfacing only a "restart to update" banner when one is ready.
             _ = Services.GetRequiredService<MainWindowViewModel>().StartupUpdateCheckAsync();
 
+            // Prune dead recent-file entries off the UI thread, AFTER the window is up: doing the
+            // File.Exists probe during construction would stall first paint if an entry points at a
+            // disconnected network share (File.Exists blocks for the OS timeout). Fire-and-forget; the
+            // continuation resumes on the UI thread, so the resulting Changed refreshes the list safely.
+            _ = Services.GetRequiredService<IRecentFilesStore>().PruneMissingAsync();
+
             // Deterministic watcher teardown on the normal close path (M14 live-reload).
             desktop.ShutdownRequested += (_, _) => Services.GetService<IDocumentWatcher>()?.Dispose();
 

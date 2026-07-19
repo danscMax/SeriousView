@@ -179,6 +179,8 @@ internal sealed class FakeRecentFilesStore : IRecentFilesStore
         _items.Insert(0, path);
         Changed?.Invoke(this, EventArgs.Empty);
     }
+
+    public System.Threading.Tasks.Task PruneMissingAsync() => System.Threading.Tasks.Task.CompletedTask;
 }
 
 /// <summary>In-memory <see cref="ISettingsStore"/> — keeps values by reference (no JSON round-trip),
