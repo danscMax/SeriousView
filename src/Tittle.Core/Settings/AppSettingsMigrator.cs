@@ -9,7 +9,7 @@ namespace Tittle.Core.Settings;
 public static class AppSettingsMigrator
 {
     /// <summary>The schema version this build writes. Bump when an in-place migration is added below.</summary>
-    public const int CurrentSchemaVersion = 2;
+    public const int CurrentSchemaVersion = 3;
 
     /// <summary>
     /// Normalize a just-loaded settings object to <see cref="CurrentSchemaVersion"/>. Null in → null
@@ -34,6 +34,11 @@ public static class AppSettingsMigrator
         // data transform — a pure stamp bump (nothing to migrate, just the version marker).
         if (settings.SchemaVersion < 2)
             settings = settings with { SchemaVersion = 2 };
+
+        // v2 → v3: added the top-level PrivateMode bool (privacy port). Non-nullable, defaults to false,
+        // so an old file deserializes to "private mode off" — a pure stamp bump, no data transform.
+        if (settings.SchemaVersion < 3)
+            settings = settings with { SchemaVersion = 3 };
 
         // A file written by a newer build than this one: clamp the stamp down so we don't claim a
         // version we can't honor. Data is left untouched (unknown fields are simply ignored on read).

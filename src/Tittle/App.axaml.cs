@@ -131,6 +131,8 @@ public partial class App : Application
         services.AddSingleton<IUpdateService, VelopackUpdateService>();
         services.AddSingleton<ISettingsStore, JsonSettingsStore>();
         services.AddSingleton<IAppSettingsService, AppSettingsService>();
+        // Private-mode gate the history stores read; seeded from the persisted flag at startup.
+        services.AddSingleton(sp => new PrivacyState { IsPrivate = sp.GetRequiredService<IAppSettingsService>().Current.PrivateMode });
         services.AddSingleton<IThemeService, ThemeService>();
         services.AddSingleton<IRecentFilesStore, RecentFilesStore>();
         services.AddSingleton<IDocumentWatcher, DocumentWatcher>();

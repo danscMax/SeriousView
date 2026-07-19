@@ -787,7 +787,8 @@ public partial class MainWindow : AppWindow
         {
             Layout = layout,
             Window = new WindowPlacement(w, h, pos.X, pos.Y, maximized),
-            Session = vm?.GetSession(),
+            // Private mode: don't persist the open-tab session (ported PRIVATE_SKIP_RE 'session').
+            Session = vm?.IsPrivateMode == true ? null : vm?.GetSession(),
         });
         vm?.FlushViewState(); // accumulated visited marks persist alongside the session
 

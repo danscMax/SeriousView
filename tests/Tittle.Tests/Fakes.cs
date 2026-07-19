@@ -180,6 +180,12 @@ internal sealed class FakeRecentFilesStore : IRecentFilesStore
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
+    public void Clear()
+    {
+        _items.Clear();
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
     public System.Threading.Tasks.Task PruneMissingAsync() => System.Threading.Tasks.Task.CompletedTask;
 }
 

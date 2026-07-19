@@ -14,6 +14,7 @@ public sealed class RecentFilesStore : IRecentFilesStore
     private const string Key = "recent";
 
     private readonly ISettingsStore _settings;
+    private readonly PrivacyState _privacy;
     private RecentFilesList _list;
     private readonly string _tempRoot;
 
@@ -21,9 +22,10 @@ public sealed class RecentFilesStore : IRecentFilesStore
 
     /// <param name="tempRoot">OS temp folder whose files are excluded from "Recent"; defaults to
     /// <see cref="Path.GetTempPath"/>. Overridable so tests can point at a scratch directory.</param>
-    public RecentFilesStore(ISettingsStore settings, string? tempRoot = null)
+    public RecentFilesStore(ISettingsStore settings, PrivacyState? privacy = null, string? tempRoot = null)
     {
         _settings = settings;
+        _privacy = privacy ?? new PrivacyState();
         _tempRoot = tempRoot ?? Path.GetTempPath();
         // Seed from the raw list, filtering ONLY throwaway temp-folder paths (a cheap, pure-string
         // check). Existence pruning — a File.Exists per entry — is deliberately NOT done here: it runs
@@ -57,12 +59,26 @@ public sealed class RecentFilesStore : IRecentFilesStore
 
     public void Add(string path)
     {
+        // Private mode: don't record what the user opens (ported PRIVATE_SKIP_RE 'recents').
+        if (_privacy.IsPrivate)
+            return;
+
         // Never record a throwaway file opened from the OS temp folder.
         if (RecentFilePathPolicy.IsUnderTempFolder(path, _tempRoot))
             return;
 
         _list.Add(path);
         _settings.Save(Key, _list.Paths.ToList());
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Wipe the recent-files list (the «Очистить данные вьюера» privacy command).</summary>
+    public void Clear()
+    {
+        if (_list.Paths.Count == 0)
+            return;
+        _list = new RecentFilesList(new List<string>());
+        _settings.Save(Key, new List<string>());
         Changed?.Invoke(this, EventArgs.Empty);
     }
 }

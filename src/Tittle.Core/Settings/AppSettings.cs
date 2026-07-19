@@ -32,6 +32,11 @@ public sealed record AppSettings
 
     /// <summary>Diagram (Kroki) rendering preferences, or null for the default (disabled).</summary>
     public DiagramSettings? Diagram { get; init; }
+
+    /// <summary>Private mode: when true, the session, recent-files list, and visited marks are NOT
+    /// persisted (settings and bookmarks still are). Ported from the viewer's <c>state.privateMode</c>.
+    /// Default off.</summary>
+    public bool PrivateMode { get; init; }
 }
 
 /// <summary>Window geometry in screen pixels plus whether it was maximized. When maximized, the

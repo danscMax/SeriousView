@@ -178,6 +178,31 @@
           </ScrollViewer>
         </TabItem>
 
+        <!-- Privacy (viewer-port): private mode + clear-data. Binds to the shell VM directly (no
+             DataContext override) — IsPrivateMode / ClearViewerDataCommand live on the VM. -->
+        <TabItem Classes="settings-tab" Header="Приватность">
+          <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                        Padding="0,0,10,0">
+            <StackPanel>
+              <TextBlock Text="ИСТОРИЯ" Classes="settings-heading"/>
+              <Border Classes="settings-rule"/>
+
+              <settings:SettingRow Label="Приватный режим"
+                                   Description="Не сохранять сессию, недавние файлы и отметки о прочитанном. Настройки и закладки остаются.">
+                <CheckBox IsChecked="{Binding IsPrivateMode, Mode=TwoWay}"
+                          AutomationProperties.Name="Приватный режим"/>
+              </settings:SettingRow>
+
+              <settings:SettingRow Label="Очистить данные вьюера"
+                                   Description="Удалить недавние файлы, закладки, отметки о прочитанном и сохранённую сессию. Настройки не затрагиваются.">
+                <Button Content="Очистить" Classes="flat"
+                        Command="{Binding ClearViewerDataCommand}"
+                        AutomationProperties.Name="Очистить данные вьюера"/>
+              </settings:SettingRow>
+            </StackPanel>
+          </ScrollViewer>
+        </TabItem>
+
       </TabControl>
     </DockPanel>
   </Grid>

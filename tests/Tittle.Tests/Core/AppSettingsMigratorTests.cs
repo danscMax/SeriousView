@@ -22,18 +22,32 @@ public class AppSettingsMigratorTests
     }
 
     [Fact]
-    public void Migrate_V1ToV2_StampsV2_AndPreservesData_WithSplitDefaults()
+    public void Migrate_V1_StampsToCurrent_AndPreservesData_WithSplitDefaults()
     {
         // v1→v2 added LayoutSettings.SplitOrientation/SplitRatio — a pure stamp bump. An old Layout
-        // section keeps its data and the new fields default to Horizontal/0.5.
+        // section keeps its data and the new fields default to Horizontal/0.5; the chain runs to current.
         var v1 = new AppSettings { SchemaVersion = 1, Layout = new LayoutSettings { ShowOmnibar = false } };
 
         var migrated = AppSettingsMigrator.Migrate(v1)!;
 
-        Assert.Equal(2, migrated.SchemaVersion);
+        Assert.Equal(AppSettingsMigrator.CurrentSchemaVersion, migrated.SchemaVersion);
         Assert.False(migrated.Layout!.ShowOmnibar); // a non-default field is preserved, nothing dropped
         Assert.Equal(SplitOrientation.Horizontal, migrated.Layout.SplitOrientation);
         Assert.Equal(0.5, migrated.Layout.SplitRatio);
+    }
+
+    [Fact]
+    public void Migrate_V2ToV3_StampsV3_PrivateModeDefaultsFalse_AndPreservesData()
+    {
+        // v2→v3 added the top-level PrivateMode bool (privacy port) — a pure stamp bump; an old v2 file
+        // deserializes to "private mode off" with all prior data intact.
+        var v2 = new AppSettings { SchemaVersion = 2, Theme = ThemeMode.Sepia };
+
+        var migrated = AppSettingsMigrator.Migrate(v2)!;
+
+        Assert.Equal(3, migrated.SchemaVersion);
+        Assert.False(migrated.PrivateMode); // defaults off
+        Assert.Equal(ThemeMode.Sepia, migrated.Theme); // nothing dropped
     }
 
     [Fact]

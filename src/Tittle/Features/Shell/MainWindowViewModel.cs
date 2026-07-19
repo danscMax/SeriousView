@@ -42,6 +42,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     // (CloseAllTabs clears the collection). Null watcher (tests without one) = no live-reload.
     private readonly IDocumentWatcher? _watcher;
     private readonly ViewStateStore? _viewState;
+    private readonly PrivacyState _privacy;
     private readonly List<string> _watchedPaths = new();
 
     /// <summary>Mirror the watcher's path set onto the current file-backed tabs (the
@@ -622,6 +623,34 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     /// persisted whenever it changes.</summary>
     public DiagramOptions Diagrams { get; }
 
+    /// <summary>Private mode (ported <c>state.privateMode</c>): while on, the session, recent-files list,
+    /// and visited marks are not persisted (settings and bookmarks still are). Two-way bound in
+    /// Настройки ▸ Приватность and toggled from the palette; the change syncs the shared
+    /// <see cref="PrivacyState"/> the stores read and persists the flag.</summary>
+    [ObservableProperty]
+    private bool _isPrivateMode;
+
+    partial void OnIsPrivateModeChanged(bool value)
+    {
+        _privacy.IsPrivate = value;
+        _settings.Update(_settings.Current with { PrivateMode = value });
+    }
+
+    /// <summary>Toggle private mode (palette entry — the settings page uses the two-way binding).</summary>
+    [RelayCommand]
+    private void TogglePrivateMode() => IsPrivateMode = !IsPrivateMode;
+
+    /// <summary>Wipe recent files, reading state (visited + bookmarks) and the saved session — everything
+    /// except settings (ported <c>clearViewerData</c>). Reached from Настройки ▸ Приватность and the palette.</summary>
+    [RelayCommand]
+    private void ClearViewerData()
+    {
+        _recent.Clear();
+        _viewState?.Clear();
+        _settings.Update(_settings.Current with { Session = null });
+        StatusText = "Данные вьюера очищены";
+    }
+
     [RelayCommand]
     private void ZoomIn() => Editor.ZoomIn();
 
@@ -698,7 +727,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         IRecentFilesStore recent, IAppSettingsService settings, IClipboardService clipboard,
         IShellService shell, string[] args, IDocumentWatcher? documentWatcher = null,
         ViewStateStore? viewState = null, IMacroStore? macroStore = null,
-        IUpdateService? updateService = null)
+        IUpdateService? updateService = null, PrivacyState? privacy = null)
     {
         _fileDialog = fileDialog;
         _fileReader = fileReader;
@@ -711,6 +740,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         _export = new DocumentExportService(theme, shell, clipboard);
         _watcher = documentWatcher;
         _viewState = viewState;
+        // Private mode: the shared gate the stores read; seed both it and the bound toggle from settings.
+        _privacy = privacy ?? new PrivacyState();
+        _isPrivateMode = _settings.Current.PrivateMode;
+        _privacy.IsPrivate = _isPrivateMode;
         // Macros (M17) live in their own controller; the only coupling back is two closures — resolve the
         // active editor's actions, and write the status line.
         Macros = new MacroController(macroStore, () => SelectedTab?.EditorActions, s => StatusText = s);
@@ -908,6 +941,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             new("Настройки: раскладка…", OpenLayoutSettingsCommand),
             new("Настройки: экспорт…", ExportSettingsCommand),
             new("Настройки: импорт…", ImportSettingsCommand),
+            new("Приватный режим (вкл/выкл)", TogglePrivateModeCommand),
+            new("Очистить данные вьюера…", ClearViewerDataCommand),
             new("Справка: горячие клавиши", ShowHelpCommand, "F1"),
             new("Проверить обновления", CheckForUpdatesCommand),
             new("Поддержать автора…", ShowDonateCommand),

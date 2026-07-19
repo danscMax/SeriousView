@@ -32,6 +32,7 @@ public sealed class ViewStateStore
     }
 
     private readonly ISettingsStore _store;
+    private readonly PrivacyState _privacy;
     private readonly Dictionary<string, Entry> _files = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Test seam: number of files held in memory (capped to <see cref="MaxFiles"/> on Flush).</summary>
@@ -40,7 +41,11 @@ public sealed class ViewStateStore
     private bool _dirty;
     private bool _loaded;
 
-    public ViewStateStore(ISettingsStore store) => _store = store;
+    public ViewStateStore(ISettingsStore store, PrivacyState? privacy = null)
+    {
+        _store = store;
+        _privacy = privacy ?? new PrivacyState();
+    }
 
     /// <summary>Read + deserialize viewstate.json on FIRST access, not in the ctor. The store is
     /// constructed during window/VM construction — before first paint — so eagerly loading (and
@@ -90,6 +95,10 @@ public sealed class ViewStateStore
     /// change notifications on it (a revisit per scroll tick must not refresh the TOC).</summary>
     public bool MarkVisited(string path, int ordinal)
     {
+        // Private mode: don't record reading history (ported PRIVATE_SKIP_RE 'visited'). Bookmarks
+        // (ToggleBookmark) are a deliberate action and stay unaffected.
+        if (_privacy.IsPrivate)
+            return false;
         if (ordinal is < 0 or > MaxOrdinal)
             return false;
         EnsureLoaded();
@@ -141,6 +150,16 @@ public sealed class ViewStateStore
         }
 
         _store.Save(Key, new ViewStateFile { Files = kept });
+    }
+
+    /// <summary>Wipe all per-document visited marks AND bookmarks (the privacy «Очистить данные»
+    /// command clears every history store except settings). Persists the emptied file immediately.</summary>
+    public void Clear()
+    {
+        _files.Clear();
+        _loaded = true; // don't let a later EnsureLoaded re-populate from the now-deleted disk content
+        _dirty = false;
+        _store.Save(Key, new ViewStateFile());
     }
 
     private Entry TouchEntry(string path)
