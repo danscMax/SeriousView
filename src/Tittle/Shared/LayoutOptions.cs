@@ -83,6 +83,9 @@ public partial class LayoutOptions : ObservableObject
     [ObservableProperty]
     private TextAlign _textAlignment = TextAlign.Left;
 
+    [ObservableProperty]
+    private ReadingFont _fontFamily = ReadingFont.Sans;
+
     // Picking a density preset writes its concrete spacing numbers (the fine-grain fields are the truth the
     // preview reads). Guarded so loading persisted settings (which set the numbers explicitly) isn't clobbered.
     private bool _suppressPresetApply;
@@ -159,6 +162,7 @@ public partial class LayoutOptions : ObservableObject
         ParagraphSpacing = ParagraphSpacing,
         HeadingScale = HeadingScale,
         TextAlignment = TextAlignment,
+        FontFamily = FontFamily,
         SplitOrientation = SplitOrientation,
         SplitRatio = SplitRatio,
     };
@@ -185,6 +189,7 @@ public partial class LayoutOptions : ObservableObject
         o.ParagraphSpacing = s.ParagraphSpacing;
         o.HeadingScale = s.HeadingScale;
         o.TextAlignment = s.TextAlignment;
+        o.FontFamily = s.FontFamily;
         o.SplitOrientation = s.SplitOrientation;
         o.SplitRatio = s.SplitRatio;
         o._suppressPresetApply = false;

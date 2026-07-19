@@ -776,6 +776,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         // Shared shell-layout options, same restore-and-persist pattern. Drives the chrome in later phases.
         Layout = LayoutOptions.FromSettings(_settings.Current.Layout);
         Layout.PropertyChanged += OnLayoutPropertyChanged;
+        ApplyPreviewFont(); // publish the persisted preview font before the first preview renders
 
         // Diagram (Kroki) options, same restore-and-persist pattern (M12).
         Diagrams = DiagramOptions.FromSettings(_settings.Current.Diagram);
@@ -820,9 +821,19 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         _editorSaveTimer.Start();
     }
 
+    // Publish the chosen preview body font as the app resource the CTextBlock DynamicResource reads, so
+    // switching Sans/Serif/Mono re-fonts every open preview live (ported state.fontFamily).
+    private void ApplyPreviewFont()
+    {
+        if (Avalonia.Application.Current is { } app)
+            app.Resources[Tittle.Shared.PreviewFonts.ResourceKey] = Tittle.Shared.PreviewFonts.Resolve(Layout.FontFamily);
+    }
+
     private void OnLayoutPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         _settings.Update(_settings.Current with { Layout = Layout.ToSettings() });
+        if (e.PropertyName == nameof(LayoutOptions.FontFamily))
+            ApplyPreviewFont();
         if (e.PropertyName is nameof(LayoutOptions.IsWorkspaceSidebarOpen)
             or nameof(LayoutOptions.WorkspaceSection))
         {

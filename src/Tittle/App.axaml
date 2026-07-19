@@ -12,6 +12,9 @@
                 <ResourceInclude Source="avares://Tittle/Themes/Icons.axaml" />
                 <ResourceInclude Source="avares://Tittle/Themes/Tabs.axaml" />
             </ResourceDictionary.MergedDictionaries>
+            <!-- Preview body font, published so the CTextBlock DynamicResource can switch Sans/Serif/Mono
+                 live (ported state.fontFamily). Updated at runtime by MainWindowViewModel.ApplyPreviewFont. -->
+            <FontFamily x:Key="PreviewFontFamily">fonts:Inter#Inter</FontFamily>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceInclude x:Key="Light" Source="avares://Tittle/Themes/Colors/Light.axaml" />
                 <ResourceInclude x:Key="Dark" Source="avares://Tittle/Themes/Colors/Dark.axaml" />

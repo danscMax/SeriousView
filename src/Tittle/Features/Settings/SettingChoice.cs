@@ -51,4 +51,11 @@ public static class SettingChoices
         new(SplitOrientation.Horizontal, "Рядом"),
         new(SplitOrientation.Vertical, "Друг над другом"),
     ];
+
+    public static IReadOnlyList<SettingChoice> ReadingFonts { get; } =
+    [
+        new(ReadingFont.Sans, "Без засечек (Inter)"),
+        new(ReadingFont.Serif, "С засечками"),
+        new(ReadingFont.Mono, "Моноширинный"),
+    ];
 }

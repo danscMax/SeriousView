@@ -68,6 +68,20 @@ public enum ReadingDensity
     Relaxed,
 }
 
+/// <summary>Preview body font family (ported <c>state.fontFamily</c>). Core-side enum; the view maps it
+/// to a real Avalonia <c>FontFamily</c> (see <c>Shared/PreviewFonts</c>).</summary>
+public enum ReadingFont
+{
+    /// <summary>Bundled Inter sans-serif — the default (the variable-font bold fix pins static Inter).</summary>
+    Sans,
+
+    /// <summary>A serif face (book-like) — system Georgia/Cambria/Times fallback.</summary>
+    Serif,
+
+    /// <summary>A monospace face — Cascadia Code/Consolas fallback.</summary>
+    Mono,
+}
+
 /// <summary>How the preview's prose is justified. Core-side twin of Avalonia's TextAlignment (Core has no
 /// Avalonia dependency); mapped to the real property in the view.</summary>
 public enum TextAlign
@@ -142,6 +156,9 @@ public sealed record LayoutSettings
 
     /// <summary>How the preview's prose is justified. Default: left (ragged right).</summary>
     public TextAlign TextAlignment { get; init; } = TextAlign.Left;
+
+    /// <summary>Preview body font family (ported). Default: bundled Inter sans.</summary>
+    public ReadingFont FontFamily { get; init; } = ReadingFont.Sans;
 
     /// <summary>Orientation of the split view (source + preview together). Default: horizontal.</summary>
     public SplitOrientation SplitOrientation { get; init; } = SplitOrientation.Horizontal;

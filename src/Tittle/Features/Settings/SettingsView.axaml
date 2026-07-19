@@ -80,6 +80,16 @@
               <TextBlock Text="ТЕКСТ" Classes="settings-heading"/>
               <Border Classes="settings-rule"/>
 
+              <settings:SettingRow Label="Шрифт"
+                                   Description="Гарнитура текста предпросмотра: без засечек, с засечками или моноширинный.">
+                <ComboBox Classes="settings-pick"
+                          ItemsSource="{x:Static settings:SettingChoices.ReadingFonts}"
+                          DisplayMemberBinding="{Binding Label}"
+                          SelectedValueBinding="{Binding Value}"
+                          SelectedValue="{Binding FontFamily, Mode=TwoWay}"
+                          AutomationProperties.Name="Шрифт предпросмотра"/>
+              </settings:SettingRow>
+
               <settings:SettingRow Label="Ширина колонки"
                                    Description="Сколько текста умещается в строке. Узкая колонка читается легче.">
                 <ComboBox Classes="settings-pick"

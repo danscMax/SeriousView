@@ -19,7 +19,7 @@
          runs inherit it from CTextBlock, while inline `code` keeps its own monospace (CCode is closer).
          MarkdownScrollViewer exposes no FontFamily, so the style targets the rendered CTextBlock. -->
     <Style Selector="ctxt|CTextBlock">
-      <Setter Property="FontFamily" Value="fonts:Inter#Inter"/>
+      <Setter Property="FontFamily" Value="{DynamicResource PreviewFontFamily}"/>
     </Style>
     <!-- Code-block top-right corner: the SyntaxHigh language badge and our copy button shared it and
          overlapped. Swap them on hover (VS Code-style) — the badge fades out, the copy button fades in —
