@@ -23,6 +23,22 @@
     <TrimMode>partial</TrimMode>
   </PropertyGroup>
 
+  <!-- Release-only trimming feature switches (doc-verified: MS "Trimming options"). Each disables a
+       framework feature this viewer never uses via runtimeconfig AND lets the trimmer delete the dead
+       code from the (trimmable) runtime assemblies partial-trim already touches — a little less size +
+       startup init. Release-scoped so Debug keeps full debugging + hot reload.
+       DELIBERATELY NOT set: StackTraceSupport=false / UseSystemResourceKeys=true — both would gut the
+       crash.log (Platform/CrashLogger writes exception message + stack). EventSource/Metrics/HttpActivity
+       are diagnostics we don't emit; Kroki/Velopack HTTP itself is unaffected (only Activity propagation
+       wiring is removed). MetadataUpdater is hot-reload, irrelevant in Release. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <EventSourceSupport>false</EventSourceSupport>
+    <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
+    <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
+    <MetricsSupport>false</MetricsSupport>
+    <DebuggerSupport>false</DebuggerSupport>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />

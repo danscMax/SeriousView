@@ -19,6 +19,10 @@
     <!-- Deterministic output; normalise embedded paths in CI builds (set by the CI env var). -->
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+
+    <!-- The UI is hardcoded Russian/English (not culture-resourced), so drop any non-English satellite
+         .resources.dll assemblies dependencies may carry from the published bundle. -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
 </Project>
