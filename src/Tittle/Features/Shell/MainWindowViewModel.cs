@@ -725,6 +725,18 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void CloseSettings() => IsSettingsOpen = false;
 
+    /// <summary>Apply a one-click reading template (ШАБЛОНЫ, ported): sets font, column width, density and
+    /// preview font size together — each still individually adjustable afterwards.</summary>
+    [RelayCommand]
+    private void ApplyReadingTemplate(ReadingTemplate template)
+    {
+        var p = ReadingTemplates.For(template);
+        Layout.FontFamily = p.Font;
+        Layout.ReadingWidth = p.Width;
+        Layout.ReadingDensity = p.Density; // cascades LineSpacing/ParagraphSpacing via OnReadingDensityChanged
+        Editor.FontSize = p.FontSize;
+    }
+
     /// <summary>Flip the split-view orientation (side-by-side ⟷ stacked). A shared-layout knob, so it
     /// applies to every split tab and persists.</summary>
     [RelayCommand]
@@ -968,6 +980,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             new("Настройки: импорт…", ImportSettingsCommand),
             new("Приватный режим (вкл/выкл)", TogglePrivateModeCommand),
             new("Очистить данные вьюера…", ClearViewerDataCommand),
+            new("Шаблон: Чтение", ApplyReadingTemplateCommand, parameter: ReadingTemplate.Reading),
+            new("Шаблон: Разработка", ApplyReadingTemplateCommand, parameter: ReadingTemplate.Developer),
+            new("Шаблон: Компактно", ApplyReadingTemplateCommand, parameter: ReadingTemplate.Compact),
+            new("Шаблон: Печать", ApplyReadingTemplateCommand, parameter: ReadingTemplate.Printable),
             new("Справка: горячие клавиши", ShowHelpCommand, "F1"),
             new("Проверить обновления", CheckForUpdatesCommand),
             new("Поддержать автора…", ShowDonateCommand),

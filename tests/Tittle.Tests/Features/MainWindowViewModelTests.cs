@@ -110,6 +110,19 @@ public class MainWindowViewModelTests
     }
 
     [AvaloniaFact]
+    public void ApplyReadingTemplate_SetsFontWidthDensityAndSize()
+    {
+        var vm = CreateVm();
+
+        vm.ApplyReadingTemplateCommand.Execute(ReadingTemplate.Developer);
+
+        Assert.Equal(ReadingFont.Mono, vm.Layout.FontFamily);
+        Assert.Equal(ReadingWidth.Full, vm.Layout.ReadingWidth);
+        Assert.Equal(ReadingDensity.Normal, vm.Layout.ReadingDensity);
+        Assert.Equal(14, vm.Editor.FontSize);
+    }
+
+    [AvaloniaFact]
     public void ToggleSplitOrientation_FlipsTheSharedLayout()
     {
         var vm = CreateVm();

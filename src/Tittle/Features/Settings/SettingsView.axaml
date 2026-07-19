@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:shared="using:Tittle.Shared"
              xmlns:settings="using:Tittle.Features.Settings"
+             xmlns:core="using:Tittle.Core.Settings"
              xmlns:vm="using:Tittle.Features.Shell"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -76,6 +77,26 @@
         <TabItem Classes="settings-tab" Header="Чтение">
           <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
                         Padding="0,0,10,0">
+            <StackPanel>
+              <!-- ШАБЛОНЫ (ported): one-click bundles. Bound to the shell VM's command (not Layout),
+                   so this outer panel keeps the VM DataContext; the reading knobs below scope to Layout. -->
+              <TextBlock Text="ШАБЛОНЫ" Classes="settings-heading"/>
+              <Border Classes="settings-rule"/>
+              <UniformGrid Columns="2" Margin="0,4,0,12">
+                <Button Content="📖 Чтение" Classes="flat" Margin="0,0,6,6" HorizontalAlignment="Stretch"
+                        Command="{Binding ApplyReadingTemplateCommand}"
+                        CommandParameter="{x:Static core:ReadingTemplate.Reading}"/>
+                <Button Content="🛠 Разработка" Classes="flat" Margin="0,0,0,6" HorizontalAlignment="Stretch"
+                        Command="{Binding ApplyReadingTemplateCommand}"
+                        CommandParameter="{x:Static core:ReadingTemplate.Developer}"/>
+                <Button Content="▬ Компактно" Classes="flat" Margin="0,0,6,0" HorizontalAlignment="Stretch"
+                        Command="{Binding ApplyReadingTemplateCommand}"
+                        CommandParameter="{x:Static core:ReadingTemplate.Compact}"/>
+                <Button Content="🖨 Печать" Classes="flat" HorizontalAlignment="Stretch"
+                        Command="{Binding ApplyReadingTemplateCommand}"
+                        CommandParameter="{x:Static core:ReadingTemplate.Printable}"/>
+              </UniformGrid>
+
             <StackPanel DataContext="{Binding Layout}" x:DataType="shared:LayoutOptions">
               <TextBlock Text="ТЕКСТ" Classes="settings-heading"/>
               <Border Classes="settings-rule"/>
@@ -161,6 +182,7 @@
                              Text="{Binding HeadingScale, StringFormat={}{0:0.00}×}"/>
                 </StackPanel>
               </settings:SettingRow>
+            </StackPanel>
             </StackPanel>
           </ScrollViewer>
         </TabItem>
