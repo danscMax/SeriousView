@@ -80,7 +80,9 @@
           </Grid>
         </Grid>
 
-        <viewer:OutlinePanel IsVisible="{Binding IsOutlinePaneVisible}"/>
+        <!-- Lazily inflated on first show (created in code-behind) — hidden by default under the Files
+             section, so building the TOC control up front is pre-paint work for nothing. -->
+        <ContentControl x:Name="OutlineHost" IsVisible="{Binding IsOutlinePaneVisible}"/>
         <StackPanel Classes="sidebar-empty" IsVisible="{Binding IsOutlineEmptyStateVisible}">
           <Border Classes="sidebar-empty-icon">
             <PathIcon Data="{StaticResource IconSidebar}" Width="16" Height="16"
@@ -93,7 +95,8 @@
                      Foreground="{DynamicResource ChromeForegroundMutedBrush}"/>
         </StackPanel>
 
-        <workspace:BookmarkPanel IsVisible="{Binding IsBookmarksSectionActive}"/>
+        <!-- Same lazy hosting as the outline panel above. -->
+        <ContentControl x:Name="BookmarkHost" IsVisible="{Binding IsBookmarksSectionActive}"/>
       </Grid>
     </Grid>
   </Border>
