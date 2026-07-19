@@ -56,8 +56,9 @@
         <StyleInclude Source="avares://Tittle/Themes/Controls.axaml" />
         <!-- Menu surfaces themed from OUR tokens: FA does not match them to the chrome by itself. -->
         <StyleInclude Source="avares://Tittle/Themes/Menus.axaml" />
-        <!-- Settings window: the SettingRow primitive + the category rail. -->
-        <StyleInclude Source="avares://Tittle/Themes/Settings.axaml" />
+        <!-- Settings.axaml (SettingRow + category rail) is NOT global — it's scoped to SettingsView
+             (its only consumer), which is itself inflated lazily, so those styles never parse until the
+             settings page is first opened. -->
         <!-- Markdown admonition callouts (GitHub alerts). -->
         <StyleInclude Source="avares://Tittle/Themes/Admonitions.axaml" />
         <!-- Block math (M11). -->

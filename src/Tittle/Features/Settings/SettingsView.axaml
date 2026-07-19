@@ -9,6 +9,11 @@
              x:Class="Tittle.Features.Settings.SettingsView"
              x:DataType="vm:MainWindowViewModel"
              Background="{DynamicResource EditorSurfaceBrush}">
+  <!-- The settings-page styles (SettingRow, category rail, pickers) live here rather than in the global
+       Application.Styles: this is their only consumer, so they parse lazily with the page, not at startup. -->
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Tittle/Themes/Settings.axaml" />
+  </UserControl.Styles>
   <!-- Settings shown INLINE as a full page (a "tab"), not a floating window: it fills the content area, so
        nothing clips. DataContext is the shell VM — the Раскладка/Чтение pages scope to Layout, Диаграммы to
        Diagrams, and Готово closes the page. Mutually exclusive with the document view (never overlays a live
