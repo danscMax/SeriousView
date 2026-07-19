@@ -6,11 +6,11 @@
 
   <!-- Single source of truth for every package version (CPM, no floating). -->
   <ItemGroup Label="Avalonia (11.x maintenance line)">
-    <PackageVersion Include="Avalonia" Version="11.3.17" />
-    <PackageVersion Include="Avalonia.Desktop" Version="11.3.17" />
-    <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.3.17" />
-    <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.3.17" />
-    <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.17" />
+    <PackageVersion Include="Avalonia" Version="11.3.18" />
+    <PackageVersion Include="Avalonia.Desktop" Version="11.3.18" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.3.18" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.3.18" />
+    <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.18" />
   </ItemGroup>
 
   <ItemGroup Label="UI toolkit (WinUI controls, Fluent v2 theme, TabView)">
@@ -88,8 +88,8 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <PackageVersion Include="Avalonia.Headless" Version="11.3.17" />
-    <PackageVersion Include="Avalonia.Headless.XUnit" Version="11.3.17" />
+    <PackageVersion Include="Avalonia.Headless" Version="11.3.18" />
+    <PackageVersion Include="Avalonia.Headless.XUnit" Version="11.3.18" />
   </ItemGroup>
 
 </Project>
