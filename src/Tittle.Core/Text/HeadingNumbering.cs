@@ -44,8 +44,10 @@ public static partial class HeadingNumbering
         return string.Join(".", counters.Take(level).Skip(start));
     }
 
-    // ATX heading: 1–6 leading '#', at least one space, then the heading text (CommonMark requires the
-    // space, so `#nospace` is not a heading; 7+ '#' can't satisfy `{1,6}` + a following space either).
-    [GeneratedRegex(@"^(?<hashes>#{1,6})[ \t]+(?<text>.*)$")]
+    // ATX heading: up to 3 leading spaces (CommonMark; matches MarkdownOutline's outline regex so a numbered
+    // heading and a TOC heading agree), 1–6 '#', at least one space, then the text. `#nospace` is not a heading;
+    // 7+ '#' can't satisfy `{1,6}` + a following space either. Leading spaces are dropped in the rewrite (they're
+    // insignificant in CommonMark, so the heading renders identically).
+    [GeneratedRegex(@"^ {0,3}(?<hashes>#{1,6})[ \t]+(?<text>.*)$")]
     private static partial Regex AtxHeading();
 }

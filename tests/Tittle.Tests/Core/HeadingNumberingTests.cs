@@ -42,6 +42,16 @@ public class HeadingNumberingTests
     }
 
     [Fact]
+    public void NumbersIndentedHeadings_0to3LeadingSpaces()
+    {
+        // CommonMark allows up to 3 leading spaces; such a heading still renders + appears in the TOC,
+        // so numbering must not skip it (else the numbers desync from the visible structure).
+        var result = Number("# A", "  ## Indented", "### Deep");
+
+        Assert.Equal(new[] { "# 1 A", "## 1.1 Indented", "### 1.1.1 Deep" }, result);
+    }
+
+    [Fact]
     public void IgnoresNonHeadings()
     {
         var result = Number("#nospace", "text", "#######7hashes");

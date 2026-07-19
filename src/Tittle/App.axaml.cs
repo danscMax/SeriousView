@@ -29,10 +29,6 @@ public partial class App : Application
             Services.GetRequiredService<IThemeService>().ApplyCurrent();
             desktop.MainWindow = Services.GetRequiredService<MainWindow>();
 
-            // Apply the persisted user accent now the window exists (the window-level token override needs it;
-            // the theme itself was already applied above, so this layers the user accent on top without a flash).
-            Services.GetRequiredService<MainWindowViewModel>().ApplyAccent();
-
             // Single-instance: route file opens forwarded from secondary launches into this window.
             WireSingleInstance(Program.Gate, desktop);
 

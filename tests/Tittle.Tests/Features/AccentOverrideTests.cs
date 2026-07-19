@@ -27,4 +27,29 @@ public class AccentOverrideTests
         Assert.True(window.TryFindResource("AccentBrush", ThemeVariant.Dark, out var resolved));
         Assert.Same(red, resolved); // the window override wins over the theme-dict entry
     }
+
+    [AvaloniaFact]
+    public void AppResourceOverride_WinsOverThemeDictAccent_AndReachesEveryWindow()
+    {
+        // The user accent must recolour ALL top-levels (command palette, donate window), not just
+        // MainWindow — so it must be applied at the Application level and still win over the theme dict.
+        var app = Avalonia.Application.Current!;
+        var had = app.Resources.TryGetValue("AccentBrush", out var previous);
+        try
+        {
+            var red = new SolidColorBrush(Colors.Red);
+            app.Resources["AccentBrush"] = red;
+
+            var window = new Window { RequestedThemeVariant = ThemeVariant.Dark };
+            Assert.True(window.TryFindResource("AccentBrush", ThemeVariant.Dark, out var resolved));
+            Assert.Same(red, resolved); // an app-level direct entry wins over the theme-dictionary entry
+        }
+        finally
+        {
+            if (had)
+                app.Resources["AccentBrush"] = previous;
+            else
+                app.Resources.Remove("AccentBrush");
+        }
+    }
 }

@@ -1001,6 +1001,12 @@ public class MainWindowViewModelTests
                 ReadingWidth = ReadingWidth.Narrow,
                 SplitOrientation = SplitOrientation.Vertical,
                 SplitRatio = 0.7,
+                LineSpacing = 12,
+                HeadingScale = 1.3,
+                TextAlignment = TextAlign.Center,
+                FontFamily = ReadingFont.Mono,
+                NumberHeadings = true,
+                AccentColor = "#EF4444",
             };
             var source = new MainWindowViewModel(new FakeFileDialogService(null) { SavePath = file },
                 new FakeFileReader("x"), new FakeThemeService(), new FakeRecentFilesStore(),
@@ -1016,6 +1022,12 @@ public class MainWindowViewModelTests
             Assert.Equal(ReadingWidth.Narrow, target.Layout.ReadingWidth);
             Assert.Equal(SplitOrientation.Vertical, target.Layout.SplitOrientation);
             Assert.Equal(0.7, target.Layout.SplitRatio);
+            Assert.Equal(12, target.Layout.LineSpacing);
+            Assert.Equal(1.3, target.Layout.HeadingScale);
+            Assert.Equal(TextAlign.Center, target.Layout.TextAlignment);
+            Assert.Equal(ReadingFont.Mono, target.Layout.FontFamily);
+            Assert.True(target.Layout.NumberHeadings);
+            Assert.Equal("#EF4444", target.Layout.AccentColor);
         }
         finally
         {

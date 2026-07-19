@@ -310,7 +310,14 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         Layout.WorkspaceSection = layout.WorkspaceSection;
         Layout.OutlineWidth = layout.OutlineWidth;
         Layout.ReadingWidth = layout.ReadingWidth;
-        Layout.ReadingDensity = layout.ReadingDensity;
+        Layout.ReadingDensity = layout.ReadingDensity; // must precede the fine spacing so its cascade can't clobber
+        Layout.LineSpacing = layout.LineSpacing;
+        Layout.ParagraphSpacing = layout.ParagraphSpacing;
+        Layout.HeadingScale = layout.HeadingScale;
+        Layout.TextAlignment = layout.TextAlignment;
+        Layout.FontFamily = layout.FontFamily;         // OnLayoutPropertyChanged → ApplyPreviewFont
+        Layout.NumberHeadings = layout.NumberHeadings;  // → invalidates every tab's preview
+        Layout.AccentColor = layout.AccentColor;        // → ApplyAccent
         Layout.SplitOrientation = layout.SplitOrientation;
         Layout.SplitRatio = layout.SplitRatio;
 
@@ -789,6 +796,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         Layout = LayoutOptions.FromSettings(_settings.Current.Layout);
         Layout.PropertyChanged += OnLayoutPropertyChanged;
         ApplyPreviewFont(); // publish the persisted preview font before the first preview renders
+        ApplyAccent();      // publish the persisted user accent (app-level, so it reaches every window)
 
         // Diagram (Kroki) options, same restore-and-persist pattern (M12).
         Diagrams = DiagramOptions.FromSettings(_settings.Current.Diagram);
@@ -845,10 +853,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void SetAccent(string? hex) => Layout.AccentColor = hex ?? "";
 
-    // Apply the user accent: FluentAvalonia's app-wide CustomAccentColor (FA controls) + a WINDOW-level
-    // override of our AccentBrush/AccentHoverBrush tokens. Window resources are closer in the lookup than
-    // Application's per-theme theme dictionaries, so the user accent wins and holds across theme switches.
-    // "" clears the override → each theme's own accent returns. Called on change + once after the window exists.
+    // Apply the user accent: FluentAvalonia's app-wide CustomAccentColor (FA controls) + an APPLICATION-level
+    // override of our AccentBrush/AccentHoverBrush tokens. A direct Application.Resources entry wins over the
+    // per-theme theme-dictionary entry (proven in AccentOverrideTests) AND reaches EVERY top-level window
+    // (command palette, donate window), not just MainWindow. "" clears the override → each theme's own accent
+    // returns; holds across theme switches. Same global-resource pattern as ApplyPreviewFont.
     internal void ApplyAccent()
     {
         if (Avalonia.Application.Current is not { } app)
@@ -859,17 +868,15 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         if (fa is not null)
             fa.CustomAccentColor = color;
 
-        if ((app.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow is not { } window)
-            return;
         if (color is { } c)
         {
-            window.Resources["AccentBrush"] = new Avalonia.Media.SolidColorBrush(c);
-            window.Resources["AccentHoverBrush"] = new Avalonia.Media.SolidColorBrush(Tittle.Shared.AccentPalette.Lighten(c, 0.14));
+            app.Resources["AccentBrush"] = new Avalonia.Media.SolidColorBrush(c);
+            app.Resources["AccentHoverBrush"] = new Avalonia.Media.SolidColorBrush(Tittle.Shared.AccentPalette.Lighten(c, 0.14));
         }
         else
         {
-            window.Resources.Remove("AccentBrush");
-            window.Resources.Remove("AccentHoverBrush");
+            app.Resources.Remove("AccentBrush");
+            app.Resources.Remove("AccentHoverBrush");
         }
     }
 
