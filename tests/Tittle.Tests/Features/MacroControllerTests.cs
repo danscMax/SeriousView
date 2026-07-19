@@ -14,7 +14,8 @@ public class MacroControllerTests
     private sealed class InMemoryMacroStore : IMacroStore
     {
         public List<Macro> Saved = new();
-        public IReadOnlyList<Macro> Load() => Saved;
+        public int Loads;
+        public IReadOnlyList<Macro> Load() { Loads++; return Saved; }
         public void Save(IReadOnlyList<Macro> macros) => Saved = macros.ToList();
     }
 
@@ -27,7 +28,33 @@ public class MacroControllerTests
         var actions = new FakeEditorActions("abc");
         var status = new List<string>();
         var c = new MacroController(store, () => actions, status.Add);
+        c.LoadDeferred(); // App calls this after the window shows; the tests want the loaded state
         return (c, store, actions, status);
+    }
+
+    [Fact]
+    public void Ctor_DoesNotReadTheStore_UntilLoadDeferred()
+    {
+        // The library read is off the pre-paint path: the ctor must not touch the store; LoadDeferred
+        // (fired after the window shows) loads it and is idempotent.
+        var store = new InMemoryMacroStore
+        {
+            Saved = { new Macro("m", RepeatMode.Once, 1, System.Array.Empty<IEditorIntent>()) },
+        };
+        var actions = new FakeEditorActions("abc");
+
+        var c = new MacroController(store, () => actions, _ => { });
+        Assert.Equal(0, store.Loads);   // nothing read at construction
+        Assert.False(c.HasMacro);
+        Assert.Empty(c.Macros);
+
+        c.LoadDeferred();
+        Assert.Equal(1, store.Loads);
+        Assert.True(c.HasMacro);
+        Assert.Single(c.Macros);
+
+        c.LoadDeferred();               // idempotent — no second read
+        Assert.Equal(1, store.Loads);
     }
 
     [Fact]

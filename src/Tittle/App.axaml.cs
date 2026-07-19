@@ -43,6 +43,12 @@ public partial class App : Application
             // continuation resumes on the UI thread, so the resulting Changed refreshes the list safely.
             _ = Services.GetRequiredService<IRecentFilesStore>().PruneMissingAsync();
 
+            // Load the saved macro library off the pre-paint path (macros are only needed on a user
+            // action); Background priority runs the macros.json read after the first render.
+            Dispatcher.UIThread.Post(
+                () => Services!.GetRequiredService<MainWindowViewModel>().Macros.LoadDeferred(),
+                DispatcherPriority.Background);
+
             // Deterministic watcher teardown on the normal close path (M14 live-reload).
             desktop.ShutdownRequested += (_, _) => Services.GetService<IDocumentWatcher>()?.Dispose();
 

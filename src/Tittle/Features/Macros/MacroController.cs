@@ -29,12 +29,24 @@ public partial class MacroController : ObservableObject, IMacroLibrary
         _macroStore = store;
         _getActions = getActions;
         _setStatus = setStatus;
-        if (_macroStore is not null)
-        {
-            _macros.AddRange(_macroStore.Load());
-            _lastMacro = _macros.Count > 0 ? _macros[^1] : null;
-            HasMacro = _macros.Count > 0;
-        }
+    }
+
+    private bool _loaded;
+
+    /// <summary>Load the saved macro library — called AFTER the window is shown, not in the ctor. The
+    /// controller is built during shell-VM construction (before first paint), but macros are only needed
+    /// on a user action (menu / palette / replay), so the macros.json read is deferred off the startup
+    /// path (App posts this at Background priority, like the recent-files prune). Idempotent.</summary>
+    public void LoadDeferred()
+    {
+        if (_loaded)
+            return;
+        _loaded = true;
+        if (_macroStore is null)
+            return;
+        _macros.AddRange(_macroStore.Load());
+        _lastMacro = _macros.Count > 0 ? _macros[^1] : null;
+        HasMacro = _macros.Count > 0;
     }
 
     [ObservableProperty]
