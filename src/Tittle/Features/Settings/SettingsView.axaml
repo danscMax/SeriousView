@@ -14,6 +14,24 @@
        Application.Styles: this is their only consumer, so they parse lazily with the page, not at startup. -->
   <UserControl.Styles>
     <StyleInclude Source="avares://Tittle/Themes/Settings.axaml" />
+    <!-- Accent swatch: a coloured circle. A minimal template makes the local Background win over the
+         FluentAvalonia button background, so each swatch shows its actual accent colour. -->
+    <Style Selector="Button.accent-swatch">
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Margin" Value="0,0,8,4"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}" Width="26" Height="26" CornerRadius="13"
+                  BorderThickness="1" BorderBrush="{DynamicResource ChromeBorderBrush}">
+            <ContentPresenter Content="{TemplateBinding Content}"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="Button.accent-swatch:pointerover /template/ Border">
+      <Setter Property="BorderBrush" Value="{DynamicResource ChromeForegroundMutedBrush}"/>
+    </Style>
   </UserControl.Styles>
   <!-- Settings shown INLINE as a full page (a "tab"), not a floating window: it fills the content area, so
        nothing clips. DataContext is the shell VM — the Раскладка/Чтение pages scope to Layout, Диаграммы to
@@ -96,6 +114,26 @@
                         Command="{Binding ApplyReadingTemplateCommand}"
                         CommandParameter="{x:Static core:ReadingTemplate.Printable}"/>
               </UniformGrid>
+
+              <!-- АКЦЕНТ (ported accentColor): swatches bound to the shell VM's SetAccent command. -->
+              <TextBlock Text="АКЦЕНТ" Classes="settings-heading"/>
+              <Border Classes="settings-rule"/>
+              <WrapPanel Margin="0,6,0,12">
+                <Button Classes="accent-swatch" Background="Transparent" Content="↺" ToolTip.Tip="По теме"
+                        Command="{Binding SetAccentCommand}" CommandParameter=""/>
+                <Button Classes="accent-swatch" Background="{x:Static shared:AccentPalette.Blue}" ToolTip.Tip="Синий"
+                        Command="{Binding SetAccentCommand}" CommandParameter="#3B82F6"/>
+                <Button Classes="accent-swatch" Background="{x:Static shared:AccentPalette.Purple}" ToolTip.Tip="Фиолетовый"
+                        Command="{Binding SetAccentCommand}" CommandParameter="#8B5CF6"/>
+                <Button Classes="accent-swatch" Background="{x:Static shared:AccentPalette.Green}" ToolTip.Tip="Зелёный"
+                        Command="{Binding SetAccentCommand}" CommandParameter="#22C55E"/>
+                <Button Classes="accent-swatch" Background="{x:Static shared:AccentPalette.Red}" ToolTip.Tip="Красный"
+                        Command="{Binding SetAccentCommand}" CommandParameter="#EF4444"/>
+                <Button Classes="accent-swatch" Background="{x:Static shared:AccentPalette.Orange}" ToolTip.Tip="Оранжевый"
+                        Command="{Binding SetAccentCommand}" CommandParameter="#F97316"/>
+                <Button Classes="accent-swatch" Background="{x:Static shared:AccentPalette.Pink}" ToolTip.Tip="Розовый"
+                        Command="{Binding SetAccentCommand}" CommandParameter="#EC4899"/>
+              </WrapPanel>
 
             <StackPanel DataContext="{Binding Layout}" x:DataType="shared:LayoutOptions">
               <TextBlock Text="ТЕКСТ" Classes="settings-heading"/>

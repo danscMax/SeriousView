@@ -89,6 +89,11 @@ public partial class LayoutOptions : ObservableObject
     [ObservableProperty]
     private bool _numberHeadings;
 
+    // User accent as #RRGGBB, or "" for the theme's own accent. Applied by the shell (window-level token
+    // override + FluentAvalonia CustomAccentColor); persisted like every other layout knob.
+    [ObservableProperty]
+    private string _accentColor = "";
+
     // Picking a density preset writes its concrete spacing numbers (the fine-grain fields are the truth the
     // preview reads). Guarded so loading persisted settings (which set the numbers explicitly) isn't clobbered.
     private bool _suppressPresetApply;
@@ -167,6 +172,7 @@ public partial class LayoutOptions : ObservableObject
         TextAlignment = TextAlignment,
         FontFamily = FontFamily,
         NumberHeadings = NumberHeadings,
+        AccentColor = AccentColor,
         SplitOrientation = SplitOrientation,
         SplitRatio = SplitRatio,
     };
@@ -195,6 +201,7 @@ public partial class LayoutOptions : ObservableObject
         o.TextAlignment = s.TextAlignment;
         o.FontFamily = s.FontFamily;
         o.NumberHeadings = s.NumberHeadings;
+        o.AccentColor = s.AccentColor ?? "";
         o.SplitOrientation = s.SplitOrientation;
         o.SplitRatio = s.SplitRatio;
         o._suppressPresetApply = false;

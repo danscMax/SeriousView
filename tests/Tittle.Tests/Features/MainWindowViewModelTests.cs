@@ -123,6 +123,18 @@ public class MainWindowViewModelTests
     }
 
     [AvaloniaFact]
+    public void SetAccent_SetsLayoutAccentColor_AndClears()
+    {
+        var vm = CreateVm();
+
+        vm.SetAccentCommand.Execute("#EF4444");
+        Assert.Equal("#EF4444", vm.Layout.AccentColor);
+
+        vm.SetAccentCommand.Execute(""); // "По теме" → clear
+        Assert.Equal("", vm.Layout.AccentColor);
+    }
+
+    [AvaloniaFact]
     public void ToggleSplitOrientation_FlipsTheSharedLayout()
     {
         var vm = CreateVm();

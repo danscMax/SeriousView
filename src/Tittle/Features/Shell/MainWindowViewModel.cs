@@ -841,11 +841,45 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             app.Resources[Tittle.Shared.PreviewFonts.ResourceKey] = Tittle.Shared.PreviewFonts.Resolve(Layout.FontFamily);
     }
 
+    /// <summary>Set the user accent (a #RRGGBB from a settings swatch, or "" for the theme's own accent).</summary>
+    [RelayCommand]
+    private void SetAccent(string? hex) => Layout.AccentColor = hex ?? "";
+
+    // Apply the user accent: FluentAvalonia's app-wide CustomAccentColor (FA controls) + a WINDOW-level
+    // override of our AccentBrush/AccentHoverBrush tokens. Window resources are closer in the lookup than
+    // Application's per-theme theme dictionaries, so the user accent wins and holds across theme switches.
+    // "" clears the override → each theme's own accent returns. Called on change + once after the window exists.
+    internal void ApplyAccent()
+    {
+        if (Avalonia.Application.Current is not { } app)
+            return;
+        var color = Tittle.Shared.AccentPalette.TryParse(Layout.AccentColor);
+
+        var fa = app.Styles.OfType<FluentAvalonia.Styling.FluentAvaloniaTheme>().FirstOrDefault();
+        if (fa is not null)
+            fa.CustomAccentColor = color;
+
+        if ((app.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow is not { } window)
+            return;
+        if (color is { } c)
+        {
+            window.Resources["AccentBrush"] = new Avalonia.Media.SolidColorBrush(c);
+            window.Resources["AccentHoverBrush"] = new Avalonia.Media.SolidColorBrush(Tittle.Shared.AccentPalette.Lighten(c, 0.14));
+        }
+        else
+        {
+            window.Resources.Remove("AccentBrush");
+            window.Resources.Remove("AccentHoverBrush");
+        }
+    }
+
     private void OnLayoutPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         _settings.Update(_settings.Current with { Layout = Layout.ToSettings() });
         if (e.PropertyName == nameof(LayoutOptions.FontFamily))
             ApplyPreviewFont();
+        if (e.PropertyName == nameof(LayoutOptions.AccentColor))
+            ApplyAccent();
         if (e.PropertyName == nameof(LayoutOptions.NumberHeadings))
             foreach (var tab in Tabs)
                 tab.InvalidatePreviewMarkdown();

@@ -163,6 +163,10 @@ public sealed record LayoutSettings
     /// <summary>Number the preview's headings hierarchically (1, 1.1, …). Ported. Default: off.</summary>
     public bool NumberHeadings { get; init; }
 
+    /// <summary>User-chosen accent colour as <c>#RRGGBB</c>, overriding the theme's accent everywhere.
+    /// Empty (the default) = use each theme's own accent. Ported <c>state.accentColor</c>.</summary>
+    public string AccentColor { get; init; } = "";
+
     /// <summary>Orientation of the split view (source + preview together). Default: horizontal.</summary>
     public SplitOrientation SplitOrientation { get; init; } = SplitOrientation.Horizontal;
 
