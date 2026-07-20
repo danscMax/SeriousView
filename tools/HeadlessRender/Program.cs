@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.VisualTree;
 using Avalonia.Headless;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -79,6 +80,25 @@ var screens = new (string Name, Func<Control> Build)[]
     }),
     // Settings is now an inline page (a "tab"), not a modal — bound to the shell VM (Layout + Diagrams).
     ("settings", () => new SettingsView { DataContext = BuildWelcomeVm() }),
+    // The Чтение tab (index 1) holds the ported ШАБЛОНЫ / АКЦЕНТ / Шрифт / РАЗМЕР controls — select it
+    // once the tabs template up so the render shows them, not the default Раскладка tab.
+    ("settings-reading", () =>
+    {
+        var v = new SettingsView { DataContext = BuildWelcomeVm() };
+        v.Loaded += (_, _) =>
+        {
+            if (v.GetVisualDescendants().OfType<TabControl>().FirstOrDefault() is { } tabs)
+                tabs.SelectedIndex = 1;
+        };
+        return v;
+    }),
+    // Native ```chart (LiveCharts2) in the preview — confirms the chart actually draws, not source-fallback.
+    ("chart", () => new DocumentView
+    {
+        DataContext = DocumentTabViewModel.FromFile(
+            "# График\n\n```chart:bar\nМесяц,Продажи,Затраты\nЯнв,100,60\nФев,120,90\nМар,90,70\n```\n",
+            @"E:\docs\chart.md"),
+    }),
 };
 
 // Standalone modal windows. Each IS a Window (the transparent ModalWindow card chrome is the thing
@@ -191,6 +211,8 @@ sealed class RenderRecentFilesStore(IEnumerable<string> items) : IRecentFilesSto
         _items.Insert(0, path);
         Changed?.Invoke(this, EventArgs.Empty);
     }
+
+    public void Clear() { _items.Clear(); Changed?.Invoke(this, EventArgs.Empty); }
 
     public Task PruneMissingAsync() => Task.CompletedTask;
 }

@@ -49,6 +49,10 @@ public static class ChartView
             Series = slices,
             LegendPosition = LegendPosition.Right,
             LegendTextPaint = text,
+            // A document chart is static: draw the final state at once (no entry animation → no flash of
+            // an empty chart, and it renders deterministically).
+            AnimationsSpeed = TimeSpan.Zero,
+            EasingFunction = null,
         };
     }
 
@@ -62,37 +66,49 @@ public static class ChartView
             YAxes = new[] { new Axis { LabelsPaint = text } },
             LegendPosition = spec.Series.Count > 1 ? LegendPosition.Top : LegendPosition.Hidden,
             LegendTextPaint = text,
+            // Static document chart: draw the final state immediately (no entry animation → no empty-chart
+            // flash, deterministic render).
+            AnimationsSpeed = TimeSpan.Zero,
+            EasingFunction = null,
         };
     }
 
     private static ISeries ToSeries(ChartSeries s, ChartKind kind)
     {
+        // Only assign a paint when the source gave an explicit colour. Leaving a paint UNSET lets
+        // LiveCharts2 apply its per-series theme palette; setting Fill = null instead paints nothing
+        // (transparent columns / no line) — the bug that made colour-less CSV charts render empty.
         var values = s.Values.ToArray();
         var color = Parse(s.Color);
-        return kind switch
+        switch (kind)
         {
-            ChartKind.Line => new LineSeries<double>
+            case ChartKind.Line:
             {
-                Values = values,
-                Name = s.Name,
-                Fill = null,
-                Stroke = color is { } lc ? new SolidColorPaint(lc, 2) : null,
-                GeometryStroke = color is { } gc ? new SolidColorPaint(gc, 2) : null,
-            },
-            ChartKind.Area => new LineSeries<double>
+                var line = new LineSeries<double> { Values = values, Name = s.Name, Fill = null }; // no area under the line
+                if (color is { } lc)
+                {
+                    line.Stroke = new SolidColorPaint(lc, 2);
+                    line.GeometryStroke = new SolidColorPaint(lc, 2);
+                }
+                return line;
+            }
+            case ChartKind.Area:
             {
-                Values = values,
-                Name = s.Name,
-                Fill = color is { } ac ? new SolidColorPaint(ac.WithAlpha(70)) : null,
-            },
-            ChartKind.Scatter => new ScatterSeries<double> { Values = values, Name = s.Name },
-            _ => new ColumnSeries<double>
+                var area = new LineSeries<double> { Values = values, Name = s.Name };
+                if (color is { } ac)
+                    area.Fill = new SolidColorPaint(ac.WithAlpha(70));
+                return area;
+            }
+            case ChartKind.Scatter:
+                return new ScatterSeries<double> { Values = values, Name = s.Name };
+            default:
             {
-                Values = values,
-                Name = s.Name,
-                Fill = color is { } cc ? new SolidColorPaint(cc) : null,
-            },
-        };
+                var col = new ColumnSeries<double> { Values = values, Name = s.Name };
+                if (color is { } cc)
+                    col.Fill = new SolidColorPaint(cc);
+                return col;
+            }
+        }
     }
 
     private static SKColor? Parse(string? hex)
