@@ -1384,7 +1384,18 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>Current theme mode — drives the radio check-marks in the ☰ View ▸ Theme submenu.</summary>
-    public ThemeMode CurrentTheme => _theme.Mode;
+    /// <summary>The active theme. Settable so the settings-page theme dropdown two-way binds; picking a
+    /// value applies it (and persists via the theme service). External changes (palette / Ctrl+Shift+T
+    /// cycle) raise Changed → OnThemeChanged re-notifies this, so the dropdown stays in sync.</summary>
+    public ThemeMode CurrentTheme
+    {
+        get => _theme.Mode;
+        set
+        {
+            if (value != _theme.Mode)
+                _theme.SetMode(value);
+        }
+    }
 
     [RelayCommand]
     private void ToggleTheme() => _theme.Cycle();

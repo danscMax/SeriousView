@@ -135,6 +135,16 @@ public class MainWindowViewModelTests
     }
 
     [AvaloniaFact]
+    public void CurrentTheme_Setter_AppliesTheme_ForTheSettingsDropdown()
+    {
+        var vm = CreateVm();
+
+        vm.CurrentTheme = ThemeMode.Sepia; // the settings ComboBox two-way binds to this
+
+        Assert.Equal(ThemeMode.Sepia, vm.CurrentTheme);
+    }
+
+    [AvaloniaFact]
     public void ToggleSplitOrientation_FlipsTheSharedLayout()
     {
         var vm = CreateVm();

@@ -3,6 +3,7 @@
              xmlns:shared="using:Tittle.Shared"
              xmlns:settings="using:Tittle.Features.Settings"
              xmlns:core="using:Tittle.Core.Settings"
+             xmlns:abs="using:Tittle.Core.Abstractions"
              xmlns:vm="using:Tittle.Features.Shell"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -134,6 +135,20 @@
                 <Button Classes="accent-swatch" Background="{x:Static shared:AccentPalette.Pink}" ToolTip.Tip="Розовый"
                         Command="{Binding SetAccentCommand}" CommandParameter="#EC4899"/>
               </WrapPanel>
+
+              <!-- ТЕМА (ported): the full 15-theme catalog, reachable from settings (was palette/menu only).
+                   Two-way to the VM's CurrentTheme, so external changes (Ctrl+Shift+T) reflect here too. -->
+              <TextBlock Text="ТЕМА" Classes="settings-heading"/>
+              <Border Classes="settings-rule"/>
+              <settings:SettingRow Label="Тема оформления"
+                                   Description="Цветовая тема окна. «Авто (как в системе)» следует за системной.">
+                <ComboBox Classes="settings-pick"
+                          ItemsSource="{x:Static abs:ThemeCatalog.All}"
+                          DisplayMemberBinding="{Binding DisplayName}"
+                          SelectedValueBinding="{Binding Mode}"
+                          SelectedValue="{Binding CurrentTheme, Mode=TwoWay}"
+                          AutomationProperties.Name="Тема оформления"/>
+              </settings:SettingRow>
 
               <TextBlock Text="РАЗМЕР" Classes="settings-heading"/>
               <Border Classes="settings-rule"/>
