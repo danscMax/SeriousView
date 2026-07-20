@@ -123,6 +123,19 @@ public class MainWindowViewModelTests
     }
 
     [AvaloniaFact]
+    public async System.Threading.Tasks.Task PasteImage_NoActiveEditableSource_IsSafeNoOp()
+    {
+        // The clipboard has an image, but there's no active source editor (no tab / no EditorActions),
+        // so PasteImage must guard and not throw. The actual insert is a view-level (user) smoke.
+        var clip = new FakeClipboardService { ImagePng = new byte[] { 1, 2, 3 } };
+        var vm = CreateVm(clipboard: clip);
+
+        await vm.PasteImageCommand.ExecuteAsync(null);
+
+        Assert.Null(vm.SelectedTab); // no tab → guarded no-op
+    }
+
+    [AvaloniaFact]
     public void SetAccent_SetsLayoutAccentColor_AndClears()
     {
         var vm = CreateVm();

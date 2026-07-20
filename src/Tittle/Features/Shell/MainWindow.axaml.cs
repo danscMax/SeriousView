@@ -205,6 +205,11 @@ public partial class MainWindow : AppWindow
             return;
         }
 
+        // Ctrl+V: additionally try pasting a clipboard image as a data-URI (ported paste-image). NOT
+        // handled — the default text paste still runs; the async image insert is additive (no-op if none).
+        if (ctrl && !shift && !alt && e.Key == Key.V && vm.SelectedTab?.ShowSource == true)
+            vm.PasteImageCommand.Execute(null);
+
         // While recording a macro, capture caret navigation + deletion flowing to the editor (the 3rd
         // recording source; typing → TextEntered, line/EOL → their VM dispatch). Record the intent but
         // do NOT handle the key — the editor still performs the real move/delete.

@@ -13,4 +13,8 @@ public interface IClipboardService
     /// copy-as-rich-text): paste targets that understand HTML (Word, mail) take the formatted
     /// document, everything else takes <paramref name="plainText"/>. A no-op without a clipboard.</summary>
     Task SetHtmlAsync(string html, string plainText);
+
+    /// <summary>Read an image from the clipboard as PNG bytes (ported paste-image), or null when there is
+    /// no image / no clipboard. Enables pasting a screenshot into the source editor as a data-URI.</summary>
+    Task<byte[]?> TryReadImagePngAsync();
 }

@@ -752,6 +752,21 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         Editor.FontSize = p.FontSize;
     }
 
+    /// <summary>Paste an image from the clipboard into the active source editor as a data-URI (ported
+    /// paste-image; Av11.3's DataTransfer read makes it portable, not Windows-only). Additive to Ctrl+V
+    /// (text still pastes normally); a no-op when the clipboard has no image or the tab isn't editable source.</summary>
+    [RelayCommand]
+    private async Task PasteImage()
+    {
+        if (SelectedTab is not { ShowSource: true, EditorActions: { } actions })
+            return;
+        var png = await _clipboard.TryReadImagePngAsync();
+        if (png is null || png.Length == 0)
+            return;
+        var dataUri = $"![](data:image/png;base64,{System.Convert.ToBase64String(png)})";
+        actions.Replace(actions.Selection.Start, actions.Selection.Length, dataUri);
+    }
+
     /// <summary>Flip the split-view orientation (side-by-side ⟷ stacked). A shared-layout knob, so it
     /// applies to every split tab and persists.</summary>
     [RelayCommand]
@@ -1059,6 +1074,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
         if (SelectedTab is not null)
             items.Add(new PaletteItem("Сохранить", SaveActiveTabCommand));
+
+        if (SelectedTab is { ShowSource: true, EditorActions: not null })
+            items.Add(new PaletteItem("Вставить изображение из буфера", PasteImageCommand, "Ctrl+V"));
 
         if (SelectedTab is { } unreadTab && unreadTab.Outline.Count > 0)
         {

@@ -17,6 +17,28 @@ public sealed class ClipboardService : IClipboardService
 
     public ClipboardService(Func<TopLevel?> topLevel) => _topLevel = topLevel;
 
+    /// <summary>Read an image from the clipboard and return it as PNG bytes, or null when there is no
+    /// image (or no window). Uses Avalonia 11.3's DataTransfer read API (TryGetDataAsync →
+    /// TryGetBitmapAsync) — portable, so the paste-image feature is no longer Windows-only.</summary>
+    public async Task<byte[]?> TryReadImagePngAsync()
+    {
+        var clipboard = _topLevel()?.Clipboard;
+        if (clipboard is null)
+            return null;
+
+        var transfer = await clipboard.TryGetDataAsync();
+        if (transfer is null)
+            return null;
+
+        var bitmap = await transfer.TryGetBitmapAsync();
+        if (bitmap is null)
+            return null;
+
+        using var stream = new System.IO.MemoryStream();
+        bitmap.Save(stream); // Avalonia Bitmap.Save writes PNG
+        return stream.ToArray();
+    }
+
     public async Task SetTextAsync(string text)
     {
         var clipboard = _topLevel()?.Clipboard;

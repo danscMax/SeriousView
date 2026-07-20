@@ -128,6 +128,11 @@ internal sealed class FakeClipboardService : IClipboardService
         LastHtmlPlainFallback = plainText;
         return Task.CompletedTask;
     }
+
+    /// <summary>Test seam: the PNG bytes a clipboard read returns (null = no image).</summary>
+    public byte[]? ImagePng { get; set; }
+
+    public Task<byte[]?> TryReadImagePngAsync() => Task.FromResult(ImagePng);
 }
 
 internal sealed class FakeShellService : IShellService
