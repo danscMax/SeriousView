@@ -1018,6 +1018,16 @@ public partial class DocumentTabViewModel : ViewModelBase, IDisposable
             NavigationRequested?.Invoke(heading);
     }
 
+    /// <summary>Jump to the next (forward) / previous unread heading (ported ]/[), reusing the outline-click
+    /// navigation. Unread state comes from ViewStateStore; the outline index equals the heading ordinal.</summary>
+    [RelayCommand]
+    private void JumpToUnread(bool forward)
+    {
+        var target = UnreadNavigation.NextUnread(Outline.Count, IsHeadingVisited, ActiveHeadingOrdinal, forward);
+        if (target >= 0 && target < Outline.Count)
+            NavigateToHeading(Outline[target]);
+    }
+
     /// <summary>Raised by the fold-all/unfold-all commands (ported section folding);
     /// the view owns the folding state, the same seam shape as navigation.</summary>
     public event Action<bool>? FoldAllRequested;

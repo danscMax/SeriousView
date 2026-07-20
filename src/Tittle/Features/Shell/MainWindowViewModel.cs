@@ -1049,6 +1049,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         if (SelectedTab is not null)
             items.Add(new PaletteItem("Сохранить", SaveActiveTabCommand));
 
+        if (SelectedTab is { } unreadTab && unreadTab.Outline.Count > 0)
+        {
+            items.Add(new PaletteItem("Следующий непрочитанный", unreadTab.JumpToUnreadCommand, "]", parameter: true));
+            items.Add(new PaletteItem("Предыдущий непрочитанный", unreadTab.JumpToUnreadCommand, "[", parameter: false));
+        }
+
         if (SelectedTab is { EditorActions: not null } editorTab)
         {
             items.Add(new PaletteItem("Заменить…", editorTab.OpenReplaceCommand, "Ctrl+H"));
