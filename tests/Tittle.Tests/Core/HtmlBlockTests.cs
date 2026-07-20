@@ -1,3 +1,4 @@
+using System.Linq;
 using Tittle.Core.Text;
 using Xunit;
 
@@ -100,6 +101,30 @@ public class HtmlBlockTests
 
         Assert.DoesNotContain("<table>", result); // converted, not left as raw (dropped) HTML
         Assert.Contains("x", result);
+    }
+
+    [Fact]
+    public void ManyUnclosedTableOpeners_BailFast_LeftAsSource()
+    {
+        // Pathological input the synchronous preview getter must survive: thousands of bare <table> openers
+        // with no close. The fast-bail (no </table> anywhere) returns without the O(n²) forward scan.
+        var src = string.Join("\n", Enumerable.Repeat("<table>", 5000));
+
+        var result = MarkdownPreprocessor.Transform(src, null);
+
+        Assert.Contains("<table>", result); // left as source, no hang
+    }
+
+    [Fact]
+    public void ManyOpenersThenOneStrayClose_TerminatesViaScanBudget()
+    {
+        // Many openers plus a single stray close (unbalanced) — the scan budget bounds total work to O(n)
+        // so this returns instead of freezing; the openers degrade gracefully to source.
+        var src = string.Join("\n", Enumerable.Repeat("<table>", 6000)) + "\n</table>";
+
+        var result = MarkdownPreprocessor.Transform(src, null);
+
+        Assert.Contains("<table>", result);
     }
 
     [Fact]

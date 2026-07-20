@@ -439,8 +439,24 @@ public static partial class MarkdownPreprocessor
     // common pattern — so those are left untouched. The table span is collected by TAG BALANCE (blank lines
     // inside a table are kept; prose after </table> is never swept in), and only outside fenced code.
     // Rebuilds the line list → the caller re-scans fences after.
+    // ponytail: this is a line-regex heuristic, not a real HTML parser — a literal "<table"/"</table>" inside
+    // an attribute VALUE or comment miscounts depth (absurd input; documented ceiling). Move to HtmlAgilityPack
+    // if that ever bites in practice.
     private static List<string> ConvertHtmlBlocks(List<string> lines, MarkdownCodeRegions regions)
     {
+        // Fast bail: no closing tag anywhere → nothing to convert. Also stops the O(n²) scan below on a
+        // pathological all-openers document (thousands of bare "<table>" with no close) from running at all.
+        var hasClose = false;
+        foreach (var l in lines)
+            if (TableCloseTag().IsMatch(l)) { hasClose = true; break; }
+        if (!hasClose)
+            return lines;
+
+        // Total lines the forward balance-scans may traverse across the whole document. A real doc never
+        // approaches this (each table scans only its own span); it caps the worst case (many unterminated
+        // openers each scanning far) at O(n) so a crafted file can't freeze the synchronous preview getter.
+        var scanBudget = lines.Count * 4 + 4096;
+
         var result = new List<string>(lines.Count);
         for (var i = 0; i < lines.Count; i++)
         {
@@ -458,8 +474,8 @@ public static partial class MarkdownPreprocessor
             var end = -1;
             for (var j = i; j < lines.Count; j++)
             {
-                if (regions.IsFencedLine(j))
-                    break;
+                if (--scanBudget < 0 || regions.IsFencedLine(j))
+                    break; // budget exhausted (pathological input) or would span into code → leave as source
                 depth += TableOpenTag().Matches(lines[j]).Count - TableCloseTag().Matches(lines[j]).Count;
                 if (depth <= 0)
                 {
