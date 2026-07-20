@@ -167,6 +167,13 @@ public sealed record LayoutSettings
     /// Empty (the default) = use each theme's own accent. Ported <c>state.accentColor</c>.</summary>
     public string AccentColor { get; init; } = "";
 
+    /// <summary>Show the breadcrumbs strip above the document (ported <c>state.showBreadcrumbs</c>). Default on.</summary>
+    public bool ShowBreadcrumbs { get; init; } = true;
+
+    /// <summary>Show the code minimap beside the source editor on code/text tabs (ported
+    /// <c>state.showMinimap</c>). Default on.</summary>
+    public bool ShowMinimap { get; init; } = true;
+
     /// <summary>Orientation of the split view (source + preview together). Default: horizontal.</summary>
     public SplitOrientation SplitOrientation { get; init; } = SplitOrientation.Horizontal;
 

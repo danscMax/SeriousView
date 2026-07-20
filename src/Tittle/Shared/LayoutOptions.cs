@@ -94,6 +94,12 @@ public partial class LayoutOptions : ObservableObject
     [ObservableProperty]
     private string _accentColor = "";
 
+    [ObservableProperty]
+    private bool _showBreadcrumbs = true;
+
+    [ObservableProperty]
+    private bool _showMinimap = true;
+
     // Picking a density preset writes its concrete spacing numbers (the fine-grain fields are the truth the
     // preview reads). Guarded so loading persisted settings (which set the numbers explicitly) isn't clobbered.
     private bool _suppressPresetApply;
@@ -173,6 +179,8 @@ public partial class LayoutOptions : ObservableObject
         FontFamily = FontFamily,
         NumberHeadings = NumberHeadings,
         AccentColor = AccentColor,
+        ShowBreadcrumbs = ShowBreadcrumbs,
+        ShowMinimap = ShowMinimap,
         SplitOrientation = SplitOrientation,
         SplitRatio = SplitRatio,
     };
@@ -202,6 +210,8 @@ public partial class LayoutOptions : ObservableObject
         o.FontFamily = s.FontFamily;
         o.NumberHeadings = s.NumberHeadings;
         o.AccentColor = s.AccentColor ?? "";
+        o.ShowBreadcrumbs = s.ShowBreadcrumbs;
+        o.ShowMinimap = s.ShowMinimap;
         o.SplitOrientation = s.SplitOrientation;
         o.SplitRatio = s.SplitRatio;
         o._suppressPresetApply = false;

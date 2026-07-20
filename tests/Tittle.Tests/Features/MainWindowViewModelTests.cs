@@ -1017,6 +1017,8 @@ public class MainWindowViewModelTests
                 FontFamily = ReadingFont.Mono,
                 NumberHeadings = true,
                 AccentColor = "#EF4444",
+                ShowBreadcrumbs = false,
+                ShowMinimap = false,
             };
             var source = new MainWindowViewModel(new FakeFileDialogService(null) { SavePath = file },
                 new FakeFileReader("x"), new FakeThemeService(), new FakeRecentFilesStore(),
@@ -1038,6 +1040,8 @@ public class MainWindowViewModelTests
             Assert.Equal(ReadingFont.Mono, target.Layout.FontFamily);
             Assert.True(target.Layout.NumberHeadings);
             Assert.Equal("#EF4444", target.Layout.AccentColor);
+            Assert.False(target.Layout.ShowBreadcrumbs);
+            Assert.False(target.Layout.ShowMinimap);
         }
         finally
         {

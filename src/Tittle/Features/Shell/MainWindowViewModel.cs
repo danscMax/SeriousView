@@ -318,6 +318,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         Layout.FontFamily = layout.FontFamily;         // OnLayoutPropertyChanged → ApplyPreviewFont
         Layout.NumberHeadings = layout.NumberHeadings;  // → invalidates every tab's preview
         Layout.AccentColor = layout.AccentColor;        // → ApplyAccent
+        Layout.ShowBreadcrumbs = layout.ShowBreadcrumbs; // → NotifyModeToggles on each tab
+        Layout.ShowMinimap = layout.ShowMinimap;
         Layout.SplitOrientation = layout.SplitOrientation;
         Layout.SplitRatio = layout.SplitRatio;
 
@@ -890,6 +892,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         if (e.PropertyName == nameof(LayoutOptions.NumberHeadings))
             foreach (var tab in Tabs)
                 tab.InvalidatePreviewMarkdown();
+        if (e.PropertyName is nameof(LayoutOptions.ShowBreadcrumbs) or nameof(LayoutOptions.ShowMinimap))
+            foreach (var tab in Tabs)
+                tab.NotifyModeToggles();
         if (e.PropertyName is nameof(LayoutOptions.IsWorkspaceSidebarOpen)
             or nameof(LayoutOptions.WorkspaceSection))
         {

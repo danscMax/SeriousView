@@ -737,7 +737,7 @@ public partial class DocumentTabViewModel : ViewModelBase, IDisposable
 
     /// <summary>Show the code minimap beside the source editor (ported): code/text tabs with
     /// a symbol outline; markdown keeps the TOC sidebar instead.</summary>
-    public bool ShowMinimap => ShowSource && !IsMarkdown && HasOutline;
+    public bool ShowMinimap => ShowSource && !IsMarkdown && HasOutline && (Shell?.Layout.ShowMinimap ?? true);
 
     /// <summary>Content classification from the loader (Text / Binary / TooLarge).</summary>
     public FileLoadKind Kind { get; }
@@ -898,7 +898,16 @@ public partial class DocumentTabViewModel : ViewModelBase, IDisposable
 
     /// <summary>True only when the active-heading chain is non-empty — the breadcrumbs strip is
     /// hidden above the first heading (and for headingless docs) so it never shows as an empty band.</summary>
-    public bool HasBreadcrumbs => _breadcrumbs.Count > 0;
+    public bool HasBreadcrumbs => _breadcrumbs.Count > 0 && (Shell?.Layout.ShowBreadcrumbs ?? true);
+
+    /// <summary>Re-evaluate the layout-driven visibility properties when a РЕЖИМЫ settings toggle changes:
+    /// the flags live on the shared <c>Layout</c>, so the tab's computed HasBreadcrumbs/ShowMinimap don't
+    /// auto-notify. The shell calls this on each tab from OnLayoutPropertyChanged.</summary>
+    public void NotifyModeToggles()
+    {
+        OnPropertyChanged(nameof(HasBreadcrumbs));
+        OnPropertyChanged(nameof(ShowMinimap));
+    }
 
     partial void OnActiveHeadingOrdinalChanged(int value)
     {

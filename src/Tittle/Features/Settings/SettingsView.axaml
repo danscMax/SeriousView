@@ -264,6 +264,19 @@
                              Text="{Binding HeadingScale, StringFormat={}{0:0.00}×}"/>
                 </StackPanel>
               </settings:SettingRow>
+
+              <TextBlock Text="РЕЖИМЫ" Classes="settings-heading" Margin="0,8,0,2"/>
+              <Border Classes="settings-rule"/>
+              <settings:SettingRow Label="Хлебные крошки"
+                                   Description="Полоса пути по заголовкам над документом.">
+                <CheckBox IsChecked="{Binding ShowBreadcrumbs, Mode=TwoWay}"
+                          AutomationProperties.Name="Хлебные крошки"/>
+              </settings:SettingRow>
+              <settings:SettingRow Label="Миникарта"
+                                   Description="Мини-обзор структуры рядом с редактором (для кода и текста).">
+                <CheckBox IsChecked="{Binding ShowMinimap, Mode=TwoWay}"
+                          AutomationProperties.Name="Миникарта"/>
+              </settings:SettingRow>
             </StackPanel>
             </StackPanel>
           </ScrollViewer>
