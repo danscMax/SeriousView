@@ -231,6 +231,8 @@ public partial class MainWindow : AppWindow
             (true, false, false, Key.E) => vm.SelectedTab?.ToggleViewModeCommand, // preview<->source (markdown; CanExecute gates)
             (false, false, false, Key.F3) => vm.SelectedTab?.NextMatchCommand, // find next (CanExecute gates)
             (false, true, false, Key.F3) => vm.SelectedTab?.PreviousMatchCommand, // find prev (CanExecute gates)
+            (false, false, true, Key.Left) => vm.SelectedTab?.NavigateBackCommand, // nav history back (ported Alt+←)
+            (false, false, true, Key.Right) => vm.SelectedTab?.NavigateForwardCommand, // nav history forward (Alt+→)
             // The physical "\|" key reports as Key.OemPipe on Windows (VK_OEM_5); OemBackslash is the
             // separate VK_OEM_102 "<>" key. Accept both so Ctrl+\ works across layouts.
             (true, false, false, Key.OemPipe or Key.OemBackslash) => vm.SelectedTab?.ToggleSplitCommand, // split (markdown; CanExecute gates)

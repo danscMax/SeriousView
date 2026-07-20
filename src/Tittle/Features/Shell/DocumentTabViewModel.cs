@@ -1010,12 +1010,34 @@ public partial class DocumentTabViewModel : ViewModelBase, IDisposable
     /// <summary>Raised when the user picks a heading; the view scrolls preview/source to it.</summary>
     public event Action<HeadingOutline>? NavigationRequested;
 
-    /// <summary>Ask the view to navigate to <paramref name="heading"/> (bound from the outline).</summary>
+    // Per-tab back/forward navigation history (ported Alt+←/→) over heading ordinals.
+    private readonly Tittle.Core.Services.NavigationHistory _navHistory = new();
+
+    /// <summary>Ask the view to navigate to <paramref name="heading"/> (bound from the outline). Records the
+    /// position being left so Alt+←/→ can walk back/forward.</summary>
     [RelayCommand]
     private void NavigateToHeading(HeadingOutline? heading)
     {
-        if (heading is not null)
-            NavigationRequested?.Invoke(heading);
+        if (heading is null)
+            return;
+        _navHistory.Record(ActiveHeadingOrdinal);
+        NavigationRequested?.Invoke(heading);
+    }
+
+    /// <summary>Alt+← : navigate to the previous position in this tab's history (no re-record).</summary>
+    [RelayCommand]
+    private void NavigateBack()
+    {
+        if (_navHistory.Back(ActiveHeadingOrdinal) is { } target && target >= 0 && target < Outline.Count)
+            NavigationRequested?.Invoke(Outline[target]);
+    }
+
+    /// <summary>Alt+→ : navigate to the next position in this tab's history (no re-record).</summary>
+    [RelayCommand]
+    private void NavigateForward()
+    {
+        if (_navHistory.Forward(ActiveHeadingOrdinal) is { } target && target >= 0 && target < Outline.Count)
+            NavigationRequested?.Invoke(Outline[target]);
     }
 
     /// <summary>Jump to the next (forward) / previous unread heading (ported ]/[), reusing the outline-click

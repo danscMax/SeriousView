@@ -1053,6 +1053,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         {
             items.Add(new PaletteItem("Следующий непрочитанный", unreadTab.JumpToUnreadCommand, "]", parameter: true));
             items.Add(new PaletteItem("Предыдущий непрочитанный", unreadTab.JumpToUnreadCommand, "[", parameter: false));
+            items.Add(new PaletteItem("Назад (навигация)", unreadTab.NavigateBackCommand, "Alt+←"));
+            items.Add(new PaletteItem("Вперёд (навигация)", unreadTab.NavigateForwardCommand, "Alt+→"));
         }
 
         if (SelectedTab is { EditorActions: not null } editorTab)
