@@ -68,6 +68,15 @@ var screens = new (string Name, Func<Control> Build)[]
 {
     ("docview", () => new DocumentView { DataContext = DocumentTabViewModel.FromFile(sampleMd, @"E:\docs\rich.md") }),
     ("welcome", () => new WelcomeView { DataContext = BuildWelcomeVm() }),
+    // Verify the user accent recolours the chrome: setting Layout.AccentColor fires ApplyAccent, which
+    // overrides the app-level AccentBrush; the settings "Готово" (accent) button should render RED.
+    // Placed so the app-resource override it leaves doesn't taint earlier screens' renders.
+    ("settings-accent", () =>
+    {
+        var vm = BuildWelcomeVm();
+        vm.Layout.AccentColor = "#E5484D";
+        return new SettingsView { DataContext = vm };
+    }),
     ("welcome-drag", () =>
     {
         var vm = BuildWelcomeVm();
@@ -235,6 +244,7 @@ sealed class RenderClipboard : IClipboardService
 {
     public Task SetTextAsync(string text) => Task.CompletedTask;
     public Task SetHtmlAsync(string html, string plainText) => Task.CompletedTask;
+    public Task<byte[]?> TryReadImagePngAsync() => Task.FromResult<byte[]?>(null);
 }
 
 sealed class RenderShell : IShellService
