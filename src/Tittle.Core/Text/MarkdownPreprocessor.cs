@@ -450,12 +450,17 @@ public static partial class MarkdownPreprocessor
                 continue;
             }
 
-            // Find the balanced </table> that closes this opener (nested tables handled by depth).
+            // Find the balanced </table> that closes this opener (nested tables handled by depth). Word-
+            // boundary tag matching (not a raw substring) so a child like <tablecell> can't inflate the
+            // open count; a fenced line before the close means the table isn't a real block (never span
+            // into code) → bail and leave it as source.
             var depth = 0;
             var end = -1;
             for (var j = i; j < lines.Count; j++)
             {
-                depth += CountCi(lines[j], "<table") - CountCi(lines[j], "</table>");
+                if (regions.IsFencedLine(j))
+                    break;
+                depth += TableOpenTag().Matches(lines[j]).Count - TableCloseTag().Matches(lines[j]).Count;
                 if (depth <= 0)
                 {
                     end = j;
@@ -490,21 +495,16 @@ public static partial class MarkdownPreprocessor
         return result;
     }
 
-    // Count case-insensitive occurrences of a substring (for <table>/</table> depth tracking).
-    private static int CountCi(string s, string sub)
-    {
-        var n = 0;
-        var idx = 0;
-        while ((idx = s.IndexOf(sub, idx, StringComparison.OrdinalIgnoreCase)) >= 0)
-        {
-            n++;
-            idx += sub.Length;
-        }
-        return n;
-    }
-
     [GeneratedRegex(@"^ {0,3}<table\b", RegexOptions.IgnoreCase)]
     private static partial Regex HtmlTableOpen();
+
+    // Word-boundary <table>/</table> tag matches for depth tracking (a substring count would miscount a
+    // child tag such as <tablecell>).
+    [GeneratedRegex(@"<table\b", RegexOptions.IgnoreCase)]
+    private static partial Regex TableOpenTag();
+
+    [GeneratedRegex(@"</table\s*>", RegexOptions.IgnoreCase)]
+    private static partial Regex TableCloseTag();
 
     // Code-language autodetect (1.3): walk fenced blocks; for one whose opener carries NO language,
     // guess it from the body and write it into the opener (``` → ```json). The fence primitive lives in

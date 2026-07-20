@@ -77,6 +77,32 @@ public class HtmlBlockTests
     }
 
     [Fact]
+    public void UnterminatedTable_ThenFenceWithStrayCloseTag_DoesNotSwallowTheFence()
+    {
+        // An unterminated <table> must not be "closed" by a </table> that appears inside a later fenced
+        // code block — that would sweep the prose and the whole fence into one HTML blob.
+        var src = "<table>\n<tr><td>x</td></tr>\n\ntext\n\n```\n</table>\n```\n";
+
+        var result = MarkdownPreprocessor.Transform(src, null);
+
+        Assert.Contains("```", result);      // the fence survives intact
+        Assert.Contains("<table>", result);  // the unterminated opener stays as source, not converted
+    }
+
+    [Fact]
+    public void TableWithChildTagStartingWithTable_StillConverts()
+    {
+        // A child element whose name starts with "table" (e.g. a web-component) must not inflate the open
+        // count and make a valid table look unterminated (→ dropped by Markdown.Avalonia).
+        var src = "<table><tr><td><tablecell>x</tablecell></td></tr></table>";
+
+        var result = MarkdownPreprocessor.Transform(src, null);
+
+        Assert.DoesNotContain("<table>", result); // converted, not left as raw (dropped) HTML
+        Assert.Contains("x", result);
+    }
+
+    [Fact]
     public void MarkdownWithoutHtmlBlocks_Untouched()
     {
         const string md = "# Heading\n\nA paragraph with no HTML at all.";
