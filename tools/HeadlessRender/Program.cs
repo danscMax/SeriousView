@@ -77,8 +77,9 @@ var screens = new (string Name, Func<Control> Build)[]
             @"E:\docs\htmltable.md"),
     }),
     // Verify the user accent recolours the chrome: setting Layout.AccentColor fires ApplyAccent, which
-    // overrides the app-level AccentBrush; the settings "Готово" (accent) button should render RED.
-    // Placed so the app-resource override it leaves doesn't taint earlier screens' renders.
+    // overrides the app-level AccentBrush; the settings "Готово" (accent) button should render RED. The
+    // override it leaves is cleared before every screen (ClearAccentOverride in the render loop), so this
+    // screen's position in the array no longer matters — no neighbour inherits the red accent.
     ("settings-accent", () =>
     {
         var vm = BuildWelcomeVm();
@@ -176,7 +177,13 @@ Dispatcher.UIThread.Invoke(() =>
     {
         Application.Current!.RequestedThemeVariant = variant;
         foreach (var (screenName, build) in screens)
+        {
+            // Hermetic: the settings-accent screen writes an app-level AccentBrush override that persists
+            // globally; clear it before EVERY screen so none inherits a prior screen's accent regardless of
+            // array order (the override is only re-applied by a screen that builds its own MainWindowViewModel).
+            ClearAccentOverride();
             Capture($"{screenName}__{themeName}.png", () => new Window { Width = 960, Height = 720, Content = build() });
+        }
         foreach (var (modalName, buildModal) in modals)
             Capture($"{modalName}__{themeName}.png", buildModal);
     }
@@ -184,6 +191,19 @@ Dispatcher.UIThread.Invoke(() =>
 
 Console.WriteLine($"{ok}/{total} rendered -> {outDir}");
 return ok == total ? 0 : 1;
+
+// Remove the app-level accent override (mirror of MainWindowViewModel.ApplyAccent's clear branch) so each
+// screen renders from a known-clean accent state.
+static void ClearAccentOverride()
+{
+    if (Application.Current is not { } app)
+        return;
+    app.Resources.Remove("AccentBrush");
+    app.Resources.Remove("AccentHoverBrush");
+    var fa = app.Styles.OfType<FluentAvalonia.Styling.FluentAvaloniaTheme>().FirstOrDefault();
+    if (fa is not null)
+        fa.CustomAccentColor = null;
+}
 
 static MainWindowViewModel BuildWelcomeVm()
 {

@@ -39,8 +39,9 @@ public sealed class ClipboardService : IClipboardService
         }
         catch (Exception)
         {
-            // The Windows clipboard COM read can fail when another process holds the clipboard, or the
-            // image data is unsupported/corrupt. Treat any failure as "no image" — paste degrades to text.
+            // A platform clipboard read can fail (another process holds the clipboard on Windows, or the
+            // image data is unsupported/corrupt on any OS). Treat any failure as "no image" — paste degrades
+            // to text. No CancellationToken flows in here, so this can't mask a legitimate cancellation.
             return null;
         }
     }
