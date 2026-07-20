@@ -19,10 +19,15 @@ public enum ChartKind
     PolarArea,
 }
 
+/// <summary>An (x, y) point for a scatter dataset (Chart.js <c>{x, y}</c>).</summary>
+public sealed record ChartPoint(double X, double Y);
+
 /// <param name="Name">Series/dataset label.</param>
 /// <param name="Values">Y values, one per category label.</param>
 /// <param name="Color">Optional #RRGGBB (from Chart.js backgroundColor/borderColor); null = auto-palette.</param>
-public sealed record ChartSeries(string Name, IReadOnlyList<double> Values, string? Color);
+/// <param name="Points">Real (x, y) points when the dataset is a Chart.js <c>{x, y}</c> array (scatter);
+/// null for a plain-number dataset. When set, a scatter chart plots at the real X instead of the index.</param>
+public sealed record ChartSeries(string Name, IReadOnlyList<double> Values, string? Color, IReadOnlyList<ChartPoint>? Points = null);
 
 /// <summary>A parsed ```chart block — the neutral model the LiveCharts2 view is built from. Independent
 /// of any charting library (Core has no Avalonia/Skia dependency).</summary>
@@ -87,11 +92,17 @@ public static class ChartSpecParser
                     var name = ds.TryGetProperty("label", out var l) && l.ValueKind == JsonValueKind.String
                         ? l.GetString() ?? $"Ряд {i}"
                         : $"Ряд {i}";
-                    var values = ds.TryGetProperty("data", out var d) && d.ValueKind == JsonValueKind.Array
-                        ? d.EnumerateArray().Select(NumberOf).ToList()
-                        : new List<double>();
+                    var items = ds.TryGetProperty("data", out var d) && d.ValueKind == JsonValueKind.Array
+                        ? d.EnumerateArray().ToList()
+                        : new List<JsonElement>();
+                    var values = items.Select(NumberOf).ToList();
+                    // Keep the real (x, y) points when EVERY item is an {x, y} object (Chart.js scatter).
+                    var pts = items.Select(PointOf).ToList();
+                    IReadOnlyList<ChartPoint>? points = pts.Count > 0 && pts.All(p => p is not null)
+                        ? pts.Select(p => p!).ToList()
+                        : null;
                     var color = FirstColor(ds);
-                    series.Add(new ChartSeries(name, values, color));
+                    series.Add(new ChartSeries(name, values, color, points));
                 }
             }
 
@@ -156,6 +167,14 @@ public static class ChartSpecParser
         JsonValueKind.Object when e.TryGetProperty("y", out var y) && y.TryGetDouble(out var yd) => yd,
         _ => 0,
     };
+
+    // A Chart.js {x,y} point → ChartPoint; null for a plain number or an object missing a numeric x/y.
+    private static ChartPoint? PointOf(JsonElement e)
+        => e.ValueKind == JsonValueKind.Object
+           && e.TryGetProperty("x", out var x) && x.TryGetDouble(out var xd)
+           && e.TryGetProperty("y", out var y) && y.TryGetDouble(out var yd)
+            ? new ChartPoint(xd, yd)
+            : null;
 
     // Chart.js backgroundColor / borderColor may be a string or an array — take the first #hex.
     private static string? FirstColor(JsonElement dataset)

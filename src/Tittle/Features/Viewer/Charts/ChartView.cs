@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using LiveChartsCore;
+using LiveChartsCore.Defaults;
 using LiveChartsCore.Measure;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Avalonia;
@@ -98,10 +99,13 @@ public static class ChartView
     private static CartesianChart BuildCartesian(ChartSpec spec, SolidColorPaint text)
     {
         var series = spec.Series.Select(s => ToSeries(s, spec.Kind)).ToArray();
+        // A scatter of real (x,y) points has no category labels → leave the X axis numeric so points land at
+        // their true X; category charts (bar/line/CSV) keep their header labels.
+        var xLabels = spec.Labels.Count > 0 ? spec.Labels.ToArray() : null;
         return new CartesianChart
         {
             Series = series,
-            XAxes = new[] { new Axis { Labels = spec.Labels.ToArray(), LabelsPaint = text } },
+            XAxes = new[] { new Axis { Labels = xLabels, LabelsPaint = text } },
             YAxes = new[] { new Axis { LabelsPaint = text } },
             LegendPosition = spec.Series.Count > 1 ? LegendPosition.Top : LegendPosition.Hidden,
             LegendTextPaint = text,
@@ -139,8 +143,13 @@ public static class ChartView
                 return area;
             }
             case ChartKind.Scatter:
-                // ponytail: plots values at category indices (0,1,2…). Chart.js {x,y} scatter points keep
-                // only y (ChartSpec.NumberOf) — true arbitrary-X scatter would need the model to carry X.
+                // Real {x,y} points plot at their true X; a plain-number dataset falls back to category indices.
+                if (s.Points is { Count: > 0 } points)
+                    return new ScatterSeries<ObservablePoint>
+                    {
+                        Values = points.Select(p => new ObservablePoint(p.X, p.Y)).ToArray(),
+                        Name = s.Name,
+                    };
                 return new ScatterSeries<double> { Values = values, Name = s.Name };
             default:
             {

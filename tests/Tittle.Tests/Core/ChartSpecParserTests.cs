@@ -68,6 +68,27 @@ public class ChartSpecParserTests
     }
 
     [Fact]
+    public void ScatterXyPoints_KeepBothCoordinates_AndYValues()
+    {
+        var json = """{"type":"scatter","data":{"datasets":[{"label":"P","data":[{"x":1.5,"y":10},{"x":4,"y":25}]}]}}""";
+
+        var spec = ChartSpecParser.Parse(json, null);
+
+        Assert.NotNull(spec);
+        Assert.Equal(ChartKind.Scatter, spec!.Kind);
+        var s = Assert.Single(spec.Series);
+        Assert.Equal(new[] { new ChartPoint(1.5, 10), new ChartPoint(4, 25) }, s.Points);
+        Assert.Equal(new[] { 10d, 25d }, s.Values); // y still available for the index fallback
+    }
+
+    [Fact]
+    public void PlainNumberDataset_HasNoPoints()
+    {
+        var spec = ChartSpecParser.Parse("""{"data":{"datasets":[{"data":[1,2,3]}]}}""", null);
+        Assert.Null(spec!.Series[0].Points);
+    }
+
+    [Fact]
     public void JsonColour_KeepsHex_IgnoresRgbaAndNamed()
     {
         Assert.Equal("#EF4444", ChartSpecParser.Parse("""{"data":{"datasets":[{"data":[1],"backgroundColor":"#EF4444"}]}}""", null)!.Series[0].Color);

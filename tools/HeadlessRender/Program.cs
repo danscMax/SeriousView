@@ -123,6 +123,14 @@ var screens = new (string Name, Func<Control> Build)[]
             + "```chart:radar\nОсь,A,B\nСкорость,80,60\nСила,70,90\nЛовкость,90,50\nУм,60,80\n```\n",
             @"E:\docs\chart.md"),
     }),
+    // Scatter with real Chart.js {x,y} points — must land at their true X (not category indices 0,1,2…).
+    ("scatter", () => new DocumentView
+    {
+        DataContext = DocumentTabViewModel.FromFile(
+            "# Scatter\n\n```chart:scatter\n{\"data\":{\"datasets\":[{\"label\":\"P\","
+            + "\"data\":[{\"x\":1,\"y\":2},{\"x\":5,\"y\":9},{\"x\":9,\"y\":3},{\"x\":14,\"y\":12},{\"x\":20,\"y\":7}]}]}}\n```\n",
+            @"E:\docs\scatter.md"),
+    }),
 };
 
 // Standalone modal windows. Each IS a Window (the transparent ModalWindow card chrome is the thing
