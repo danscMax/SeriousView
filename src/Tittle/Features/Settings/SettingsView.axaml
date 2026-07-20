@@ -97,6 +97,22 @@
           <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
                         Padding="0,0,10,0">
             <StackPanel>
+              <!-- ПРЕВЬЮ (ported): a live sample in the current preview font + body size, so a font/size
+                   change is visible without switching to the document. FontFamily reads the same
+                   PreviewFontFamily resource the preview uses; the body size tracks Editor.FontSize. -->
+              <Border Padding="16,12" CornerRadius="8" Margin="0,0,0,14" BorderThickness="1"
+                      Background="{DynamicResource EditorSurfaceBrush}"
+                      BorderBrush="{DynamicResource ChromeBorderBrush}">
+                <StackPanel Spacing="6">
+                  <TextBlock Text="Образец заголовка" FontWeight="SemiBold" FontSize="19"
+                             FontFamily="{DynamicResource PreviewFontFamily}"/>
+                  <TextBlock TextWrapping="Wrap"
+                             FontFamily="{DynamicResource PreviewFontFamily}"
+                             FontSize="{Binding Editor.FontSize}"
+                             Text="Текст в актуальных настройках. Числа 1234567890, а также курсив и полужирное."/>
+                </StackPanel>
+              </Border>
+
               <!-- ШАБЛОНЫ (ported): one-click bundles. Bound to the shell VM's command (not Layout),
                    so this outer panel keeps the VM DataContext; the reading knobs below scope to Layout. -->
               <TextBlock Text="ШАБЛОНЫ" Classes="settings-heading"/>
