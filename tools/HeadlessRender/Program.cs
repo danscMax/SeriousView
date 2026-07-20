@@ -68,6 +68,12 @@ var screens = new (string Name, Func<Control> Build)[]
 {
     ("docview", () => new DocumentView { DataContext = DocumentTabViewModel.FromFile(sampleMd, @"E:\docs\rich.md") }),
     ("welcome", () => new WelcomeView { DataContext = BuildWelcomeVm() }),
+    ("welcome-drag", () =>
+    {
+        var vm = BuildWelcomeVm();
+        vm.IsDragActive = true; // show the ported drag-drop overlay
+        return new WelcomeView { DataContext = vm };
+    }),
     ("notice", () => new DocumentView
     {
         DataContext = DocumentTabViewModel.FromLoad(FileLoadResult.Binary(2048), @"E:\docs\archive.bin"),

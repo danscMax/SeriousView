@@ -116,5 +116,21 @@
         </Border>
       </StackPanel>
     </ScrollViewer>
+
+    <!-- Drag-drop overlay (ported): shown while files are dragged over the window. Only on Welcome —
+         over a document AvaloniaEdit's GPU surface can't be overlaid (deferred), but plain drop still opens. -->
+    <Border IsVisible="{Binding IsDragActive}" ZIndex="10" Margin="16" CornerRadius="12" Opacity="0.94"
+            Background="{DynamicResource EditorSurfaceBrush}"
+            BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+        <Border Classes="welcome-mark" Width="56" Height="56">
+          <PathIcon Data="{StaticResource IconDocument}" Width="26" Height="26"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Foreground="{DynamicResource AccentBrush}"/>
+        </Border>
+        <TextBlock Text="Отпустите, чтобы открыть файл" FontSize="16" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" Foreground="{DynamicResource ChromeForegroundBrush}"/>
+      </StackPanel>
+    </Border>
   </Grid>
 </UserControl>

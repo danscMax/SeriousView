@@ -86,6 +86,7 @@ public partial class MainWindow : AppWindow
 
         PositionChanged += (_, _) => TrackNormalBounds();
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
+        AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
         AddHandler(DragDrop.DropEvent, OnDrop);
         // Tunnel both so the shortcuts win over the focused editor (which otherwise swallows
         // Ctrl+L / Alt+Z and consumes the wheel for scrolling).
@@ -653,13 +654,25 @@ public partial class MainWindow : AppWindow
     // NOTE: Avalonia 11.3 marks DragEventArgs.Data / DataFormats.Files obsolete in favour of the
     // newer DataTransfer API. The classic API still works; migrating to DataTransfer is follow-up.
 #pragma warning disable CS0618
-    private static void OnDragOver(object? sender, DragEventArgs e)
-        => e.DragEffects = e.Data.Contains(DataFormats.Files)
-            ? DragDropEffects.Copy
-            : DragDropEffects.None;
+    private void OnDragOver(object? sender, DragEventArgs e)
+    {
+        var hasFiles = e.Data.Contains(DataFormats.Files);
+        e.DragEffects = hasFiles ? DragDropEffects.Copy : DragDropEffects.None;
+        // Surface the drag so the Welcome view can show its "drop to open" overlay (ported).
+        if (DataContext is MainWindowViewModel vm)
+            vm.IsDragActive = hasFiles;
+    }
+
+    private void OnDragLeave(object? sender, DragEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm)
+            vm.IsDragActive = false;
+    }
 
     private async void OnDrop(object? sender, DragEventArgs e)
     {
+        if (DataContext is MainWindowViewModel dropVm)
+            dropVm.IsDragActive = false;
         if (DataContext is not MainWindowViewModel vm || e.Data.GetFiles() is not { } files)
             return;
 

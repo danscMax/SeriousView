@@ -643,6 +643,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     /// persisted whenever it changes.</summary>
     public DiagramOptions Diagrams { get; }
 
+    /// <summary>True while files are being dragged over the window (ported drop overlay). Set by the
+    /// window's drag handlers; the Welcome view shows a "drop to open" overlay when it's true (over a
+    /// document the overlay is deliberately not shown — AvaloniaEdit's GPU surface can't be overlaid).</summary>
+    [ObservableProperty]
+    private bool _isDragActive;
+
     /// <summary>Private mode (ported <c>state.privateMode</c>): while on, the session, recent-files list,
     /// and visited marks are not persisted (settings and bookmarks still are). Two-way bound in
     /// Настройки ▸ Приватность and toggled from the palette; the change syncs the shared
