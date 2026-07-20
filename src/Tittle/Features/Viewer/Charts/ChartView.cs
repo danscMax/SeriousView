@@ -23,16 +23,55 @@ public static class ChartView
     public static Control Build(ChartSpec spec)
     {
         var text = ChromeTextPaint();
-        Control control = spec.Kind is ChartKind.Pie or ChartKind.Doughnut
-            ? BuildPie(spec, text)
-            : BuildCartesian(spec, text);
+        Control control = spec.Kind switch
+        {
+            ChartKind.Pie or ChartKind.Doughnut => BuildPie(spec, text),
+            ChartKind.Radar or ChartKind.PolarArea => BuildPolar(spec, text),
+            _ => BuildCartesian(spec, text),
+        };
         control.Height = 320;
         control.Margin = new Thickness(0, 4, 0, 4);
         return control;
     }
 
+    private static PolarChart BuildPolar(ChartSpec spec, SolidColorPaint text)
+    {
+        var series = spec.Series.Select(s =>
+        {
+            var line = new PolarLineSeries<double> { Values = s.Values.ToArray(), Name = s.Name };
+            var color = Parse(s.Color);
+            if (spec.Kind == ChartKind.PolarArea)
+            {
+                // Filled polar area. Only override Fill for an explicit colour; leave it unset otherwise so
+                // LiveCharts2's palette fills it (setting null would paint nothing — the ColumnSeries lesson).
+                if (color is { } fc)
+                    line.Fill = new SolidColorPaint(fc.WithAlpha(80));
+            }
+            else
+            {
+                line.Fill = null; // radar = outline only (deliberately no fill)
+            }
+            if (color is { } sc)
+                line.Stroke = new SolidColorPaint(sc, 2);
+            return (ISeries)line;
+        }).ToArray();
+
+        return new PolarChart
+        {
+            Series = series,
+            AngleAxes = new[] { new PolarAxis { Labels = spec.Labels.ToArray(), LabelsPaint = text } },
+            RadiusAxes = new[] { new PolarAxis { LabelsPaint = text } },
+            LegendPosition = spec.Series.Count > 1 ? LegendPosition.Top : LegendPosition.Hidden,
+            LegendTextPaint = text,
+            AnimationsSpeed = TimeSpan.Zero,
+            EasingFunction = null,
+        };
+    }
+
     private static PieChart BuildPie(ChartSpec spec, SolidColorPaint text)
     {
+        // A pie/doughnut shows ONE series as slices (one slice per label); extra series have no pie
+        // representation, so only the first is charted. ponytail: first-series-only, by the chart type's nature.
         var series = spec.Series.FirstOrDefault();
         var values = series?.Values ?? Array.Empty<double>();
         var inner = spec.Kind == ChartKind.Doughnut ? 60d : 0d;
@@ -100,6 +139,8 @@ public static class ChartView
                 return area;
             }
             case ChartKind.Scatter:
+                // ponytail: plots values at category indices (0,1,2…). Chart.js {x,y} scatter points keep
+                // only y (ChartSpec.NumberOf) — true arbitrary-X scatter would need the model to carry X.
                 return new ScatterSeries<double> { Values = values, Name = s.Name };
             default:
             {

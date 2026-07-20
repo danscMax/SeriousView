@@ -96,7 +96,8 @@ var screens = new (string Name, Func<Control> Build)[]
     ("chart", () => new DocumentView
     {
         DataContext = DocumentTabViewModel.FromFile(
-            "# График\n\n```chart:bar\nМесяц,Продажи,Затраты\nЯнв,100,60\nФев,120,90\nМар,90,70\n```\n",
+            "# График\n\n```chart:bar\nМесяц,Продажи,Затраты\nЯнв,100,60\nФев,120,90\nМар,90,70\n```\n\n"
+            + "```chart:radar\nОсь,A,B\nСкорость,80,60\nСила,70,90\nЛовкость,90,50\nУм,60,80\n```\n",
             @"E:\docs\chart.md"),
     }),
 };

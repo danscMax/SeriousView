@@ -37,4 +37,14 @@ public class ChartViewTests
         var control = ChartView.Build(Spec(kind));
         Assert.IsType<PieChart>(control);
     }
+
+    [AvaloniaTheory]
+    [InlineData(ChartKind.Radar)]
+    [InlineData(ChartKind.PolarArea)]
+    public void Build_PolarKinds_ProduceAPolarChart_NotABar(ChartKind kind)
+    {
+        // Radar / polar must render as a PolarChart, not silently fall through to a bar CartesianChart.
+        var control = ChartView.Build(Spec(kind));
+        Assert.IsType<PolarChart>(control);
+    }
 }

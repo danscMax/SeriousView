@@ -21,7 +21,7 @@ public sealed partial class MarkdownCodeRegions
     {
         var fenced = new bool[lines.Count];
         var inFence = false;
-        var inMath = false;
+        var inContainer = false;
         var fenceChar = '\0';
         var openLength = 0;
 
@@ -35,18 +35,18 @@ public sealed partial class MarkdownCodeRegions
                 continue;
             }
 
-            if (inMath)
+            if (inContainer)
             {
                 fenced[i] = true;
                 if (ContainerClose().IsMatch(lines[i]))
-                    inMath = false;
+                    inContainer = false;
                 continue;
             }
 
-            if (MathContainerOpen().IsMatch(lines[i]))
+            if (ProtectedContainerOpen().IsMatch(lines[i]))
             {
                 fenced[i] = true;
-                inMath = true;
+                inContainer = true;
                 continue;
             }
 
@@ -167,9 +167,12 @@ public sealed partial class MarkdownCodeRegions
     [GeneratedRegex(@"(?<!\\)(?<!`)(`+)(.+?)(?<!`)\1(?!`)")]
     private static partial Regex InlineCodeSpan();
 
-    // The math container emitted by the preprocessor's own math pass (M11).
-    [GeneratedRegex(@"^\s*::: math\s*$")]
-    private static partial Regex MathContainerOpen();
+    // The preprocessor's percent-encoded-transport containers (math/chart/diagram/frontmatter): their body
+    // is ONE opaque percent-encoded line that the inline passes (underscore emphasis, emoji, bare-URL …)
+    // must never rewrite — Uri.EscapeDataString leaves _ - . ~ unescaped, so an un-protected body can be
+    // silently corrupted (e.g. a leading _id_ CSV header). Marking the whole container fenced shields it.
+    [GeneratedRegex(@"^\s*::: (?:math|chart|diagram|frontmatter)\s*$")]
+    private static partial Regex ProtectedContainerOpen();
 
     [GeneratedRegex(@"^\s*:::\s*$")]
     private static partial Regex ContainerClose();
