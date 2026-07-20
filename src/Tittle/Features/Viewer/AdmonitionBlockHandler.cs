@@ -76,6 +76,11 @@ public sealed class AdmonitionBlockHandler : IContainerBlockHandler
         if (string.Equals(blockName.Trim(), "diagram", StringComparison.OrdinalIgnoreCase))
             return BuildDiagram(lines.Trim());
 
+        // ::: chart (ported ```chart): "typeHint|body", both percent-encoded. Rendered natively by
+        // LiveCharts2 (no network). Unparseable data → the source + a hint, never a crash.
+        if (string.Equals(blockName.Trim(), "chart", StringComparison.OrdinalIgnoreCase))
+            return BuildChart(lines.Trim());
+
         var type = NormalizeType(blockName);
 
         // Obsidian-style callout: an icon leads the coloured title; the box gets a faint type-tinted
@@ -104,6 +109,46 @@ public sealed class AdmonitionBlockHandler : IContainerBlockHandler
         border.Classes.Add("admonition");
         border.Classes.Add("admonition-" + type);
         return border;
+    }
+
+    // ::: chart body = "typeHint|body", both percent-encoded. Parse into a ChartSpec and hand it to the
+    // native LiveCharts2 view; on empty/garbage/exception show the raw source + a hint (never a crash).
+    private Border BuildChart(string encoded)
+    {
+        var sep = encoded.IndexOf('|');
+        var typeHint = sep >= 0 ? System.Uri.UnescapeDataString(encoded[..sep]) : "";
+        var body = System.Uri.UnescapeDataString(sep >= 0 ? encoded[(sep + 1)..] : encoded);
+
+        var border = new Border();
+        border.Classes.Add("chart-block");
+        try
+        {
+            var spec = Core.Text.ChartSpecParser.Parse(body, string.IsNullOrEmpty(typeHint) ? null : typeHint);
+            border.Child = spec is not null
+                ? Charts.ChartView.Build(spec)
+                : ChartSourceFallback(body, "Не удалось разобрать данные графика");
+        }
+        catch (Exception ex)
+        {
+            border.Child = ChartSourceFallback(body, "Ошибка графика: " + ex.Message);
+        }
+        return border;
+    }
+
+    private static Control ChartSourceFallback(string body, string message)
+    {
+        var panel = new StackPanel { Spacing = 4 };
+        var note = new TextBlock { Text = message, FontSize = 12 };
+        note.Foreground = Application.Current?.FindResource("ChromeForegroundMutedBrush") as IBrush;
+        var src = new SelectableTextBlock
+        {
+            Text = body,
+            FontFamily = new FontFamily("Cascadia Code,Consolas,monospace"),
+            FontSize = 12.5,
+        };
+        panel.Children.Add(note);
+        panel.Children.Add(src);
+        return panel;
     }
 
     // The preprocessor emits the bare alert type as the container name ("note", "tip", …).

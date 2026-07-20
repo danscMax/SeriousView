@@ -50,6 +50,11 @@ public static partial class MarkdownPreprocessor
         if (diagramsEnabled)
             lines = ConvertDiagramFences(lines);
 
+        // Chart fences (```chart / ```chart:TYPE) → ::: chart containers, rendered natively by LiveCharts2.
+        // NOT gated (local render, no network — unlike diagrams). Before the code-region scan so the fence
+        // is consumed and never falls through to a code block.
+        lines = ConvertChartFences(lines);
+
         // Inline passes run first, in place (line count preserved → the fence bitmap stays
         // valid) and before admonition re-wrapping so callout bodies get them too. Wiki before
         // underscore: a [[my_note]] link resolves to its real file first, and the underscore
@@ -246,6 +251,67 @@ public static partial class MarkdownPreprocessor
             {
                 result.Add(string.Empty);
                 result.AddRange(renderDiagram(krokiType, string.Join("\n", body)));
+                result.Add(string.Empty);
+            }
+            else
+            {
+                result.Add(lines[i]);   // opener
+                result.AddRange(body);
+                result.Add(lines[j]);   // closer
+            }
+
+            i = j; // resume after the closing fence
+        }
+
+        return result;
+    }
+
+    // Chart fences: ```chart or ```chart:TYPE with a JSON/CSV body → a ::: chart container ("typeHint|body",
+    // both percent-encoded — the opaque ::: transport). Rendered natively by LiveCharts2, so unlike diagrams
+    // this is NOT gated (no network). Own fence walk (runs before the shared code-region scan); every other
+    // fence is copied verbatim so a ```chart shown INSIDE an outer fence isn't consumed. The fence info is
+    // matched directly (FenceLang rejects the ':' in "chart:line"); "charter" etc. are excluded by the exact
+    // "chart" / "chart:" test.
+    private static List<string> ConvertChartFences(List<string> lines)
+    {
+        var result = new List<string>(lines.Count);
+        for (var i = 0; i < lines.Count; i++)
+        {
+            if (!MarkdownCodeRegions.TryMatchFenceOpen(lines[i], out var fence))
+            {
+                result.Add(lines[i]);
+                continue;
+            }
+
+            var body = new List<string>();
+            var j = i + 1;
+            var closed = false;
+            for (; j < lines.Count; j++)
+            {
+                if (MarkdownCodeRegions.IsFenceClose(lines[j], fence.Char, fence.Length))
+                {
+                    closed = true;
+                    break;
+                }
+                body.Add(lines[j]);
+            }
+
+            if (!closed)
+            {
+                result.Add(lines[i]); // unclosed opener → leave it, keep scanning
+                continue;
+            }
+
+            var info = fence.Info.Trim();
+            var hasType = info.StartsWith("chart:", StringComparison.OrdinalIgnoreCase);
+            var isChart = hasType || info.Equals("chart", StringComparison.OrdinalIgnoreCase);
+            if (isChart)
+            {
+                var typeHint = hasType ? info["chart:".Length..] : "";
+                result.Add(string.Empty);
+                result.Add("::: chart");
+                result.Add(Uri.EscapeDataString(typeHint) + "|" + Uri.EscapeDataString(string.Join("\n", body).Trim()));
+                result.Add(":::");
                 result.Add(string.Empty);
             }
             else
