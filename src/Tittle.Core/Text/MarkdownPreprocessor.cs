@@ -66,6 +66,11 @@ public static partial class MarkdownPreprocessor
         lines = ConvertMathBlocks(lines, regions);
         regions = MarkdownCodeRegions.Scan(lines);
 
+        // Block-level raw HTML (tables/divs/lists) → markdown so Markdown.Avalonia can render it (it drops
+        // raw HTML). Rebuilds the line list, so re-scan fences after. Before the inline HTML + other passes.
+        lines = ConvertHtmlBlocks(lines, regions);
+        regions = MarkdownCodeRegions.Scan(lines);
+
         // Hierarchical heading numbers (ported numberHeadings), display-only + fence-guarded. Runs on the
         // math-settled lines before the inline passes, preserving line count so the fence bitmap stays valid.
         if (numberHeadings)
@@ -413,6 +418,58 @@ public static partial class MarkdownPreprocessor
 
     [GeneratedRegex(@"<a\s[^>]*?href=(?<q>[""'])(?<u>[^""']*)\k<q>[^>]*>(?<t>.*?)</a>", RegexOptions.IgnoreCase)]
     private static partial Regex HtmlLink();
+
+    // One shared HTML→markdown converter for the block pass. GitHub-flavored → HTML tables become GFM
+    // tables; unknown tags are bypassed (children kept, wrapper dropped — a DOMPurify-like allowlist effect).
+    private static readonly ReverseMarkdown.Converter HtmlToMarkdown = new(new ReverseMarkdown.Config
+    {
+        GithubFlavored = true,
+        UnknownTags = ReverseMarkdown.Config.UnknownTagsOption.Bypass,
+        RemoveComments = true,
+        SmartHrefHandling = true,
+    });
+
+    // Block-level raw HTML (tables/divs/lists/blockquotes) → markdown, so Markdown.Avalonia (which drops raw
+    // HTML) can render it. Detects an HTML block by an allowlisted block tag at line start (≤3 indent, not
+    // fenced), collects consecutive non-blank lines (a CommonMark HTML block ends at a blank line), and
+    // converts the chunk via ReverseMarkdown. Rebuilds the line list → the caller re-scans fences after.
+    private static List<string> ConvertHtmlBlocks(List<string> lines, MarkdownCodeRegions regions)
+    {
+        var result = new List<string>(lines.Count);
+        for (var i = 0; i < lines.Count; i++)
+        {
+            if (regions.IsFencedLine(i) || !HtmlBlockOpen().IsMatch(lines[i]))
+            {
+                result.Add(lines[i]);
+                continue;
+            }
+
+            var block = new List<string>();
+            var j = i;
+            for (; j < lines.Count && lines[j].Trim().Length > 0 && !regions.IsFencedLine(j); j++)
+                block.Add(lines[j]);
+
+            string md;
+            try
+            {
+                md = HtmlToMarkdown.Convert(string.Join("\n", block)).Trim();
+            }
+            catch
+            {
+                md = string.Join("\n", block); // conversion failure → keep the source, never crash
+            }
+
+            result.Add(string.Empty);
+            result.AddRange(md.Split('\n'));
+            result.Add(string.Empty);
+            i = j - 1; // resume after the consumed block
+        }
+
+        return result;
+    }
+
+    [GeneratedRegex(@"^ {0,3}<(?:table|thead|tbody|tfoot|tr|td|th|div|section|article|ul|ol|dl|blockquote|pre|figure|figcaption|details|summary)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex HtmlBlockOpen();
 
     // Code-language autodetect (1.3): walk fenced blocks; for one whose opener carries NO language,
     // guess it from the body and write it into the opener (``` → ```json). The fence primitive lives in

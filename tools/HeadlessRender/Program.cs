@@ -68,6 +68,14 @@ var screens = new (string Name, Func<Control> Build)[]
 {
     ("docview", () => new DocumentView { DataContext = DocumentTabViewModel.FromFile(sampleMd, @"E:\docs\rich.md") }),
     ("welcome", () => new WelcomeView { DataContext = BuildWelcomeVm() }),
+    // Block HTML → markdown: a raw <table> should render as a real table in the preview (ported).
+    ("htmltable", () => new DocumentView
+    {
+        DataContext = DocumentTabViewModel.FromFile(
+            "# HTML-таблица\n\n<table>\n<tr><th>Месяц</th><th>Продажи</th></tr>\n"
+            + "<tr><td>Янв</td><td>100</td></tr>\n<tr><td>Фев</td><td>120</td></tr>\n</table>\n",
+            @"E:\docs\htmltable.md"),
+    }),
     // Verify the user accent recolours the chrome: setting Layout.AccentColor fires ApplyAccent, which
     // overrides the app-level AccentBrush; the settings "Готово" (accent) button should render RED.
     // Placed so the app-resource override it leaves doesn't taint earlier screens' renders.

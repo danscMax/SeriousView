@@ -11,6 +11,8 @@
     <PackageReference Include="System.Text.Encoding.CodePages" />
     <!-- Markdown → HTML for the self-contained export (M13). Pure, UI-free. -->
     <PackageReference Include="Markdig" />
+    <!-- HTML fragment → markdown for the block-HTML preview pass (tables/divs). Pure managed. -->
+    <PackageReference Include="ReverseMarkdown" />
   </ItemGroup>
 
   <ItemGroup>

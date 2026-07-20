@@ -64,6 +64,12 @@
     <PackageVersion Include="Markdig" Version="1.3.2" />
   </ItemGroup>
 
+  <ItemGroup Label="HTML → markdown (block HTML in the preview)">
+    <!-- ReverseMarkdown converts an HTML fragment (tables / div / lists) to markdown, so Markdown.Avalonia
+         (which drops raw HTML) can render it. Pure managed (HtmlAgilityPack) — no SkiaSharp, no Av11 clash. -->
+    <PackageVersion Include="ReverseMarkdown" Version="6.1.0" />
+  </ItemGroup>
+
   <ItemGroup Label="Data charts (```chart)">
     <!-- LiveCharts2 stable 2.0.5: its LiveChartsCore.SkiaSharpView pins SkiaSharp 2.88.9 — the EXACT
          version Avalonia 11.3's native uses, so no clash (verified via nuspec). The 2.1.0-dev line moves
