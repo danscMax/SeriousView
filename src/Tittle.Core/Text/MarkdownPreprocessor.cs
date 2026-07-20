@@ -72,6 +72,9 @@ public static partial class MarkdownPreprocessor
             HeadingNumbering.Apply(lines, regions.IsFencedLine);
 
         ConvertWikiLinksInPlace(lines, regions, Memoize(wikiLinkResolver));
+        // Inline HTML → markdown BEFORE the bare-URL/underscore passes, so an <a href="…"> href isn't
+        // first mangled into an autolink and the produced [t](u) is then masked like any other link.
+        ConvertHtmlInlineInPlace(lines, regions);
         ConvertUnderscoreEmphasisInPlace(lines, regions);
         // Bare http/https URLs → <url> autolinks so the viewer renders them as clickable links (like
         // VS Code). Before emoji so the emoji pass's AutoLink mask protects the freshly-wrapped URLs.
@@ -379,6 +382,37 @@ public static partial class MarkdownPreprocessor
             lines[i] = UnorderedListMarker().Replace(lines[i], "*", 1);
         }
     }
+
+    // Inline HTML formatting → markdown (ported HTML-subset). Markdown.Avalonia silently drops raw HTML,
+    // so common inline tags would vanish; convert an allowlisted set (b/strong, i/em, code/kbd, a) to their
+    // markdown equivalents, per non-fenced line, leaving inline-code spans and fenced blocks untouched.
+    // Block HTML (tables/divs) is a separate concern (needs a block parser) — inline is the common case.
+    private static void ConvertHtmlInlineInPlace(List<string> lines, MarkdownCodeRegions regions)
+    {
+        for (var i = 0; i < lines.Count; i++)
+        {
+            if (regions.IsFencedLine(i) || lines[i].IndexOf('<') < 0 || lines[i].Length > MaxInlineLineLength)
+                continue;
+            var line = lines[i];
+            line = MarkdownCodeRegions.ReplaceOutsideCode(line, HtmlBold(), m => "**" + m.Groups["c"].Value + "**");
+            line = MarkdownCodeRegions.ReplaceOutsideCode(line, HtmlItalic(), m => "*" + m.Groups["c"].Value + "*");
+            line = MarkdownCodeRegions.ReplaceOutsideCode(line, HtmlCode(), m => "`" + m.Groups["c"].Value + "`");
+            line = MarkdownCodeRegions.ReplaceOutsideCode(line, HtmlLink(), m => "[" + m.Groups["t"].Value + "](" + m.Groups["u"].Value + ")");
+            lines[i] = line;
+        }
+    }
+
+    [GeneratedRegex(@"<(?<t>b|strong)>(?<c>.*?)</\k<t>>", RegexOptions.IgnoreCase)]
+    private static partial Regex HtmlBold();
+
+    [GeneratedRegex(@"<(?<t>i|em)>(?<c>.*?)</\k<t>>", RegexOptions.IgnoreCase)]
+    private static partial Regex HtmlItalic();
+
+    [GeneratedRegex(@"<(?<t>code|kbd)>(?<c>.*?)</\k<t>>", RegexOptions.IgnoreCase)]
+    private static partial Regex HtmlCode();
+
+    [GeneratedRegex(@"<a\s[^>]*?href=(?<q>[""'])(?<u>[^""']*)\k<q>[^>]*>(?<t>.*?)</a>", RegexOptions.IgnoreCase)]
+    private static partial Regex HtmlLink();
 
     // Code-language autodetect (1.3): walk fenced blocks; for one whose opener carries NO language,
     // guess it from the body and write it into the opener (``` → ```json). The fence primitive lives in
