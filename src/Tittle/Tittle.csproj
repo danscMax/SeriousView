@@ -59,6 +59,9 @@
          Native pdfium binaries arrive transitively via bblanchon.PDFium per RID; a missing native
          degrades gracefully to "open externally" (see Pdf/PdfDocumentSource). -->
     <PackageReference Include="PDFtoImage" />
+    <!-- Native data-charts (```chart Chart.js-style JSON/CSV → line/bar/pie…). LiveCharts2 on
+         SkiaSharp 2.88.9, which unifies with Avalonia 11.3's native (no 3.x clash). -->
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <!-- Installer + delta auto-update (Velopack). Inert for the portable single-file build. -->
