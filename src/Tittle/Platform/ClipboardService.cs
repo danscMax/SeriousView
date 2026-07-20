@@ -26,17 +26,23 @@ public sealed class ClipboardService : IClipboardService
         if (clipboard is null)
             return null;
 
-        var transfer = await clipboard.TryGetDataAsync();
-        if (transfer is null)
-            return null;
+        try
+        {
+            var transfer = await clipboard.TryGetDataAsync();
+            var bitmap = transfer is null ? null : await transfer.TryGetBitmapAsync();
+            if (bitmap is null)
+                return null;
 
-        var bitmap = await transfer.TryGetBitmapAsync();
-        if (bitmap is null)
+            using var stream = new System.IO.MemoryStream();
+            bitmap.Save(stream); // Avalonia Bitmap.Save writes PNG
+            return stream.ToArray();
+        }
+        catch (Exception)
+        {
+            // The Windows clipboard COM read can fail when another process holds the clipboard, or the
+            // image data is unsupported/corrupt. Treat any failure as "no image" — paste degrades to text.
             return null;
-
-        using var stream = new System.IO.MemoryStream();
-        bitmap.Save(stream); // Avalonia Bitmap.Save writes PNG
-        return stream.ToArray();
+        }
     }
 
     public async Task SetTextAsync(string text)

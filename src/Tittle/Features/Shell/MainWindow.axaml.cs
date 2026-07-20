@@ -193,21 +193,23 @@ public partial class MainWindow : AppWindow
             return;
         }
 
-        // ]/[ jump to next/previous UNREAD heading (ported) — ONLY in preview mode; in Source these keys
-        // type brackets into the editor (the tunnelling dispatcher runs before it), so gate on !ShowSource.
-        if (!ctrl && !shift && !alt && vm.SelectedTab is { ShowSource: false } previewTab
+        // ]/[ jump to next/previous UNREAD heading (ported) — only when NO editable source pane is on
+        // screen; in Source AND Split these keys must type brackets into the editor (the tunnelling
+        // dispatcher runs before it), so gate on !ShowSourcePane (Source OR Split), not just !ShowSource.
+        if (!ctrl && !shift && !alt && vm.SelectedTab is { ShowSourcePane: false } readTab
             && e.Key is Key.OemOpenBrackets or Key.OemCloseBrackets)
         {
             var forward = e.Key == Key.OemCloseBrackets;
-            if (previewTab.JumpToUnreadCommand.CanExecute(forward))
-                previewTab.JumpToUnreadCommand.Execute(forward);
+            if (readTab.JumpToUnreadCommand.CanExecute(forward))
+                readTab.JumpToUnreadCommand.Execute(forward);
             e.Handled = true;
             return;
         }
 
         // Ctrl+V: additionally try pasting a clipboard image as a data-URI (ported paste-image). NOT
         // handled — the default text paste still runs; the async image insert is additive (no-op if none).
-        if (ctrl && !shift && !alt && e.Key == Key.V && vm.SelectedTab?.ShowSource == true)
+        // ShowSourcePane covers Source AND Split (both realize an editable source editor).
+        if (ctrl && !shift && !alt && e.Key == Key.V && vm.SelectedTab?.ShowSourcePane == true)
             vm.PasteImageCommand.Execute(null);
 
         // While recording a macro, capture caret navigation + deletion flowing to the editor (the 3rd

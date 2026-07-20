@@ -24,6 +24,9 @@ public class TabNavigationTests
         tab.NavigateBackCommand.Execute(null);              // back → returns to A (0), no re-record
         Assert.NotNull(navigated);
         Assert.Equal(0, navigated!.Ordinal);
+        // The position is synced at once (not waiting for the DEFERRED scroll-changed pass), so a rapid
+        // second Back/Forward reads the fresh ordinal, not a stale one.
+        Assert.Equal(0, tab.ActiveHeadingOrdinal);
     }
 
     [AvaloniaFact]

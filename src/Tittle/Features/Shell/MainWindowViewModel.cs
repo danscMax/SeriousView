@@ -758,7 +758,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task PasteImage()
     {
-        if (SelectedTab is not { ShowSource: true, EditorActions: { } actions })
+        if (SelectedTab is not { ShowSourcePane: true, EditorActions: { } actions })
             return;
         var png = await _clipboard.TryReadImagePngAsync();
         if (png is null || png.Length == 0)
@@ -1075,7 +1075,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         if (SelectedTab is not null)
             items.Add(new PaletteItem("Сохранить", SaveActiveTabCommand));
 
-        if (SelectedTab is { ShowSource: true, EditorActions: not null })
+        if (SelectedTab is { ShowSourcePane: true, EditorActions: not null })
             items.Add(new PaletteItem("Вставить изображение из буфера", PasteImageCommand, "Ctrl+V"));
 
         if (SelectedTab is { } unreadTab && unreadTab.Outline.Count > 0)

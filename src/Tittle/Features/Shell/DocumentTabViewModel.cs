@@ -1038,7 +1038,12 @@ public partial class DocumentTabViewModel : ViewModelBase, IDisposable
     private void NavigateBack()
     {
         if (_navHistory.Back(ActiveHeadingOrdinal) is { } target && target >= 0 && target < Outline.Count)
+        {
             NavigationRequested?.Invoke(Outline[target]);
+            // Sync the position at once: ActiveHeadingOrdinal is otherwise only updated by the DEFERRED
+            // scroll-changed pass, so a rapid/held second Back would stash a stale ordinal.
+            ActiveHeadingOrdinal = target;
+        }
     }
 
     /// <summary>Alt+→ : navigate to the next position in this tab's history (no re-record).</summary>
@@ -1046,7 +1051,10 @@ public partial class DocumentTabViewModel : ViewModelBase, IDisposable
     private void NavigateForward()
     {
         if (_navHistory.Forward(ActiveHeadingOrdinal) is { } target && target >= 0 && target < Outline.Count)
+        {
             NavigationRequested?.Invoke(Outline[target]);
+            ActiveHeadingOrdinal = target; // sync (see NavigateBack) so rapid Forward isn't racy
+        }
     }
 
     /// <summary>Jump to the next (forward) / previous unread heading (ported ]/[), reusing the outline-click
