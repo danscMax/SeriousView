@@ -419,57 +419,92 @@ public static partial class MarkdownPreprocessor
     [GeneratedRegex(@"<a\s[^>]*?href=(?<q>[""'])(?<u>[^""']*)\k<q>[^>]*>(?<t>.*?)</a>", RegexOptions.IgnoreCase)]
     private static partial Regex HtmlLink();
 
-    // One shared HTML→markdown converter for the block pass. GitHub-flavored → HTML tables become GFM
-    // tables; unknown tags are bypassed (children kept, wrapper dropped — a DOMPurify-like allowlist effect).
-    private static readonly ReverseMarkdown.Converter HtmlToMarkdown = new(new ReverseMarkdown.Config
-    {
-        GithubFlavored = true,
-        UnknownTags = ReverseMarkdown.Config.UnknownTagsOption.Bypass,
-        RemoveComments = true,
-        SmartHrefHandling = true,
-    });
+    // One shared HTML→markdown converter for the block-table pass. GitHub-flavored → an HTML <table> becomes a
+    // GFM table; unknown tags are bypassed (children kept, wrapper dropped). Uses the nested-config surface
+    // (the flat Config.UnknownTags/RemoveComments/SmartHrefHandling are [Obsolete] in ReverseMarkdown 6.x).
+    private static readonly ReverseMarkdown.Converter HtmlToMarkdown = CreateHtmlConverter();
 
-    // Block-level raw HTML (tables/divs/lists/blockquotes) → markdown, so Markdown.Avalonia (which drops raw
-    // HTML) can render it. Detects an HTML block by an allowlisted block tag at line start (≤3 indent, not
-    // fenced), collects consecutive non-blank lines (a CommonMark HTML block ends at a blank line), and
-    // converts the chunk via ReverseMarkdown. Rebuilds the line list → the caller re-scans fences after.
+    private static ReverseMarkdown.Converter CreateHtmlConverter()
+    {
+        var config = new ReverseMarkdown.Config { GithubFlavored = true };
+        config.Tags.Unknown = ReverseMarkdown.Config.UnknownTagsOption.Bypass;
+        config.Formatting.RemoveComments = true;
+        config.Links.SmartHref = true;
+        return new ReverseMarkdown.Converter(config);
+    }
+
+    // Raw HTML <table> blocks → GFM tables, so Markdown.Avalonia (which drops raw HTML) can render them.
+    // ONLY <table> is converted, deliberately: a <div>/<section> wrapping markdown prose would have its
+    // markdown escaped by the HTML→md conversion (e.g. *italic* → \*italic\*), corrupting a legitimate,
+    // common pattern — so those are left untouched. The table span is collected by TAG BALANCE (blank lines
+    // inside a table are kept; prose after </table> is never swept in), and only outside fenced code.
+    // Rebuilds the line list → the caller re-scans fences after.
     private static List<string> ConvertHtmlBlocks(List<string> lines, MarkdownCodeRegions regions)
     {
         var result = new List<string>(lines.Count);
         for (var i = 0; i < lines.Count; i++)
         {
-            if (regions.IsFencedLine(i) || !HtmlBlockOpen().IsMatch(lines[i]))
+            if (regions.IsFencedLine(i) || !HtmlTableOpen().IsMatch(lines[i]))
             {
                 result.Add(lines[i]);
                 continue;
             }
 
-            var block = new List<string>();
-            var j = i;
-            for (; j < lines.Count && lines[j].Trim().Length > 0 && !regions.IsFencedLine(j); j++)
-                block.Add(lines[j]);
+            // Find the balanced </table> that closes this opener (nested tables handled by depth).
+            var depth = 0;
+            var end = -1;
+            for (var j = i; j < lines.Count; j++)
+            {
+                depth += CountCi(lines[j], "<table") - CountCi(lines[j], "</table>");
+                if (depth <= 0)
+                {
+                    end = j;
+                    break;
+                }
+            }
+            if (end < 0) // unterminated <table> → not a real block, leave the source as-is
+            {
+                result.Add(lines[i]);
+                continue;
+            }
 
+            var html = string.Join("\n", lines.GetRange(i, end - i + 1));
             string md;
             try
             {
-                md = HtmlToMarkdown.Convert(string.Join("\n", block)).Trim();
+                md = HtmlToMarkdown.Convert(html).Trim();
             }
             catch
             {
-                md = string.Join("\n", block); // conversion failure → keep the source, never crash
+                result.AddRange(lines.GetRange(i, end - i + 1)); // conversion failure → keep the source, never crash
+                i = end;
+                continue;
             }
 
             result.Add(string.Empty);
             result.AddRange(md.Split('\n'));
             result.Add(string.Empty);
-            i = j - 1; // resume after the consumed block
+            i = end; // resume after the consumed table
         }
 
         return result;
     }
 
-    [GeneratedRegex(@"^ {0,3}<(?:table|thead|tbody|tfoot|tr|td|th|div|section|article|ul|ol|dl|blockquote|pre|figure|figcaption|details|summary)\b", RegexOptions.IgnoreCase)]
-    private static partial Regex HtmlBlockOpen();
+    // Count case-insensitive occurrences of a substring (for <table>/</table> depth tracking).
+    private static int CountCi(string s, string sub)
+    {
+        var n = 0;
+        var idx = 0;
+        while ((idx = s.IndexOf(sub, idx, StringComparison.OrdinalIgnoreCase)) >= 0)
+        {
+            n++;
+            idx += sub.Length;
+        }
+        return n;
+    }
+
+    [GeneratedRegex(@"^ {0,3}<table\b", RegexOptions.IgnoreCase)]
+    private static partial Regex HtmlTableOpen();
 
     // Code-language autodetect (1.3): walk fenced blocks; for one whose opener carries NO language,
     // guess it from the body and write it into the opener (``` → ```json). The fence primitive lives in
