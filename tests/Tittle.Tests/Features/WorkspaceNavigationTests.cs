@@ -134,7 +134,9 @@ public sealed class WorkspaceNavigationTests
     public void WorkspaceSidebar_RecentFiles_ExposeAutomationNames()
     {
         var recent = new FakeRecentFilesStore();
-        recent.Add(@"C:\docs\readme.md");
+        // Forward slashes so Path.GetFileName yields "readme.md" on every OS (a "\"-separated path is a
+        // single name on Linux/macOS, where "\" is an ordinary character — the test failed there otherwise).
+        recent.Add("/docs/readme.md");
         var vm = CreateVm(recent: recent);
         var sidebar = new WorkspaceSidebar { DataContext = vm };
         var window = new Window { Width = 360, Height = 420, Content = sidebar };
