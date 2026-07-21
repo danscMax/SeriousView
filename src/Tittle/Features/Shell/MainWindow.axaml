@@ -329,16 +329,18 @@
                     Content="✕" FontSize="11" Padding="4,0" VerticalAlignment="Center"/>
           </StackPanel>
         </Border>
+        <!-- Disabled horizontal scrolling (not Auto): the ScrollViewer then constrains the strip to the
+             viewport width, so TabsPanel knows how wide it is and shrinks tabs to fit instead of overflowing
+             into an ugly horizontal scrollbar. Tabs always fit → no scrollbar, no wheel-scroll needed. -->
         <ListBox x:Name="TabStrip" Grid.Column="1" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}"
                ItemContainerTheme="{StaticResource VsCodeTab}"
                Background="Transparent" BorderThickness="0" Padding="0"
                HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
-               ScrollViewer.HorizontalScrollBarVisibility="Auto"
-               ScrollViewer.VerticalScrollBarVisibility="Disabled"
-               ScrollViewer.AllowAutoHide="True">
+               ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+               ScrollViewer.VerticalScrollBarVisibility="Disabled">
         <ListBox.ItemsPanel>
           <ItemsPanelTemplate>
-            <StackPanel Orientation="Horizontal"/>
+            <vm:TabsPanel/>
           </ItemsPanelTemplate>
         </ListBox.ItemsPanel>
         <ListBox.ItemTemplate>

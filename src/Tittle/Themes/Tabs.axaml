@@ -11,9 +11,16 @@
     <Setter Property="MinHeight" Value="0" />
     <Setter Property="Padding" Value="0" />
     <Setter Property="Margin" Value="0" />
-    <Setter Property="Background" Value="Transparent" />
+    <!-- Rest state is the transparent-SURFACE base, NOT `Transparent` (= #00FFFFFF, transparent WHITE):
+         PART_Bg's BrushTransition fades this → WorkspaceHover/TabActiveBg on hover/select, and fading from
+         transparent-white lerps RGB through white → a white flash before the dark chrome lands (the same
+         bug fixed for the sidebar/menu rows in 4ae99b5). Fading from dark-at-alpha-0 keeps the sweep dark. -->
+    <Setter Property="Background" Value="{DynamicResource HoverFadeBaseBrush}" />
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundMutedBrush}" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
+    <!-- Clip so a tab shrunk below its content's minimum (TabsPanel share layout, very many tabs) cuts off
+         cleanly at its edge instead of overlapping its neighbour. No effect at natural width. -->
+    <Setter Property="ClipToBounds" Value="True" />
     <Setter Property="Template">
       <ControlTemplate>
         <Border x:Name="PART_Bg" Background="{TemplateBinding Background}"
@@ -25,7 +32,7 @@
               <BrushTransition Property="BorderBrush" Duration="{DynamicResource DurFast}" />
             </Transitions>
           </Border.Transitions>
-          <Grid ColumnDefinitions="*,Auto" Height="30" MinWidth="92">
+          <Grid ColumnDefinitions="*,Auto" Height="30" MinWidth="48">
             <ContentPresenter Grid.Column="0"
                               Content="{TemplateBinding Content}"
                               ContentTemplate="{TemplateBinding ContentTemplate}"

@@ -23,6 +23,9 @@ using Tittle.Features.Welcome;
 using Tittle.Platform;
 using Tittle.Shared;
 using CommunityToolkit.Mvvm.Input;
+using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Templates;
+using Avalonia.Media;
 
 // Layer-1 render oracle: render leaf controls to PNG in every theme (the cheap, deterministic
 // both-theme visual check). Output dir is arg[0] (default: plans/avalonia-smoke/screenshots).
@@ -131,6 +134,43 @@ var screens = new (string Name, Func<Control> Build)[]
             "# Scatter\n\n```chart:scatter\n{\"data\":{\"datasets\":[{\"label\":\"P\","
             + "\"data\":[{\"x\":1,\"y\":2},{\"x\":5,\"y\":9},{\"x\":9,\"y\":3},{\"x\":14,\"y\":12},{\"x\":20,\"y\":7}]}]}}\n```\n",
             @"E:\docs\scatter.md"),
+    }),
+    // Many tabs → the strip must SHRINK them to share the width (Chrome-style), not show a horizontal
+    // scrollbar. Also confirms the rest background is the transparent-surface base (no white patch).
+    ("tabstrip", () =>
+    {
+        var names = new[]
+        {
+            "readme.md", "a-very-long-filename-that-would-be-wide.md", "notes.txt", "a.md", "data.csv",
+            "config.json", "CHANGELOG.md", "index.html", "style.css", "main.cpp", "script.py", "b.md", "c.md", "final.md",
+        };
+        var tabs = names.Select(n => DocumentTabViewModel.FromFile($"# {n}", $@"E:\docs\{n}")).ToList();
+        var list = new ListBox
+        {
+            ItemsSource = tabs,
+            SelectedIndex = 0,
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(0),
+            ItemContainerTheme = (ControlTheme)Application.Current!.FindResource("VsCodeTab")!,
+            ItemsPanel = new FuncTemplate<Panel?>(() => new Tittle.Features.Shell.TabsPanel()),
+            ItemTemplate = new FuncDataTemplate<DocumentTabViewModel>((vm, _) => new TextBlock
+            {
+                Text = vm.Header,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                MaxWidth = 200,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+            }),
+        };
+        list.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
+        list.SetValue(ScrollViewer.VerticalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
+        return new Border
+        {
+            Height = 44,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top,
+            Background = Application.Current!.FindResource("WorkspaceHeaderBackgroundBrush") as IBrush,
+            Child = list,
+        };
     }),
 };
 
