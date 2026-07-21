@@ -473,9 +473,11 @@ configurable text density); **H1/H2 divider lines also DONE** (`ebcb54e`, GitHub
 **(d) HTML-export of diagrams DONE** (Kroki GET-URL `<img>` in the self-contained export).
 
 **⚠ Genuinely open after v0.2.2:**
-- **macOS not built** — the release matrix is win-x64/win-arm64/linux-x64 only; no `osx-*` RID despite the
-  README's cross-platform claim. Add `osx-arm64` (+ `osx-x64`) to the `release.yml` matrix when a mac deliverable
-  is wanted.
+- **macOS build — matrix ADDED (2026-07-22), verifies on the next release.** `release.yml` now builds
+  `osx-arm64` (native) + `osx-x64` (crossgen2 cross-compile) on `macos-latest`; every native dep covers both
+  (bblanchon.PDFium ships per-RID osx dylibs; SkiaSharp/HarfBuzz/Avalonia.Native ship a universal `osx`), and
+  `ci.yml` already builds+tests on macOS. The two mac portable binaries attach on the next `v*` tag. Still
+  open: macOS code-signing / notarization (binaries are unsigned → right-click ▸ Open past Gatekeeper).
 - **Velopack auto-update — pipeline PROVEN, live in-app apply still manual-only.** v0.2.1 ran the `velopack` job
   for the first time (full package); **v0.2.2 produced the first DELTA** (`Tittle-0.2.2-win-x64-delta.nupkg`
   1.28 MB vs 50.24 MB full) — Setup.exe + RELEASES + .nupkg are attached and an installed v0.2.1 client was

@@ -21,6 +21,8 @@ jobs:
           - { os: windows-latest, rid: win-x64,   ext: ".exe" }
           - { os: windows-latest, rid: win-arm64, ext: ".exe" }
           - { os: ubuntu-latest,  rid: linux-x64,  ext: ""     }
+          - { os: macos-latest,   rid: osx-arm64,  ext: ""     }
+          - { os: macos-latest,   rid: osx-x64,    ext: ""     }
     steps:
       - uses: actions/checkout@v6
 
@@ -36,7 +38,9 @@ jobs:
 
       # Same flags as build.ps1's shipped default: self-contained single-file, R2R on,
       # compression off (fast cold start), partial trimming (TrimMode=partial lives in the
-      # csproj). win-arm64 R2R cross-compiles fine from the x64 Windows runner (crossgen2).
+      # csproj). The off-native-arch RIDs R2R cross-compile via crossgen2 on the matching-OS runner:
+      # win-arm64 from the x64 Windows runner, osx-x64 from the arm64 macOS runner (osx-arm64 is native).
+      # macOS binaries are unsigned, so users open them via right-click Open past Gatekeeper (notarization TBD).
       - name: Publish
         shell: bash
         run: |
