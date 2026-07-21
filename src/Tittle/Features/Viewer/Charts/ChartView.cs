@@ -126,22 +126,22 @@ public static class ChartView
         switch (kind)
         {
             case ChartKind.Line:
-            {
-                var line = new LineSeries<double> { Values = values, Name = s.Name, Fill = null }; // no area under the line
-                if (color is { } lc)
                 {
-                    line.Stroke = new SolidColorPaint(lc, 2);
-                    line.GeometryStroke = new SolidColorPaint(lc, 2);
+                    var line = new LineSeries<double> { Values = values, Name = s.Name, Fill = null }; // no area under the line
+                    if (color is { } lc)
+                    {
+                        line.Stroke = new SolidColorPaint(lc, 2);
+                        line.GeometryStroke = new SolidColorPaint(lc, 2);
+                    }
+                    return line;
                 }
-                return line;
-            }
             case ChartKind.Area:
-            {
-                var area = new LineSeries<double> { Values = values, Name = s.Name };
-                if (color is { } ac)
-                    area.Fill = new SolidColorPaint(ac.WithAlpha(70));
-                return area;
-            }
+                {
+                    var area = new LineSeries<double> { Values = values, Name = s.Name };
+                    if (color is { } ac)
+                        area.Fill = new SolidColorPaint(ac.WithAlpha(70));
+                    return area;
+                }
             case ChartKind.Scatter:
                 // Real {x,y} points plot at their true X; a plain-number dataset falls back to category indices.
                 if (s.Points is { Count: > 0 } points)
@@ -152,12 +152,12 @@ public static class ChartView
                     };
                 return new ScatterSeries<double> { Values = values, Name = s.Name };
             default:
-            {
-                var col = new ColumnSeries<double> { Values = values, Name = s.Name };
-                if (color is { } cc)
-                    col.Fill = new SolidColorPaint(cc);
-                return col;
-            }
+                {
+                    var col = new ColumnSeries<double> { Values = values, Name = s.Name };
+                    if (color is { } cc)
+                        col.Fill = new SolidColorPaint(cc);
+                    return col;
+                }
         }
     }
 
