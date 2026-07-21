@@ -47,13 +47,9 @@ public partial class MainWindow : AppWindow
     // pixel through Layout.PropertyChanged would rewrite settings.json continuously.
     private double _outlineWidth = LayoutOptions.DefaultOutlineWidth;
 
-    // Tab drag-reorder: the tab grabbed on press, the press point, and whether we've passed the movement
-    // threshold. The Tabs collection reorders live as the cursor crosses neighbours — the dragged tab is
-    // itself the visual feedback, so there's no separate insertion adorner.
-    private DocumentTabViewModel? _dragTab;
-    private Point _dragStart;
-    private bool _dragging;
-    private const double DragThreshold = 5;
+    // Tab drag-reorder (Chrome/Firefox-style) lives in TabDragBehavior, attached to the tab-strip ListBox.
+    private TabDragBehavior? _dragBehavior;
+    private bool _suppressEntrance;    // don't play the entrance fade on the tab a reorder just re-created
     private const double NarrowHeaderThreshold = 640;
     private const double CompactWorkspaceThreshold = 760;
     private bool _compactWorkspace;
@@ -98,10 +94,9 @@ public partial class MainWindow : AppWindow
         OmnibarBox.KeyDown += OnOmnibarKeyDown;
         OmnibarBox.GotFocus += (_, _) => SetOmnibarFocused(true);
         OmnibarBox.LostFocus += (_, _) => SetOmnibarFocused(false);
-        // Tab drag-reorder. Tunnel so we observe the gesture before the ListBox's own pointer handling.
-        TabStrip.AddHandler(PointerPressedEvent, OnTabPointerPressed, RoutingStrategies.Tunnel);
-        TabStrip.AddHandler(PointerMovedEvent, OnTabPointerMoved, RoutingStrategies.Tunnel);
-        TabStrip.AddHandler(PointerReleasedEvent, OnTabPointerReleased, RoutingStrategies.Tunnel);
+        // Tab drag-reorder. The behavior wires its own pointer handlers on the strip and commits the reorder
+        // through CommitTabMove (which suppresses the entrance fade on the re-created container).
+        _dragBehavior = new TabDragBehavior(TabStrip, CommitTabMove);
         // Entrance fade on new tabs (#23). Programmatic, not a styled animation: drag-reorder's
         // Move() recreates containers mid-gesture, and a styled entrance would replay on every swap.
         TabStrip.ContainerPrepared += OnTabContainerPrepared;
@@ -460,52 +455,15 @@ public partial class MainWindow : AppWindow
         e.Handled = true;
     }
 
-    // --- Tab drag-reorder (#18). Press a tab and drag horizontally; Tabs reorders live as the cursor
-    //     crosses each neighbour's midpoint. A plain click still selects, the close button still closes
-    //     (we skip presses on it), and a right-click still opens the context menu (left button only). ---
-
-    private void OnTabPointerPressed(object? sender, PointerPressedEventArgs e)
+    // Commit a drag-reorder (called by TabDragBehavior on release). Bracket the model Move so the entrance
+    // fade doesn't replay on the re-created container — it's a reorder, not a newly opened tab.
+    private void CommitTabMove(object item, int target)
     {
-        _dragTab = null;
-        _dragging = false;
-        if (!e.GetCurrentPoint(TabStrip).Properties.IsLeftButtonPressed)
+        if (item is not DocumentTabViewModel tab || DataContext is not MainWindowViewModel vm)
             return;
-        // Leave the close button (and any future in-tab button) to its own click.
-        if (e.Source is Visual v && (v is Button || v.GetVisualAncestors().OfType<Button>().Any()))
-            return;
-        if (TabItemFrom(e.Source)?.DataContext is DocumentTabViewModel tab)
-        {
-            _dragTab = tab;
-            _dragStart = e.GetPosition(TabStrip);
-        }
-    }
-
-    private void OnTabPointerMoved(object? sender, PointerEventArgs e)
-    {
-        if (_dragTab is null || DataContext is not MainWindowViewModel vm)
-            return;
-        if (!e.GetCurrentPoint(TabStrip).Properties.IsLeftButtonPressed)
-        {
-            _dragTab = null; // the button came up outside the strip
-            _dragging = false;
-            return;
-        }
-
-        var x = e.GetPosition(TabStrip).X;
-        if (!_dragging)
-        {
-            if (Math.Abs(x - _dragStart.X) < DragThreshold)
-                return;
-            _dragging = true; // crossed the threshold — this is a drag, not a click
-        }
-
-        vm.MoveTab(_dragTab, TargetIndexAt(x));
-    }
-
-    private void OnTabPointerReleased(object? sender, PointerReleasedEventArgs e)
-    {
-        _dragTab = null;
-        _dragging = false;
+        _suppressEntrance = true;
+        vm.MoveTab(tab, target);
+        Dispatcher.UIThread.Post(() => _suppressEntrance = false, DispatcherPriority.Loaded);
     }
 
     // Entrance fade for a freshly realized tab container (#23). Opacity only — Avalonia 11
@@ -525,26 +483,10 @@ public partial class MainWindow : AppWindow
 
     private void OnTabContainerPrepared(object? sender, ContainerPreparedEventArgs e)
     {
-        if (!_dragging)
+        // Skip the fade during a drag and on the container a reorder just re-created (not a newly opened tab).
+        if (_dragBehavior?.IsDragging != true && !_suppressEntrance)
             _ = TabEntranceAnimation.RunAsync(e.Container);
     }
-
-    // The slot the cursor is over: the first tab whose horizontal midpoint is right of the cursor, else
-    // the last. The tab strip uses a (non-virtualizing) StackPanel, so every container is realized.
-    private int TargetIndexAt(double x)
-    {
-        for (var i = 0; i < TabStrip.ItemCount; i++)
-        {
-            if (TabStrip.ContainerFromIndex(i) is Control c
-                && x < (c.TranslatePoint(default, TabStrip)?.X ?? 0) + c.Bounds.Width / 2)
-                return i;
-        }
-        return Math.Max(0, TabStrip.ItemCount - 1);
-    }
-
-    private static ListBoxItem? TabItemFrom(object? source)
-        => source as ListBoxItem
-           ?? (source as Visual)?.GetVisualAncestors().OfType<ListBoxItem>().FirstOrDefault();
 
     public MainWindow(MainWindowViewModel viewModel, IAppSettingsService settings) : this()
     {
@@ -561,23 +503,6 @@ public partial class MainWindow : AppWindow
         viewModel.DonateRequested += OnDonateRequested;
         viewModel.Macros.MacroManagerRequested += OnMacroManagerRequested;
         viewModel.RestartToUpdateRequested += OnRestartToUpdate;
-        // The tab strip lays out horizontally; translate a vertical wheel into sideways scroll so
-        // overflowing tabs are reachable by the wheel (Avalonia doesn't flip the wheel axis itself).
-        TabStrip.PointerWheelChanged += OnTabStripWheel;
-    }
-
-    private ScrollViewer? _tabScroll;
-
-    private void OnTabStripWheel(object? sender, PointerWheelEventArgs e)
-    {
-        _tabScroll ??= TabStrip.FindDescendantOfType<ScrollViewer>();
-        if (_tabScroll is not { } sv || sv.Extent.Width <= sv.Viewport.Width + 0.5)
-            return;
-
-        var delta = e.Delta.Y != 0 ? e.Delta.Y : e.Delta.X;
-        var max = sv.Extent.Width - sv.Viewport.Width;
-        sv.Offset = new Vector(Math.Clamp(sv.Offset.X - delta * 48, 0, max), sv.Offset.Y);
-        e.Handled = true;
     }
 
     // Restore the persisted sidebar width, follow live drags into a field, and expand/collapse the
