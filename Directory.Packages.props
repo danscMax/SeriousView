@@ -48,7 +48,7 @@
          Av11 native (same trap as PDFtoImage 5.x). Avalonia floor 11.2.0 ≤ our 11.3.17. Raster
          images need no package — Avalonia decodes PNG/JPEG/WebP/BMP/GIF via Skia natively;
          SvgImage/SvgSource render .svg as an IImage. Do NOT bump past 2.88.x until the Av12 migration. -->
-    <PackageVersion Include="Avalonia.Svg.Skia" Version="11.2.0.2" />
+    <PackageVersion Include="Avalonia.Svg.Skia" Version="11.3.0" />
   </ItemGroup>
 
   <ItemGroup Label="PDF rendering (PDFium via SkiaSharp)">
@@ -67,7 +67,7 @@
   <ItemGroup Label="HTML → markdown (block HTML in the preview)">
     <!-- ReverseMarkdown converts an HTML fragment (tables / div / lists) to markdown, so Markdown.Avalonia
          (which drops raw HTML) can render it. Pure managed (HtmlAgilityPack) — no SkiaSharp, no Av11 clash. -->
-    <PackageVersion Include="ReverseMarkdown" Version="6.1.0" />
+    <PackageVersion Include="ReverseMarkdown" Version="6.1.1" />
   </ItemGroup>
 
   <ItemGroup Label="Data charts (```chart)">
@@ -89,17 +89,17 @@
   <ItemGroup Label="MVVM + DI">
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <!-- .NET 9 servicing stream (9.0.0 RTM → 9.0.17 cumulative patches; no API change, same major). -->
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.17" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.18" />
   </ItemGroup>
 
   <ItemGroup Label="BCL (legacy code pages for encoding detection)">
     <!-- Enables Encoding.GetEncoding(1251) etc. via CodePagesEncodingProvider. Works under
          InvariantGlobalization (that affects cultures, not encodings). -->
-    <PackageVersion Include="System.Text.Encoding.CodePages" Version="9.0.17" />
+    <PackageVersion Include="System.Text.Encoding.CodePages" Version="9.0.18" />
   </ItemGroup>
 
   <ItemGroup Label="Testing">
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="Avalonia.Headless" Version="11.3.18" />
