@@ -155,6 +155,13 @@ public static partial class MarkdownPreprocessor
     private static List<string> ConvertMathBlocks(List<string> lines, MarkdownCodeRegions regions)
     {
         var result = new List<string>(lines.Count);
+
+        // Total lines the closer-scans may traverse across the whole document. A real doc never
+        // approaches this (each closed block scans only its own span); it caps the worst case (many
+        // unclosed openers each scanning far) at O(n) so a crafted file can't freeze the synchronous
+        // preview getter.
+        var scanBudget = lines.Count * 4 + 4096;
+
         for (var i = 0; i < lines.Count; i++)
         {
             if (regions.IsFencedLine(i))
@@ -184,15 +191,21 @@ public static partial class MarkdownPreprocessor
             var bracketStyle = open.Groups[1].Value == @"\[";
             var body = new List<string>();
             var j = i + 1;
+            var budgetOut = false;
             for (; j < lines.Count; j++)
             {
+                if (--scanBudget < 0)
+                {
+                    budgetOut = true; // budget exhausted (pathological input) → treated as unclosed below
+                    break;
+                }
                 if (!regions.IsFencedLine(j)
                     && (bracketStyle ? BracketMathClose() : DollarMathClose()).IsMatch(lines[j]))
                     break;
                 body.Add(lines[j]);
             }
 
-            if (j >= lines.Count)
+            if (budgetOut || j >= lines.Count)
             {
                 result.Add(lines[i]); // unclosed → leave as authored
                 continue;
@@ -228,6 +241,13 @@ public static partial class MarkdownPreprocessor
         List<string> lines, Func<string, string, IEnumerable<string>> renderDiagram)
     {
         var result = new List<string>(lines.Count);
+
+        // Total lines the closer-scans may traverse across the whole document. A real doc never
+        // approaches this (each closed fence scans only its own span); it caps the worst case (many
+        // unclosed openers each scanning far) at O(n) so a crafted file can't freeze the synchronous
+        // preview getter.
+        var scanBudget = lines.Count * 4 + 4096;
+
         for (var i = 0; i < lines.Count; i++)
         {
             if (!MarkdownCodeRegions.TryMatchFenceOpen(lines[i], out var fence))
@@ -241,6 +261,8 @@ public static partial class MarkdownPreprocessor
             var closed = false;
             for (; j < lines.Count; j++)
             {
+                if (--scanBudget < 0)
+                    break; // budget exhausted (pathological input) → treated as unclosed below
                 if (MarkdownCodeRegions.IsFenceClose(lines[j], fence.Char, fence.Length))
                 {
                     closed = true;
@@ -283,6 +305,13 @@ public static partial class MarkdownPreprocessor
     private static List<string> ConvertChartFences(List<string> lines)
     {
         var result = new List<string>(lines.Count);
+
+        // Total lines the closer-scans may traverse across the whole document. A real doc never
+        // approaches this (each closed fence scans only its own span); it caps the worst case (many
+        // unclosed openers each scanning far) at O(n) so a crafted file can't freeze the synchronous
+        // preview getter.
+        var scanBudget = lines.Count * 4 + 4096;
+
         for (var i = 0; i < lines.Count; i++)
         {
             if (!MarkdownCodeRegions.TryMatchFenceOpen(lines[i], out var fence))
@@ -296,6 +325,8 @@ public static partial class MarkdownPreprocessor
             var closed = false;
             for (; j < lines.Count; j++)
             {
+                if (--scanBudget < 0)
+                    break; // budget exhausted (pathological input) → treated as unclosed below
                 if (MarkdownCodeRegions.IsFenceClose(lines[j], fence.Char, fence.Length))
                 {
                     closed = true;
