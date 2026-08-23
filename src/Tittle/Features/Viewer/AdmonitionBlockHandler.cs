@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
@@ -31,19 +32,46 @@ public sealed class AdmonitionBlockHandler : IContainerBlockHandler
 {
     private readonly MdEngine _engine;
     private readonly Func<string?>? _krokiUrlProvider;
+    private readonly Func<string, string, string, Task<DiagramImage>>? _fetchOverride;
 
     // One shared client + an in-memory cache (keyed by url\ntype\nbody) so identical diagrams
-    // aren't re-fetched on every preview rebuild. Static: shared across tabs/handlers. A second
-    // tier persists rendered diagrams on disk so they survive a restart.
+    // aren't re-fetched on every preview rebuild. Values are in-flight fetch TASKS wrapped in a
+    // Lazy: a render that misses joins the running flight instead of double-POSTing to Kroki
+    // (single-flight), and the Lazy guarantees the fetch starts AT MOST once even when two
+    // callers race on GetOrAdd. A failed flight is removed from the map, so a later render
+    // retries — failures are never cached positively. Static: shared across tabs/handlers.
+    // A second tier persists rendered diagrams on disk so they survive a restart.
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(20) };
-    private static readonly ConcurrentDictionary<string, DiagramImage> DiagramCache = new();
+    private static readonly ConcurrentDictionary<string, Lazy<Task<DiagramImage>>> DiagramCache = new();
+
+    // Decoded Avalonia images memoized per cache key: SVG parsing / PNG decoding is expensive and
+    // must not repeat inside every preview rebuild (nor run on the UI thread). One immutable
+    // IImage is decoded per diagram on a worker thread and shared by all Image controls built
+    // around it. Unbounded, like DiagramCache (eviction policy out of scope).
+    private static readonly ConcurrentDictionary<string, IImage> DecodedImages = new();
+
     private static readonly string DiskCacheDir = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Tittle", "diagram-cache");
 
+    private int _fetchCount;
+
+    // Test seam (InternalsVisibleTo Tittle.Tests): how many underlying fetches (disk or network)
+    // actually STARTED — lets tests assert single-flight honesty.
+    internal int FetchCount => _fetchCount;
+
     public AdmonitionBlockHandler(MdEngine engine, Func<string?>? krokiUrlProvider = null)
+        : this(engine, krokiUrlProvider, fetchOverride: null) { }
+
+    // Test seam: overrides the underlying load/fetch so tests can count starts and simulate
+    // failures without network, the real static HttpClient or the real disk cache.
+    internal AdmonitionBlockHandler(
+        MdEngine engine,
+        Func<string?>? krokiUrlProvider,
+        Func<string, string, string, Task<DiagramImage>>? fetchOverride)
     {
         _engine = engine;
         _krokiUrlProvider = krokiUrlProvider;
+        _fetchOverride = fetchOverride;
     }
 
     public Border ProvideControl(string assetPathRoot, string blockName, string lines)
@@ -265,22 +293,37 @@ public sealed class AdmonitionBlockHandler : IContainerBlockHandler
         return border;
     }
 
-    private static async Task RenderDiagramAsync(Border border, string url, string type, string body)
+    private async Task RenderDiagramAsync(Border border, string url, string type, string body)
     {
         var key = $"{url}\n{type}\n{body}";
+        Lazy<Task<DiagramImage>>? flight = null;
         try
         {
-            if (!DiagramCache.TryGetValue(key, out var image))
+            // Insert BEFORE awaiting: a second render of the same key awaits the SAME flight
+            // instead of starting its own fetch. The Lazy makes the start itself race-free.
+            flight = DiagramCache.GetOrAdd(key, _ => new Lazy<Task<DiagramImage>>(() =>
             {
-                image = await LoadOrFetchAsync(url, type, body);
-                DiagramCache[key] = image;
-            }
+                Interlocked.Increment(ref _fetchCount);
+                return _fetchOverride is { } fetch
+                    ? fetch(url, type, body)
+                    : LoadOrFetchAsync(url, type, body);
+            }));
 
-            var control = BuildImageControl(image);
-            await Dispatcher.UIThread.InvokeAsync(() => border.Child = control);
+            var image = await flight.Value.ConfigureAwait(false);
+
+            // Decode once per key, off the UI thread; repeat renders reuse the memoized image.
+            if (!DecodedImages.TryGetValue(key, out var source))
+                source = await Task.Run(() => DecodedImages.GetOrAdd(key, _ => DecodeImage(image)))
+                    .ConfigureAwait(false);
+
+            await Dispatcher.UIThread.InvokeAsync(() => border.Child = BuildImageControl(source));
         }
         catch (Exception ex)
         {
+            // Never cache failures positively: drop OUR entry (value-matched, so a newer retry
+            // inserted meanwhile isn't clobbered) so a later render starts a fresh fetch.
+            if (flight is not null)
+                DiagramCache.TryRemove(KeyValuePair.Create(key, flight));
             await Dispatcher.UIThread.InvokeAsync(() =>
                 border.Child = DiagramError($"Не удалось отрендерить диаграмму: {ex.Message}", body));
         }
@@ -304,20 +347,23 @@ public sealed class AdmonitionBlockHandler : IContainerBlockHandler
         return image;
     }
 
-    private static Control BuildImageControl(DiagramImage image)
+    // Bytes → Avalonia image, safe OFF the UI thread (pure Skia decode/parse): SVG re-parses the
+    // markup, raster decodes pixels. Runs once per cache key; the result is an immutable IImage
+    // that every rebuilt control can share.
+    private static IImage DecodeImage(DiagramImage image)
     {
-        IImage source;
         if (image.IsSvg)
-        {
-            source = new SvgImage { Source = SvgSource.LoadFromSvg(System.Text.Encoding.UTF8.GetString(image.Bytes)) };
-        }
-        else
-        {
-            // Bitmap reads the whole stream in its ctor, so the MemoryStream can be disposed after.
-            using var ms = new MemoryStream(image.Bytes);
-            source = new Bitmap(ms);
-        }
+            return new SvgImage { Source = SvgSource.LoadFromSvg(System.Text.Encoding.UTF8.GetString(image.Bytes)) };
 
+        // Bitmap reads the whole stream in its ctor, so the MemoryStream can be disposed after.
+        using var ms = new MemoryStream(image.Bytes);
+        return new Bitmap(ms);
+    }
+
+    // Assembles ONLY the lightweight control around an already-decoded (shared) image — cheap
+    // enough to run on the UI thread on every rebuild; decoding never repeats.
+    private static Control BuildImageControl(IImage source)
+    {
         // Natural size, but never upscale past the diagram's own width; the preview's horizontal
         // scroll handles anything wider than the reading column. A click opens the lightbox
         // (top-level window) at full size — overlays over AvaloniaEdit don't repaint.
