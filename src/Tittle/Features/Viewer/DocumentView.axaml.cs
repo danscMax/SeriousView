@@ -39,6 +39,8 @@ public partial class DocumentView : UserControl
         _previewReflowTimer.Tick += OnPreviewReflowTick;
         _resizeSettleTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(120) };
         _resizeSettleTimer.Tick += OnResizeSettleTick;
+        _zoomSettleTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(ZoomSettleMilliseconds) };
+        _zoomSettleTimer.Tick += OnZoomSettleTick;
 
         // Configure the existing engine (rather than replace it) so the auto-selected
         // theme-aware FluentAvalonia style stays intact:
@@ -135,6 +137,7 @@ public partial class DocumentView : UserControl
     {
         _previewReflowTimer.Tick -= OnPreviewReflowTick;
         _resizeSettleTimer.Tick -= OnResizeSettleTick;
+        _zoomSettleTimer.Tick -= OnZoomSettleTick;
         Source.TextArea.Caret.PositionChanged -= OnCaretPositionChanged;
         Source.TextArea.SelectionChanged -= OnSelectionChanged;
         PreviewScroll.ScrollChanged -= OnPreviewScrollChanged;
@@ -167,6 +170,7 @@ public partial class DocumentView : UserControl
             _vm.EditorTextProvider = () => Source.Text ?? string.Empty; // M15 save pulls from here
             _vm.EditorActions = new AvaloniaEditorActions(Source);       // command-intent backbone surface
             ApplySourceEditMode(); // read-only while a display transform (pretty-JSON/typography) is on
+            WirePreviewZoomCoalescing(); // zoom-burst coalescing: track the shared Editor + open-layout scale
             _vm.NavigationRequested += OnNavigationRequested;
             _vm.GoToLineRequested += OnGoToLineRequested;
             _vm.SearchUpdated += OnSearchUpdated;
@@ -223,6 +227,9 @@ public partial class DocumentView : UserControl
             // when it next activates, not while hidden.
             if (_vm?.IsActive == true)
                 SyncPositionAcrossModes();
+            // A zoom that arrived while the preview was hidden applies on this transition (after
+            // the sync, which reads geometry consistent with its pre-zoom caches; layout is deferred).
+            ApplyPendingZoomIfPreviewVisible();
         }
         else if (e.PropertyName == nameof(DocumentTabViewModel.IsSourceTransformActive))
         {
@@ -277,6 +284,7 @@ public partial class DocumentView : UserControl
         _taskGlyphs = null; // new content rebuilds the glyph cache on the next reflow/click
         _resizeSettleTimer.Stop();
         UnfreezePreviewWidth(); // new content must start from auto width, not a stale pin
+        UnwirePreviewZoomCoalescing(); // drop the shared-Editor subscription + any pending zoom burst
         if (_vm is not null)
         {
             _vm.EditorTextProvider = null;

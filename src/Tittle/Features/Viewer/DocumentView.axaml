@@ -367,9 +367,12 @@
                clip horizontally. The LTC carries the reading-width centering (a ScrollViewer would
                swallow it on the direct child); MaxWidth stays on the MarkdownScrollViewer to cap the
                LOGICAL column width, which the LTC then scales. -->
+          <!-- The transform itself is applied from code-behind ONLY (DocumentView.ZoomCoalesce.cs):
+               zoom bursts coalesce onto a trailing settle timer so N rapid steps cost ONE full
+               re-measure instead of one per step — do NOT re-add a LayoutTransform binding here
+               (it would apply every step instantly, defeating the coalescing). -->
           <LayoutTransformControl x:Name="PreviewZoom"
-              HorizontalAlignment="{Binding Layout.ReadingWidth, FallbackValue=Full, Converter={x:Static sh:ReadingWidthConverter.Instance}, ConverterParameter=align}"
-              LayoutTransform="{Binding Editor.PreviewScale, FallbackValue=1.0, Converter={x:Static sh:ScaleTransformConverter.Instance}}">
+              HorizontalAlignment="{Binding Layout.ReadingWidth, FallbackValue=Full, Converter={x:Static sh:ReadingWidthConverter.Instance}, ConverterParameter=align}">
             <md:MarkdownScrollViewer x:Name="Preview"
                                      Markdown="{Binding PreviewMarkdown}"
                                      AssetPathRoot="{Binding AssetPathRoot}"
