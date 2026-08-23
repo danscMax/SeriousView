@@ -690,4 +690,46 @@ public class MarkdownPreprocessorTests
         var md = "```\n- not a bullet\n```";
         Assert.Contains("- not a bullet", MarkdownPreprocessor.Transform(md));
     }
+
+    // --- List-marker pass: anchored regex + per-line cap (plan 011) ---
+
+    [Fact]
+    public void Transform_TabIndentedBullet_ConvertsKeepingTabIndent()
+        => Assert.Equal("\t* x", MarkdownPreprocessor.Transform("\t- x"));
+
+    [Fact]
+    public void Transform_MixedSpaceAndTabIndent_ConvertsKeepingIndent()
+    // Also proves the `$1*` substitution: group 1 (indent) followed by a LITERAL `*`.
+        => Assert.Equal(" \t * x", MarkdownPreprocessor.Transform(" \t - x"));
+
+    [Fact]
+    public void Transform_PlusBulletFollowedByTab_Converts()
+        => Assert.Equal("*\titem", MarkdownPreprocessor.Transform("+\titem"));
+
+    [Fact]
+    public void Transform_SpacedDashes_ThematicBreak_Unchanged()
+        => Assert.Equal("- - -", MarkdownPreprocessor.Transform("- - -"));
+
+    [Fact]
+    public void Transform_DashBulletInTildeFencedCode_IsUnchanged()
+        => Assert.Contains("- not a bullet", MarkdownPreprocessor.Transform("~~~\n- not a bullet\n~~~"));
+
+    [Fact]
+    public void Transform_OverCapListLine_IsSkippedNotNormalized()
+    {
+        // Over the inline-pass cap the whole line passes through untouched — documented trade-off
+        // (display-only transform), consistent with the sibling inline passes.
+        var line = "- " + new string('a', MarkdownPreprocessor.MaxInlineLine);
+        Assert.True(line.Length > MarkdownPreprocessor.MaxInlineLine);
+        Assert.Equal(line, MarkdownPreprocessor.Transform(line));
+    }
+
+    [Fact]
+    public void Transform_LongContentLineUnderCap_LeadingMarkerStillConverted()
+    {
+        var padding = new string('a', MarkdownPreprocessor.MaxInlineLine - 4); // total length = cap - 2
+        var line = "- " + padding;
+        Assert.True(line.Length <= MarkdownPreprocessor.MaxInlineLine);
+        Assert.Equal("* " + padding, MarkdownPreprocessor.Transform(line));
+    }
 }

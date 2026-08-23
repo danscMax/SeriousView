@@ -402,14 +402,16 @@ public static partial class MarkdownPreprocessor
 
     // Unordered list marker `-`/`+` → `*` (display-only). Only the leading marker char of a list line
     // (line-start + indent, then the marker, then a space) is touched; a `-`/`*`/`_` thematic break
-    // (incl. spaced `- - -`) and fenced code are skipped, and mid-line dashes never match.
+    // (incl. spaced `- - -`) and fenced code are skipped, and mid-line dashes never match. Over-cap
+    // lines skip the pass entirely — a padded list line longer than the cap simply isn't normalized
+    // (display-only transform; consistent with the sibling inline passes).
     private static void NormalizeListMarkersInPlace(List<string> lines, MarkdownCodeRegions regions)
     {
         for (var i = 0; i < lines.Count; i++)
         {
-            if (regions.IsFencedLine(i) || ThematicBreak().IsMatch(lines[i]))
+            if (regions.IsFencedLine(i) || ThematicBreak().IsMatch(lines[i]) || lines[i].Length > MaxInlineLineLength)
                 continue;
-            lines[i] = UnorderedListMarker().Replace(lines[i], "*", 1);
+            lines[i] = UnorderedListMarker().Replace(lines[i], "$1*", 1);
         }
     }
 
@@ -896,9 +898,14 @@ public static partial class MarkdownPreprocessor
     [GeneratedRegex(@"https?://[^\s<>""'()]+")]
     private static partial Regex BareUrl();
 
-    // The leading unordered-list marker (`-` or `+`) only: at the first non-space position, followed by
-    // a space (so mid-line dashes and emphasis `*` never match). .NET allows the variable lookbehind.
-    [GeneratedRegex(@"(?<=^[ \t]*)[-+](?=[ \t])")]
+    // The leading unordered-list marker (`-` or `+`) only: anchored at line start so the match is
+    // linear even on very long whitespace-padded lines (the old variable-length lookbehind scanned
+    // backward through padding runs, degrading toward quadratic). Capture 1 keeps the indent and the
+    // `$1*` substitution re-emits it before the literal `*`. Equivalent to the old lookbehind on ALL
+    // inputs: leftmost-first matching means the lookbehind could only ever match at the FIRST non-space
+    // position of the line — exactly the one position the `^`-anchored form can match — and
+    // Replace(..., 1) takes a single replacement either way.
+    [GeneratedRegex(@"^([ \t]*)[-+](?=[ \t])")]
     private static partial Regex UnorderedListMarker();
 
     // A thematic break: 3+ of the same `-`/`*`/`_`, optionally space-separated, on their own line.
