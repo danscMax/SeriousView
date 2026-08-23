@@ -132,11 +132,17 @@ foreach ($rid in $Rids) {
     & (Join-Path $root 'build.ps1') -Rid $rid -OutDir (Join-Path 'dist' $rid) `
         -NoOpen -NoReadyToRun:$NoReadyToRun -NoTrim:$NoTrim -Compress:$Compress `
         -PublishTimeoutSeconds $PublishTimeoutSeconds
-    if ($LASTEXITCODE -ne 0) {
+
+    # $LASTEXITCODE only tracks NATIVE commands -- an invoked .ps1 child leaves it
+    # STALE here, so a real failure could march past unnoticed. $? flips False when
+    # the child exits nonzero; require BOTH signals healthy before continuing.
+    $scriptOk = $?
+    $ridExit  = $LASTEXITCODE   # native tail of the child, if any
+    if (-not $scriptOk -or $ridExit -ne 0) {
         Write-Host ''
         Write-Host "  Portable build for $rid failed -- aborting." -ForegroundColor Red
         Show-Notification -Title 'Tittle Build FAILED' -Body "Portable $rid failed. Check the terminal." -IsError
-        exit $LASTEXITCODE
+        exit $(if ($ridExit) { $ridExit } else { 1 })
     }
 }
 

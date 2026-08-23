@@ -87,9 +87,7 @@ Write-Info 'Publishing (first run restores the runtime pack -- can take a minute
 
 # Invoke publish as a tracked child process. A direct PowerShell invocation cannot
 # be timed out safely: if crossgen2 or the linker stalls, the shell remains blocked
-# and a later retry leaves orphaned dotnet workers behind. Redirecting to temporary
-# files keeps the console responsive without risking a pipe deadlock; diagnostics are
-# replayed after publish (or immediately when it fails/times out).
+# and a later retry leaves orphaned dotnet workers behind.
 function ConvertTo-ProcessArgument {
     param([Parameter(Mandatory)][string]$Value)
     if ($Value -match '[\s"]') {
@@ -113,51 +111,65 @@ $dotnetCommand = Get-Command dotnet -CommandType Application -ErrorAction Stop |
 $dotnetPath = if ($dotnetCommand.Path) { $dotnetCommand.Path } else { $dotnetCommand.Source }
 $argumentLine = ((@('publish', $project) + $publishArgs) |
     ForEach-Object { ConvertTo-ProcessArgument $_ }) -join ' '
-$stdoutLog = [System.IO.Path]::GetTempFileName()
-$stderrLog = [System.IO.Path]::GetTempFileName()
-$publishProcess = $null
+# Raw System.Diagnostics.Process instead of Start-Process -PassThru: under Windows
+# PowerShell 5.1 the PassThru object intermittently reports a NULL ExitCode even after
+# a clean exit ($null -ne 0 then trips BUILD FAILED on a SUCCESSFUL publish, and
+# `exit $publishExitCode` degrades to `exit $null` == exit 0, masking real aborts).
+# The raw API yields a trustworthy Int32 once WaitForExit() completes.
+$psi = [System.Diagnostics.ProcessStartInfo]::new()
+$psi.FileName               = $dotnetPath
+$psi.Arguments              = $argumentLine
+$psi.UseShellExecute        = $false
+$psi.RedirectStandardOutput = $true
+$psi.RedirectStandardError  = $true
+$psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
+$psi.StandardErrorEncoding  = [System.Text.Encoding]::UTF8
+$publishProcess = [System.Diagnostics.Process]::Start($psi)
+
+# Drain pipes on background tasks: a full pipe would deadlock the child; ReadToEndAsync
+# collects the diagnostics without interleaving the heartbeat loop.
+$stdoutTask = $publishProcess.StandardOutput.ReadToEndAsync()
+$stderrTask = $publishProcess.StandardError.ReadToEndAsync()
+
 $publishTimedOut = $false
 $publishExitCode = 1
 
-try {
-    $publishProcess = Start-Process -FilePath $dotnetPath -ArgumentList $argumentLine `
-        -RedirectStandardOutput $stdoutLog -RedirectStandardError $stderrLog -PassThru
-    $publishDeadline = (Get-Date).AddSeconds($PublishTimeoutSeconds)
-    $lastHeartbeat = Get-Date
+$publishDeadline = (Get-Date).AddSeconds($PublishTimeoutSeconds)
+$lastHeartbeat = Get-Date
 
-    while (-not $publishProcess.HasExited) {
-        if ((Get-Date) -ge $publishDeadline) {
-            $publishTimedOut = $true
-            Write-Warn "Publish exceeded the $PublishTimeoutSeconds-second limit; stopping the process tree..."
-            Stop-ProcessTree -ProcessId $publishProcess.Id
-            break
-        }
-
-        if (((Get-Date) - $lastHeartbeat).TotalSeconds -ge 30) {
-            $elapsedMinutes = '{0:0.0}' -f ((Get-Date) - $start).TotalMinutes
-            Write-Info "Still publishing... ${elapsedMinutes} min elapsed"
-            $lastHeartbeat = Get-Date
-        }
-        Start-Sleep -Milliseconds 500
-        $publishProcess.Refresh()
+while (-not $publishProcess.HasExited) {
+    if ((Get-Date) -ge $publishDeadline) {
+        $publishTimedOut = $true
+        Write-Warn "Publish exceeded the $PublishTimeoutSeconds-second limit; stopping the process tree..."
+        Stop-ProcessTree -ProcessId $publishProcess.Id
+        break
     }
 
-    if (-not $publishTimedOut) {
-        $publishProcess.WaitForExit()
-        $publishProcess.Refresh()
-        $publishExitCode = $publishProcess.ExitCode
+    if (((Get-Date) - $lastHeartbeat).TotalSeconds -ge 30) {
+        $elapsedMinutes = '{0:0.0}' -f ((Get-Date) - $start).TotalMinutes
+        Write-Info "Still publishing... ${elapsedMinutes} min elapsed"
+        $lastHeartbeat = Get-Date
     }
+    Start-Sleep -Milliseconds 500
 }
-finally {
-    if (Test-Path -LiteralPath $stdoutLog) {
-        Get-Content -LiteralPath $stdoutLog -Encoding UTF8 -ErrorAction SilentlyContinue |
-            ForEach-Object { Write-Host $_ }
-    }
-    if (Test-Path -LiteralPath $stderrLog) {
-        Get-Content -LiteralPath $stderrLog -Encoding UTF8 -ErrorAction SilentlyContinue |
-            ForEach-Object { Write-Host $_ -ForegroundColor DarkYellow }
-    }
-    Remove-Item -LiteralPath $stdoutLog, $stderrLog -Force -ErrorAction SilentlyContinue
+
+$publishProcess.WaitForExit()
+
+# Raw Process API after WaitForExit(): ExitCode is a real Int32 (Start-Process -PassThru
+# intermittently left it $null, which tripped the failure branch and exited 0 via `exit $null`).
+$stdoutLog_text = $stdoutTask.Result
+$stderrLog_text = $stderrTask.Result
+$publishExitCode = $publishProcess.ExitCode
+
+# Fail closed: never let a null exit code masquerade as success.
+if ($null -eq $publishExitCode) { $publishExitCode = 1 }
+
+# Replay captured diagnostics -- same order/colors as before (stdout plain, stderr dark yellow).
+if ($stdoutLog_text) {
+    foreach ($line in ($stdoutLog_text.TrimEnd("`r", "`n") -split "`r?`n")) { Write-Host $line }
+}
+if ($stderrLog_text) {
+    foreach ($line in ($stderrLog_text.TrimEnd("`r", "`n") -split "`r?`n")) { Write-Host $line -ForegroundColor DarkYellow }
 }
 
 if ($publishTimedOut) {
