@@ -88,6 +88,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     /// <summary>The pending reload, for tests to await (same seam as <see cref="ErrorBarDismissal"/>).</summary>
     internal Task? PendingReload { get; private set; }
 
+    /// <summary>The pending session restore, for tests to await (same seam as <see cref="PendingReload"/>).</summary>
+    internal Task? PendingRestore { get; private set; }
+
     /// <summary>Pause before the second attempt when the first load hits a transient
     /// IOException (the editor may still hold the file); tests zero it.</summary>
     internal TimeSpan ReloadRetryDelay { get; set; } = TimeSpan.FromMilliseconds(150);
@@ -104,6 +107,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         => result.Text.Length > WarmupOffloadThreshold
             ? Task.Run(() => DocumentTabViewModel.FromLoad(result, path))
             : Task.FromResult(DocumentTabViewModel.FromLoad(result, path));
+
+    // Session restore derives EVERY tab on a worker regardless of size: at startup N files stack their
+    // full immutable derivation on the UI thread otherwise, delaying first paint/first input per tab.
+    // Interactive opens keep BuildTabAsync's sync-for-small-files contract (tests + drag-drop rely on it).
+    private static Task<DocumentTabViewModel> BuildTabOffThreadAsync(FileLoadResult result, string path)
+        => Task.Run(() => DocumentTabViewModel.FromLoad(result, path));
 
     /// <summary>Export the active markdown tab as one self-contained HTML file (M13). The
     /// theme follows the app (Auto reads as dark — our default); wiki links resolve against
@@ -841,7 +850,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         if (args.Length > 0)
             _ = OpenPathAsync(args[0]);
         else if (_settings.Current.Session is { OpenFiles.Count: > 0 } session)
-            _ = RestoreSessionAsync(session);
+            PendingRestore = RestoreSessionAsync(session);
         // Otherwise no tab is opened — the welcome view is shown while HasTabs is false.
     }
 
@@ -1218,7 +1227,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             try
             {
                 var result = await _fileReader.LoadAsync(path);
-                AddTab(await BuildTabAsync(result, path));
+                AddTab(await BuildTabOffThreadAsync(result, path));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

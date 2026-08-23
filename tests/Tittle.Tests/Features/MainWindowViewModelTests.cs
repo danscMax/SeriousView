@@ -565,19 +565,20 @@ public class MainWindowViewModelTests
     }
 
     [AvaloniaFact]
-    public void Startup_WithSession_RestoresTabs_AndSelectsSavedActive()
+    public async Task Startup_WithSession_RestoresTabs_AndSelectsSavedActive()
     {
         var files = new Dictionary<string, string> { ["/a.md"] = "# A", ["/b.md"] = "# B" };
         var settings = Holder(new AppSettings { Session = new SessionState(new() { "/a.md", "/b.md" }, 1) });
 
         var vm = CreateVm(fileReader: new FakeFileReader(files), settings: settings);
+        await vm.PendingRestore!; // restore derives tabs off-thread now
 
         Assert.Equal(2, vm.Tabs.Count);
         Assert.Equal("b.md", vm.SelectedTab!.Header); // ActiveIndex 1
     }
 
     [AvaloniaFact]
-    public void Startup_Session_SkipsMissingFiles()
+    public async Task Startup_Session_SkipsMissingFiles()
     {
         var files = new Dictionary<string, string> { ["/a.md"] = "# A", ["/b.md"] = "# B" };
         var settings = Holder(new AppSettings
@@ -586,6 +587,7 @@ public class MainWindowViewModelTests
         });
 
         var vm = CreateVm(fileReader: new FakeFileReader(files), settings: settings);
+        await vm.PendingRestore!;
 
         Assert.Equal(2, vm.Tabs.Count); // the missing file is silently skipped
         Assert.Equal("a.md", vm.SelectedTab!.Header);
@@ -774,7 +776,7 @@ public class MainWindowViewModelTests
     }
 
     [AvaloniaFact]
-    public void Startup_Session_MissingFiles_SurfaceOneSummaryError()
+    public async Task Startup_Session_MissingFiles_SurfaceOneSummaryError()
     {
         var files = new Dictionary<string, string> { ["/a.md"] = "# A" };
         var settings = Holder(new AppSettings
@@ -783,11 +785,70 @@ public class MainWindowViewModelTests
         });
 
         var vm = CreateVm(fileReader: new FakeFileReader(files), settings: settings);
+        await vm.PendingRestore!;
 
         Assert.Single(vm.Tabs); // restore still skips the missing tabs...
         Assert.True(vm.IsErrorBarOpen); // ...but no longer silently
         Assert.Contains("gone.md", vm.ErrorBarMessage);
         Assert.Contains("lost.md", vm.ErrorBarMessage);
+    }
+
+    [AvaloniaFact]
+    public async Task RestoreSession_ThreeSmallFiles_KeepFileOrder_AndSavedActiveIndex()
+    {
+        // Small files derive off-thread too now (plan 008): order must still match OpenFiles
+        // and the saved ActiveIndex must select the same tab after the async restore.
+        var files = new Dictionary<string, string>
+        {
+            ["/a.md"] = "# A",
+            ["/b.md"] = "# B",
+            ["/c.md"] = "# C",
+        };
+        var settings = Holder(new AppSettings
+        {
+            Session = new SessionState(new() { "/a.md", "/b.md", "/c.md" }, 2),
+        });
+
+        var vm = CreateVm(fileReader: new FakeFileReader(files), settings: settings);
+        await vm.PendingRestore!;
+
+        Assert.Equal(3, vm.Tabs.Count);
+        Assert.Equal("a.md", vm.Tabs[0].Header);
+        Assert.Equal("b.md", vm.Tabs[1].Header);
+        Assert.Equal("c.md", vm.Tabs[2].Header);
+        Assert.Same(vm.Tabs[2], vm.SelectedTab); // ActiveIndex honored
+    }
+
+    [AvaloniaFact]
+    public async Task RestoreSession_OneMissingFile_AggregatesOneError_TwoTabsRestored()
+    {
+        var files = new Dictionary<string, string> { ["/a.md"] = "# A", ["/b.md"] = "# B" };
+        var settings = Holder(new AppSettings
+        {
+            Session = new SessionState(new() { "/a.md", "/gone.md", "/b.md" }, 0),
+        });
+
+        var vm = CreateVm(fileReader: new FakeFileReader(files), settings: settings);
+        await vm.PendingRestore!;
+
+        Assert.Equal(2, vm.Tabs.Count);
+        Assert.True(vm.IsErrorBarOpen);
+        Assert.Equal("Не удалось открыть файл из прошлой сессии: gone.md", vm.ErrorBarMessage);
+    }
+
+    [AvaloniaFact]
+    public void RestoreSession_EmptyOpenList_ShowsWelcome_NoError_NothingPending()
+    {
+        // An empty OpenFiles list never starts a restore (the ctor guard requires >0),
+        // so PendingRestore stays null — welcome state, no error bar, nothing to await.
+        var settings = Holder(new AppSettings { Session = new SessionState([], 0) });
+
+        var vm = CreateVm(fileReader: new FakeFileReader("x"), settings: settings);
+
+        Assert.Empty(vm.Tabs);
+        Assert.True(vm.IsWelcomeVisible);
+        Assert.False(vm.IsErrorBarOpen);
+        Assert.Null(vm.PendingRestore);
     }
 
     // --- M14: external-change watching (C1 — watch lifecycle + the dirty dot) ---
