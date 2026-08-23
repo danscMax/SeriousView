@@ -44,16 +44,17 @@ public static partial class MarkdownPreprocessor
         // can mistake its --- fences for thematic breaks or transform inside the block.
         lines = ExtractFrontMatter(lines);
 
-        // Diagram fences (M12, opt-in) → ::: diagram containers. Runs before the code-region scan
-        // so the consumed fences don't leave their language as stray code; the bodies travel
-        // percent-encoded (the ::: math/frontmatter transport).
-        if (diagramsEnabled)
-            lines = ConvertDiagramFences(lines);
-
-        // Chart fences (```chart / ```chart:TYPE) → ::: chart containers, rendered natively by LiveCharts2.
-        // NOT gated (local render, no network — unlike diagrams). Before the code-region scan so the fence
-        // is consumed and never falls through to a code block.
-        lines = ConvertChartFences(lines);
+        // Diagram fences (M12, opt-in) → ::: diagram containers; chart fences (```chart /
+        // ```chart:TYPE) → ::: chart containers rendered natively by LiveCharts2 (NOT gated — local
+        // render, no network). ONE shared fence walk decides per closed fence: the two passes were
+        // structurally identical back-to-back walks over disjoint languages, so folding them halves
+        // the work when diagrams are on. Runs before the code-region scan so the consumed fences
+        // don't leave their language as stray code; the bodies travel percent-encoded (the
+        // ::: math/frontmatter transport).
+        lines = WalkDiagramFences(
+            lines,
+            diagramsEnabled ? RenderDiagramContainer : null,
+            RenderChartContainer);
 
         // Inline passes run first, in place (line count preserved → the fence bitmap stays
         // valid) and before admonition re-wrapping so callout bodies get them too. Wiki before
@@ -218,27 +219,41 @@ public static partial class MarkdownPreprocessor
         return result;
     }
 
-    // Diagram fences: a ```<lang> … ``` block whose language Kroki can render → a ::: diagram
+    // Diagram fences (M12): a ```<lang> … ``` block whose language Kroki can render → a ::: diagram
     // container. The body + Kroki type travel as ONE percent-encoded line ("type|body"), the same
-    // opaque-transport contract as ::: math. Detects fences itself (own state walk) since it runs
-    // before the shared code-region scan. Unknown languages and unclosed fences pass through.
-    private static List<string> ConvertDiagramFences(List<string> lines)
-        // Preview: a diagram fence → a ::: diagram container ("type|body", percent-encoded — the
-        // opaque ::: transport the viewer's handler decodes and renders via Kroki).
-        => WalkDiagramFences(lines, (krokiType, body) => new[]
+    // opaque-transport contract as ::: math.
+    private static IEnumerable<string> RenderDiagramContainer(string krokiType, string body)
+        => new[]
         {
             "::: diagram",
             Uri.EscapeDataString(krokiType) + "|" + Uri.EscapeDataString(body),
             ":::",
-        });
+        };
 
-    /// <summary>Walk fenced blocks: a diagram fence (a language Kroki renders) is replaced by
-    /// <paramref name="renderDiagram"/>'s lines (blank-line padded so the engine parses it as its
-    /// own block), receiving the Kroki type + the joined body; EVERY other fence — a bare ```, a
-    /// ```python, or a ```mermaid example shown inside an outer fence — is copied verbatim, so a
-    /// non-diagram fence is never peeked into. Shared by the preview pass and the HTML export.</summary>
+    // Chart fences: the ::: chart container ("typeHint|body", both percent-encoded — the same opaque
+    // transport). The joined body is trimmed (the container parser dislikes padded edges); typeHint is
+    // the text after "chart:" (empty for a bare ```chart).
+    private static IEnumerable<string> RenderChartContainer(string typeHint, string body)
+        => new[]
+        {
+            "::: chart",
+            Uri.EscapeDataString(typeHint) + "|" + Uri.EscapeDataString(body.Trim()),
+            ":::",
+        };
+
+    /// <summary>Walk fenced blocks: a CHART-shaped fence ("chart" / "chart:*", when
+    /// <paramref name="renderChart"/> is given) or a DIAGRAM fence (a language Kroki renders, when
+    /// <paramref name="renderDiagram"/> is given) is replaced by its renderer's lines (blank-line
+    /// padded so the engine parses it as its own block), receiving the type hint / Kroki type plus the
+    /// joined body; EVERY other fence — a bare ```, a ```python, or a ```mermaid example shown inside
+    /// an outer fence — is copied verbatim, so a non-diagram fence is never peeked into. A null
+    /// renderer disables that family entirely (the HTML export passes only the diagram renderer; the
+    /// diagrams-off preview passes only the chart renderer). Shared by the preview pass and the HTML
+    /// export.</summary>
     internal static List<string> WalkDiagramFences(
-        List<string> lines, Func<string, string, IEnumerable<string>> renderDiagram)
+        List<string> lines,
+        Func<string, string, IEnumerable<string>>? renderDiagram,
+        Func<string, string, IEnumerable<string>>? renderChart = null)
     {
         var result = new List<string>(lines.Count);
 
@@ -277,7 +292,18 @@ public static partial class MarkdownPreprocessor
                 continue;
             }
 
-            if (DiagramTypes.ToKrokiType(MarkdownCodeRegions.FenceLang(fence.Info)) is { } krokiType)
+            var info = fence.Info.Trim();
+            var hasType = info.StartsWith("chart:", StringComparison.OrdinalIgnoreCase);
+            var isChart = renderChart is not null
+                && (hasType || info.Equals("chart", StringComparison.OrdinalIgnoreCase));
+            if (isChart)
+            {
+                result.Add(string.Empty);
+                result.AddRange(renderChart!(hasType ? info["chart:".Length..] : "", string.Join("\n", body)));
+                result.Add(string.Empty);
+            }
+            else if (renderDiagram is not null
+                && DiagramTypes.ToKrokiType(MarkdownCodeRegions.FenceLang(fence.Info)) is { } krokiType)
             {
                 result.Add(string.Empty);
                 result.AddRange(renderDiagram(krokiType, string.Join("\n", body)));
@@ -298,72 +324,34 @@ public static partial class MarkdownPreprocessor
 
     // Chart fences: ```chart or ```chart:TYPE with a JSON/CSV body → a ::: chart container ("typeHint|body",
     // both percent-encoded — the opaque ::: transport). Rendered natively by LiveCharts2, so unlike diagrams
-    // this is NOT gated (no network). Own fence walk (runs before the shared code-region scan); every other
-    // fence is copied verbatim so a ```chart shown INSIDE an outer fence isn't consumed. The fence info is
-    // matched directly (FenceLang rejects the ':' in "chart:line"); "charter" etc. are excluded by the exact
-    // "chart" / "chart:" test.
-    private static List<string> ConvertChartFences(List<string> lines)
+    // this is NOT gated (no network). Shares the fence walk with diagrams; every other fence is copied
+    // verbatim so a ```chart shown INSIDE an outer fence isn't consumed. The fence info is matched directly
+    // (FenceLang rejects the ':' in "chart:line"); "charter" etc. are excluded by the exact "chart" /
+    // "chart:" test.
+    internal static List<string> ConvertChartFences(List<string> lines)
     {
-        var result = new List<string>(lines.Count);
-
-        // Total lines the closer-scans may traverse across the whole document. A real doc never
-        // approaches this (each closed fence scans only its own span); it caps the worst case (many
-        // unclosed openers each scanning far) at O(n) so a crafted file can't freeze the synchronous
-        // preview getter.
-        var scanBudget = lines.Count * 4 + 4096;
-
-        for (var i = 0; i < lines.Count; i++)
+        // Fast bail: no line opens a chart-shaped fence → nothing to convert; return the SAME reference
+        // so chart-free documents skip the full walk + list rebuild entirely (mirrors ConvertHtmlBlocks'
+        // close-tag bail). Fence-opener matching plus the exact "chart"/"chart:" info test — never a raw
+        // substring search for "chart", so prose or fenced examples merely CONTAINING the word don't
+        // enable the pass.
+        var hasChart = false;
+        foreach (var l in lines)
         {
-            if (!MarkdownCodeRegions.TryMatchFenceOpen(lines[i], out var fence))
-            {
-                result.Add(lines[i]);
+            if (!MarkdownCodeRegions.TryMatchFenceOpen(l, out var probe))
                 continue;
-            }
-
-            var body = new List<string>();
-            var j = i + 1;
-            var closed = false;
-            for (; j < lines.Count; j++)
+            var probeInfo = probe.Info.Trim();
+            if (probeInfo.Equals("chart", StringComparison.OrdinalIgnoreCase)
+                || probeInfo.StartsWith("chart:", StringComparison.OrdinalIgnoreCase))
             {
-                if (--scanBudget < 0)
-                    break; // budget exhausted (pathological input) → treated as unclosed below
-                if (MarkdownCodeRegions.IsFenceClose(lines[j], fence.Char, fence.Length))
-                {
-                    closed = true;
-                    break;
-                }
-                body.Add(lines[j]);
+                hasChart = true;
+                break;
             }
-
-            if (!closed)
-            {
-                result.Add(lines[i]); // unclosed opener → leave it, keep scanning
-                continue;
-            }
-
-            var info = fence.Info.Trim();
-            var hasType = info.StartsWith("chart:", StringComparison.OrdinalIgnoreCase);
-            var isChart = hasType || info.Equals("chart", StringComparison.OrdinalIgnoreCase);
-            if (isChart)
-            {
-                var typeHint = hasType ? info["chart:".Length..] : "";
-                result.Add(string.Empty);
-                result.Add("::: chart");
-                result.Add(Uri.EscapeDataString(typeHint) + "|" + Uri.EscapeDataString(string.Join("\n", body).Trim()));
-                result.Add(":::");
-                result.Add(string.Empty);
-            }
-            else
-            {
-                result.Add(lines[i]);   // opener
-                result.AddRange(body);
-                result.Add(lines[j]);   // closer
-            }
-
-            i = j; // resume after the closing fence
         }
+        if (!hasChart)
+            return lines;
 
-        return result;
+        return WalkDiagramFences(lines, null, RenderChartContainer);
     }
 
     private static void AppendMathContainer(List<string> result, IReadOnlyList<string> body)
