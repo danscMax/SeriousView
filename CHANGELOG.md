@@ -4,6 +4,30 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] – 2026-08-23
+
+### Added
+- macOS builds: the release matrix now produces unsigned `osx-arm64` + `osx-x64`
+  binaries alongside Windows/Linux (Gatekeeper: right-click ▸ Open).
+
+### Changed — performance pass (startup + runtime)
+- Settings persistence debounced (slider bursts write once, not per tick).
+- Preview zoom bursts coalesce into one trailing re-layout instead of one per step.
+- Session restore derives every tab off the UI thread (faster first paint).
+- Startup update check moved past first frame; UpdateManager built lazily.
+- Chart-free documents skip chart/diagram fence walks entirely; the shared walk
+  replaces two back-to-back passes.
+- Diagram cache: single-flight fetches (no duplicate Kroki POSTs) + decoded images
+  memoized off the UI thread; CSV parsing stops materializing rows past the cap;
+  navigation history depth capped.
+
+### Fixed
+- O(n²)-shaped rescans bounded in math/diagram/chart block walks (crafted input
+  could freeze the synchronous preview getter for seconds).
+- List-marker normalization regex anchored (linear on long padded lines).
+- Build scripts report publish failures truthfully (a null ExitCode could fake
+  BUILD FAILED on success — and mask real aborts as ALL DONE).
+
 ## [Unreleased]
 
 ### Added — M15 "In-place editing"
