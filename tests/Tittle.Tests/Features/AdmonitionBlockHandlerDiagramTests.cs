@@ -89,7 +89,11 @@ public class AdmonitionBlockHandlerDiagramTests
 
         Assert.Equal(1, fake.Calls);          // the real fetch ran once…
         Assert.Equal(1, handler.FetchCount);  // …and the seam agrees with it
-        Assert.Same(((Image)first.Child).Source!, ((Image)second.Child).Source!);
+        var firstImage = Assert.IsType<Image>(first.Child);
+        var secondImage = Assert.IsType<Image>(second.Child);
+        Assert.NotNull(firstImage.Source);
+        Assert.NotNull(secondImage.Source);
+        Assert.Same(firstImage.Source, secondImage.Source);
     }
 
     [AvaloniaFact]
@@ -124,7 +128,9 @@ public class AdmonitionBlockHandlerDiagramTests
 
         var first = handler.ProvideControl("", "diagram", encoded);
         PumpUntil(first, () => first.Child is Image);
-        var decoded = ((Image)first.Child).Source!;
+        var firstImage = Assert.IsType<Image>(first.Child);
+        Assert.NotNull(firstImage.Source);
+        var decoded = firstImage.Source;
 
         // Two more renders (every preview reflow rebuilds controls) must not re-decode.
         var second = handler.ProvideControl("", "diagram", encoded);
@@ -132,8 +138,12 @@ public class AdmonitionBlockHandlerDiagramTests
         var third = handler.ProvideControl("", "diagram", encoded);
         PumpUntil(third, () => third.Child is Image);
 
-        Assert.Same(decoded, ((Image)second.Child).Source);
-        Assert.Same(decoded, ((Image)third.Child).Source);
+        var secondImage = Assert.IsType<Image>(second.Child);
+        var thirdImage = Assert.IsType<Image>(third.Child);
+        Assert.NotNull(secondImage.Source);
+        Assert.NotNull(thirdImage.Source);
+        Assert.Same(decoded, secondImage.Source);
+        Assert.Same(decoded, thirdImage.Source);
         Assert.Equal(1, handler.FetchCount);
     }
 
@@ -157,6 +167,10 @@ public class AdmonitionBlockHandlerDiagramTests
         PumpUntil(b, () => b.Child is Image);
 
         Assert.Equal(1, fake.Calls);
-        Assert.Same(((Image)a.Child).Source!, ((Image)b.Child).Source!);
+        var aImage = Assert.IsType<Image>(a.Child);
+        var bImage = Assert.IsType<Image>(b.Child);
+        Assert.NotNull(aImage.Source);
+        Assert.NotNull(bImage.Source);
+        Assert.Same(aImage.Source, bImage.Source);
     }
 }
