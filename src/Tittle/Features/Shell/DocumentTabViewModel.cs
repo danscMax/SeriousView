@@ -381,26 +381,22 @@ public partial class DocumentTabViewModel : ViewModelBase, IDisposable
             {
                 _diagrams.PropertyChanged += OnDiagramsChanged;
                 // FromLoad warms PreviewMarkdown with diagrams OFF (Diagrams isn't assigned yet);
-                // if they're actually on, that warm is stale — drop it so the next read recomputes.
-                if (_diagrams.Enabled && _previewMarkdown is not null)
-                {
-                    _previewMarkdown = null;
-                    OnPropertyChanged(nameof(PreviewMarkdown));
-                }
+                // if they're actually on, that warm is stale — invalidate so the next read recomputes
+                // (immediately for an active tab, lazily for an inactive one).
+                if (_diagrams.Enabled)
+                    InvalidatePreviewMarkdown();
             }
         }
     }
 
     private void OnDiagramsChanged(object? sender, PropertyChangedEventArgs e)
     {
-        // Only Enabled changes the markdown string (fences ↔ ::: diagram containers) → drop the
-        // cache and re-emit so the preview rebuilds live. A URL change leaves the string identical
-        // (the handler reads the URL at render time), so it applies on the next reload/reopen.
+        // Only Enabled changes the markdown string (fences ↔ ::: diagram containers) → invalidate
+        // so the preview rebuilds live (immediate for an active tab, lazy-dirty for an inactive
+        // one). A URL change leaves the string identical (the handler reads the URL at render
+        // time), so it applies on the next reload/reopen.
         if (e.PropertyName == nameof(DiagramOptions.Enabled))
-        {
-            _previewMarkdown = null;
-            OnPropertyChanged(nameof(PreviewMarkdown));
-        }
+            InvalidatePreviewMarkdown();
     }
 
     /// <summary>Back-reference to the owning shell, assigned when the tab is added (same pattern as
@@ -778,24 +774,57 @@ public partial class DocumentTabViewModel : ViewModelBase, IDisposable
 
     private string? _previewMarkdown;
 
+    /// <summary>Set when a shell-level transform flag changed while this tab was inactive: the
+    /// cached preview is stale, but rebuilding it (a full preprocessor run) must wait until the
+    /// tab is actually shown again — see <see cref="OnActivated"/>.</summary>
+    private bool _previewDirty;
+
     /// <summary>Markdown handed to the renderer — empty for non-markdown files so the
     /// (hidden) preview never parses code as markdown. Run through the Core preprocessor
     /// (wiki links, admonitions, task lists, footnotes). Cached: the document text is
     /// immutable, so wiki-link existence snapshots once per tab (the click-time command
     /// re-checks; M14 live-reload will refresh naturally).</summary>
-    public string PreviewMarkdown =>
-        _previewMarkdown ??= IsMarkdown
-            ? MarkdownPreprocessor.Transform(DocumentText, BuildWikiResolver(), Diagrams?.Enabled ?? false, Shell?.Layout.NumberHeadings ?? false)
-            : "";
+    public string PreviewMarkdown
+    {
+        get
+        {
+            if (_previewDirty || _previewMarkdown is null)
+            {
+                _previewDirty = false; // the pending invalidation is consumed by this recompute
+                _previewMarkdown = IsMarkdown
+                    ? MarkdownPreprocessor.Transform(DocumentText, BuildWikiResolver(), Diagrams?.Enabled ?? false, Shell?.Layout.NumberHeadings ?? false)
+                    : "";
+            }
+            return _previewMarkdown;
+        }
+    }
 
-    /// <summary>Drop the cached preview markdown and re-emit, so a shell-level setting that changes the
-    /// preprocessed string (heading numbering) rebuilds this tab's preview live.</summary>
+    /// <summary>Invalidate the cached preview markdown so a shell-level setting that changes the
+    /// preprocessed string (heading numbering) rebuilds this tab's preview. An ACTIVE tab drops its
+    /// cache and re-emits immediately (its kept-alive preview binding is on screen); an INACTIVE
+    /// tab only marks dirty — its hidden DocumentView binding must not rerun the full preprocessor
+    /// plus a Markdown.Avalonia visual-tree rebuild synchronously on the UI thread. The dirty tab
+    /// recomputes when it becomes selected again (<see cref="OnActivated"/>).</summary>
     public void InvalidatePreviewMarkdown()
     {
         if (!IsMarkdown || _previewMarkdown is null)
             return;
+        if (!IsActive)
+        {
+            _previewDirty = true;
+            return;
+        }
         _previewMarkdown = null;
         OnPropertyChanged(nameof(PreviewMarkdown));
+    }
+
+    /// <summary>The tab became active (shell selection): flush a pending lazy invalidation by
+    /// re-emitting — the getter sees the dirty flag, recomputes with the current transform flags
+    /// and clears it. A no-op for an already-clean tab.</summary>
+    internal void OnActivated()
+    {
+        if (_previewDirty)
+            OnPropertyChanged(nameof(PreviewMarkdown));
     }
 
     /// <summary>Wiki-name resolver for the preprocessor and the HTML exporter: a sibling

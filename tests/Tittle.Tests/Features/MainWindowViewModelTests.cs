@@ -1515,6 +1515,37 @@ public class MainWindowViewModelTests
     }
 
     [AvaloniaFact]
+    public async Task NumberHeadingsToggle_DoesNotRebuildInactiveTabs_TheyCatchUpOnSelection()
+    {
+        // Lazy preview invalidation: the fan-out over Tabs must not rerun the preprocessor +
+        // Markdown.Avalonia rebuild for HIDDEN tabs — they stay on their shown (old) value until
+        // selected, then rebuild exactly once at activation.
+        var files = new Dictionary<string, string> { ["/a.md"] = "# Alpha\n\ntext", ["/b.md"] = "# Beta\n\ntext" };
+        var vm = CreateVm(fileReader: new FakeFileReader(files));
+        await vm.OpenPathAsync("/a.md"); // tab 0
+        await vm.OpenPathAsync("/b.md"); // tab 1 — active; tab 0 hidden
+        var inactive = vm.Tabs[0];
+        Assert.False(inactive.IsActive);
+        Assert.StartsWith("# Alpha", inactive.PreviewMarkdown); // warm/un-numbered BEFORE the toggle
+
+        var events = 0;
+        inactive.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DocumentTabViewModel.PreviewMarkdown))
+                events++;
+        };
+
+        vm.Layout.NumberHeadings = true; // fans out over ALL tabs
+
+        Assert.Equal(0, events); // no re-emit while hidden → its shown value is untouched
+
+        vm.SelectedTab = inactive; // activation flushes the pending invalidation
+
+        Assert.Equal(1, events);  // exactly one rebuild, at activation — not at toggle time
+        Assert.StartsWith("# 1 Alpha", inactive.PreviewMarkdown); // recomputed with the flag
+    }
+
+    [AvaloniaFact]
     public void Editor_IsRestoredFromSettings()
     {
         var holder = Holder(new AppSettings { Editor = new EditorSettings(20, WordWrap: true, ShowLineNumbers: false) });

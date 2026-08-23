@@ -1514,7 +1514,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         if (oldValue is not null)
             oldValue.IsActive = false;
         if (newValue is not null)
+        {
             newValue.IsActive = true;
+            newValue.OnActivated(); // flush a pending lazy preview invalidation now that it's shown
+        }
 
         // Selecting a document tab returns from the settings page (VS-Code-style: the settings "tab" yields).
         if (newValue is not null)

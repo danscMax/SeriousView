@@ -1,5 +1,9 @@
+using System;
 using System.IO;
+using Avalonia.Headless.XUnit;
 using Tittle.Core.Documents;
+using Tittle.Core.Services;
+using Tittle.Core.Settings;
 using Tittle.Core.Text;
 using Tittle.Features.Shell;
 using Tittle.Shared;
@@ -707,5 +711,116 @@ public class DocumentTabViewModelTests
 
         vm.Diagrams.Enabled = false;
         Assert.DoesNotContain("::: diagram", vm.PreviewMarkdown); // live re-invalidation on toggle
+    }
+
+    // --- Lazy preview invalidation: hidden tabs mark dirty and rebuild only on activation ---
+
+    [Fact]
+    public void InvalidatePreview_InactiveTab_RaisesNoEvent()
+    {
+        var vm = DocumentTabViewModel.FromFile("# Title\n\nplain **bold**.", "/docs/a.md"); // IsActive defaults to false
+        _ = vm.PreviewMarkdown; // warm
+
+        var raised = 0;
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DocumentTabViewModel.PreviewMarkdown))
+                raised++;
+        };
+
+        vm.InvalidatePreviewMarkdown();
+
+        // Hidden tab: the kept-alive preview binding must not be re-emitted into a synchronous
+        // preprocessor run + Markdown.Avalonia rebuild while nobody can see it.
+        Assert.Equal(0, raised);
+    }
+
+    [Fact]
+    public void InvalidatePreview_InactiveTab_KeepsTheCachedValue()
+    {
+        var vm = DocumentTabViewModel.FromFile("# Title\n\nplain **bold**.", "/docs/a.md");
+        var warmed = vm.PreviewMarkdown;
+
+        vm.InvalidatePreviewMarkdown(); // no transform flag changed → the pending recompute is value-stable
+
+        Assert.Equal(warmed, vm.PreviewMarkdown); // the hidden tab keeps showing its old preview
+    }
+
+    [AvaloniaFact]
+    public void OnActivated_RecomputesPendingInvalidation_WithNumberHeadings()
+    {
+        var shell = new MainWindowViewModel(
+            new FakeFileDialogService(null), new FakeFileReader("x"), new FakeThemeService(),
+            new FakeRecentFilesStore(), new AppSettingsService(new FakeSettingsStore()),
+            new FakeClipboardService(), new FakeShellService(), Array.Empty<string>());
+        shell.Layout.NumberHeadings = true;
+
+        var tab = DocumentTabViewModel.FromFile("# Title\n\npara", "/docs/a.md"); // warm: Shell null → un-numbered
+        Assert.False(tab.IsActive);
+
+        tab.Shell = shell; // numbering is ON → the Shell-assign stale drop marks the warm cache dirty (lazy)
+
+        var raised = 0;
+        tab.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DocumentTabViewModel.PreviewMarkdown))
+                raised++;
+        };
+
+        tab.OnActivated();
+
+        Assert.Equal(1, raised);
+        Assert.StartsWith("# 1 Title", tab.PreviewMarkdown); // recomputed with the flag at activation
+    }
+
+    [Fact]
+    public void InvalidatePreview_ActiveTab_StillReemitsImmediately()
+    {
+        var vm = DocumentTabViewModel.FromFile("```mermaid\ngraph TD;A-->B\n```", "/d/x.md");
+        vm.IsActive = true; // regression guard: the lazy path must not touch active-tab behavior
+        Assert.DoesNotContain("::: diagram", vm.PreviewMarkdown); // warm with diagrams off
+
+        var raised = 0;
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DocumentTabViewModel.PreviewMarkdown))
+                raised++;
+        };
+
+        vm.Diagrams = new DiagramOptions { Enabled = true }; // active → immediate drop + re-emit
+
+        Assert.Equal(1, raised);
+        Assert.Contains("::: diagram", vm.PreviewMarkdown);
+    }
+
+    [Fact]
+    public void DiagramsToggle_OnInactiveTab_IsLazy_UntilActivation()
+    {
+        var vm = DocumentTabViewModel.FromFile("```mermaid\ngraph TD;A-->B\n```", "/d/x.md");
+        vm.Diagrams = new DiagramOptions { Enabled = false };
+        Assert.DoesNotContain("::: diagram", vm.PreviewMarkdown); // warmed with diagrams off
+
+        var raisedWhileInactive = 0;
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DocumentTabViewModel.PreviewMarkdown))
+                raisedWhileInactive++;
+        };
+
+        vm.Diagrams.Enabled = true;       // hidden tab → dirty flag only
+        Assert.Equal(0, raisedWhileInactive);
+
+        var raisedOnActivation = 0;
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DocumentTabViewModel.PreviewMarkdown))
+                raisedOnActivation++;
+        };
+        vm.OnActivated();
+        Assert.Equal(1, raisedOnActivation);
+        Assert.Contains("::: diagram", vm.PreviewMarkdown); // recomputed per the CURRENT Diagrams.Enabled
+
+        vm.Diagrams.Enabled = false;      // now active → back to immediate invalidation
+        Assert.DoesNotContain("::: diagram", vm.PreviewMarkdown);
     }
 }
