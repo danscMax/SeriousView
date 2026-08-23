@@ -32,10 +32,13 @@ public partial class App : Application
             // Single-instance: route file opens forwarded from secondary launches into this window.
             WireSingleInstance(Program.Gate, desktop);
 
-            // Background self-update check (Velopack). Fired after the window is created so it never
-            // delays first paint; the VM guards on IsSupported (no-op for the portable build) and
-            // swallows offline errors, surfacing only a "restart to update" banner when one is ready.
-            _ = Services.GetRequiredService<MainWindowViewModel>().StartupUpdateCheckAsync();
+            // Background self-update check (Velopack). Posted at Background priority so it runs
+            // after the first render — the same pattern as the macro library load below; the VM
+            // guards on IsSupported (no-op for the portable build) and swallows offline errors,
+            // surfacing only a "restart to update" banner when one is ready.
+            Dispatcher.UIThread.Post(
+                () => _ = Services.GetRequiredService<MainWindowViewModel>().StartupUpdateCheckAsync(),
+                DispatcherPriority.Background);
 
             // Prune dead recent-file entries off the UI thread, AFTER the window is up: doing the
             // File.Exists probe during construction would stall first paint if an entry points at a

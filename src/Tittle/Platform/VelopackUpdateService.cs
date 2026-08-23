@@ -18,23 +18,28 @@ public sealed class VelopackUpdateService : IUpdateService
     // stable releases only (prerelease: false).
     private const string RepoUrl = "https://github.com/danscMax/Tittle";
 
-    private readonly UpdateManager _mgr = new(new GithubSource(RepoUrl, null, prerelease: false));
+    private UpdateManager? _mgr;
     private UpdateInfo? _pending;
 
-    public bool IsSupported => _mgr.IsInstalled;
+    // Lazily constructed on first use: the service singleton is built during DI resolution of the main
+    // window (pre-first-frame), and Velopack's ctor probes the install locations on the filesystem —
+    // that cost must not sit on the startup path.
+    private UpdateManager Manager => _mgr ??= new UpdateManager(new GithubSource(RepoUrl, null, prerelease: false));
+
+    public bool IsSupported => Manager.IsInstalled;
 
     public async Task<string?> CheckAndDownloadAsync(CancellationToken ct = default)
     {
-        if (!_mgr.IsInstalled)
+        if (!Manager.IsInstalled)
             return null;
 
         try
         {
-            var info = await _mgr.CheckForUpdatesAsync().ConfigureAwait(false);
+            var info = await Manager.CheckForUpdatesAsync().ConfigureAwait(false);
             if (info is null)
                 return null; // up to date
 
-            await _mgr.DownloadUpdatesAsync(info, cancelToken: ct).ConfigureAwait(false);
+            await Manager.DownloadUpdatesAsync(info, cancelToken: ct).ConfigureAwait(false);
             _pending = info;
             return info.TargetFullRelease.Version?.ToString();
         }
@@ -49,6 +54,6 @@ public sealed class VelopackUpdateService : IUpdateService
     {
         if (_pending is null)
             return;
-        _mgr.ApplyUpdatesAndRestart(_pending); // installs the staged update and relaunches; this process exits
+        Manager.ApplyUpdatesAndRestart(_pending); // installs the staged update and relaunches; this process exits
     }
 }
