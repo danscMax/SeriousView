@@ -46,15 +46,17 @@ public static partial class MarkdownPreprocessor
 
         // Diagram fences (M12, opt-in) → ::: diagram containers; chart fences (```chart /
         // ```chart:TYPE) → ::: chart containers rendered natively by LiveCharts2 (NOT gated — local
-        // render, no network). ONE shared fence walk decides per closed fence: the two passes were
-        // structurally identical back-to-back walks over disjoint languages, so folding them halves
-        // the work when diagrams are on. Runs before the code-region scan so the consumed fences
-        // don't leave their language as stray code; the bodies travel percent-encoded (the
-        // ::: math/frontmatter transport).
-        lines = WalkDiagramFences(
-            lines,
-            diagramsEnabled ? RenderDiagramContainer : null,
-            RenderChartContainer);
+        // render, no network). ONE shared fence walk for both families — but only when something can
+        // match: a chart-free document with diagrams off skips the walk + rebuild entirely (the probe
+        // is the walk's per-line opener test minus the rebuild). Runs before the code-region scan so
+        // the consumed fences don't leave their language as stray code; the bodies travel
+        // percent-encoded (the ::: math/frontmatter transport).
+        var hasCharts = HasChartFence(lines);
+        if (diagramsEnabled || hasCharts)
+            lines = WalkDiagramFences(
+                lines,
+                diagramsEnabled ? RenderDiagramContainer : null,
+                hasCharts ? RenderChartContainer : null);
 
         // Inline passes run first, in place (line count preserved → the fence bitmap stays
         // valid) and before admonition re-wrapping so callout bodies get them too. Wiki before
@@ -330,12 +332,21 @@ public static partial class MarkdownPreprocessor
     // "chart:" test.
     internal static List<string> ConvertChartFences(List<string> lines)
     {
-        // Fast bail: no line opens a chart-shaped fence → nothing to convert; return the SAME reference
+        // Fast bail: no chart-shaped fence opener → nothing to convert; return the SAME reference
         // so chart-free documents skip the full walk + list rebuild entirely (mirrors ConvertHtmlBlocks'
-        // close-tag bail). Fence-opener matching plus the exact "chart"/"chart:" info test — never a raw
-        // substring search for "chart", so prose or fenced examples merely CONTAINING the word don't
-        // enable the pass.
-        var hasChart = false;
+        // close-tag bail).
+        if (!HasChartFence(lines))
+            return lines;
+
+        return WalkDiagramFences(lines, null, RenderChartContainer);
+    }
+
+    /// <summary>True when any line opens a chart-shaped fence ("chart" / "chart:*", case-insensitive) —
+    /// the exact per-line opener test the fence walk applies, minus the rebuild. The cheap gate that lets
+    /// chart-free documents skip the walk entirely. Never a raw substring search for "chart": prose or
+    /// fenced examples merely CONTAINING the word don't enable the pass.</summary>
+    internal static bool HasChartFence(List<string> lines)
+    {
         foreach (var l in lines)
         {
             if (!MarkdownCodeRegions.TryMatchFenceOpen(l, out var probe))
@@ -343,15 +354,10 @@ public static partial class MarkdownPreprocessor
             var probeInfo = probe.Info.Trim();
             if (probeInfo.Equals("chart", StringComparison.OrdinalIgnoreCase)
                 || probeInfo.StartsWith("chart:", StringComparison.OrdinalIgnoreCase))
-            {
-                hasChart = true;
-                break;
-            }
+                return true;
         }
-        if (!hasChart)
-            return lines;
 
-        return WalkDiagramFences(lines, null, RenderChartContainer);
+        return false;
     }
 
     private static void AppendMathContainer(List<string> result, IReadOnlyList<string> body)

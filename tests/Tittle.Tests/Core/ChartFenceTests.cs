@@ -140,4 +140,24 @@ public class ChartFenceTests
 
         Assert.Equal(md, result);
     }
+
+    [Fact]
+    public void ChartFreeDiagramsOff_TransformSkipsTheWalkAndRoundTrips()
+    {
+        // End-to-end pin of the LIVE preview path (Transform itself, not just ConvertChartFences):
+        // no chart fence anywhere + diagrams OFF → the gate input is false and Transform must be a
+        // byte-identical passthrough — the fence walk + list rebuild are skipped entirely.
+        const string md =
+            "# Notes\n"
+            + "\n"
+            + "Prose mentioning chart and charting in passing.\n"
+            + "\n"
+            + "```python\n"
+            + "# draws a chart\n"
+            + "print(\"chart\")\n"
+            + "```\n";
+
+        Assert.False(MarkdownPreprocessor.HasChartFence(new List<string>(md.Split('\n'))));
+        Assert.Equal(md, MarkdownPreprocessor.Transform(md, null, diagramsEnabled: false));
+    }
 }
