@@ -92,15 +92,25 @@ public static class ChartSpecParser
                     var name = ds.TryGetProperty("label", out var l) && l.ValueKind == JsonValueKind.String
                         ? l.GetString() ?? $"Ряд {i}"
                         : $"Ряд {i}";
-                    var items = ds.TryGetProperty("data", out var d) && d.ValueKind == JsonValueKind.Array
-                        ? d.EnumerateArray().ToList()
-                        : new List<JsonElement>();
-                    var values = items.Select(NumberOf).ToList();
-                    // Keep the real (x, y) points when EVERY item is an {x, y} object (Chart.js scatter).
-                    var pts = items.Select(PointOf).ToList();
-                    IReadOnlyList<ChartPoint>? points = pts.Count > 0 && pts.All(p => p is not null)
-                        ? pts.Select(p => p!).ToList()
-                        : null;
+                    // Single pass over "data": one value per element; buffer {x, y} points
+                    // only while every element is one — a non-point element poisons the set.
+                    var values = new List<double>();
+                    var pointBuffer = new List<ChartPoint>();
+                    var allPoints = true;
+                    if (ds.TryGetProperty("data", out var d) && d.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var el in d.EnumerateArray())
+                        {
+                            values.Add(NumberOf(el));
+                            if (PointOf(el) is { } pt)
+                                pointBuffer.Add(pt);
+                            else
+                                allPoints = false;
+                        }
+                    }
+
+                    // Empty array or any non-point element → null (never an empty list).
+                    IReadOnlyList<ChartPoint>? points = values.Count > 0 && allPoints ? pointBuffer : null;
                     var color = FirstColor(ds);
                     series.Add(new ChartSeries(name, values, color, points));
                 }

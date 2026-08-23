@@ -89,6 +89,28 @@ public class ChartSpecParserTests
     }
 
     [Fact]
+    public void MixedXyThenScalarData_PointsAreNull()
+    {
+        var spec = ChartSpecParser.Parse(
+            """{"type":"scatter","data":{"datasets":[{"label":"M","data":[{"x":1,"y":2},5]}]}}""", null);
+
+        Assert.NotNull(spec);
+        Assert.Null(spec!.Series[0].Points);
+        // NumberOf still yields one value per element: y for the {x,y} point, the scalar itself.
+        Assert.Equal(new[] { 2d, 5d }, spec.Series[0].Values);
+    }
+
+    [Fact]
+    public void EmptyDatasetArray_EmptyValues_NullPoints()
+    {
+        var spec = ChartSpecParser.Parse("""{"data":{"datasets":[{"label":"E","data":[]}]}}""", null);
+
+        Assert.NotNull(spec); // an empty dataset still forms a series
+        Assert.Empty(spec!.Series[0].Values);
+        Assert.Null(spec.Series[0].Points);
+    }
+
+    [Fact]
     public void JsonColour_KeepsHex_IgnoresRgbaAndNamed()
     {
         Assert.Equal("#EF4444", ChartSpecParser.Parse("""{"data":{"datasets":[{"data":[1],"backgroundColor":"#EF4444"}]}}""", null)!.Series[0].Color);
