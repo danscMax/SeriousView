@@ -37,6 +37,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly DocumentExportService _export; // HTML export / print / rich-text copy collaborator
     private readonly DispatcherTimer _editorSaveTimer; // coalesces editor-option writes (zoom bursts)
     private bool _editorDirty;
+    private readonly DispatcherTimer _layoutSaveTimer; // coalesces Layout/Diagram chrome writes (slider bursts)
+    private bool _layoutDirty;
 
     // External-change watching (M14). The shadow list makes the diff work even for a Reset
     // (CloseAllTabs clears the collection). Null watcher (tests without one) = no live-reload.
@@ -811,6 +813,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         Editor = EditorOptions.FromSettings(_settings.Current.Editor);
         _editorSaveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
         _editorSaveTimer.Tick += OnEditorSaveTimerTick;
+        // Same coalescing for the Layout/Diagram chrome pair: the «Чтение» settings sliders emit
+        // ~30-60 PropertyChanged per drag, and an immediate write per tick hammered settings.json.
+        _layoutSaveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+        _layoutSaveTimer.Tick += OnLayoutSaveTimerTick;
         // Editor/Layout are shared singletons; their closures would root this VM for the whole
         // app/window lifetime, so the handlers are named and detached in Dispose().
         Editor.PropertyChanged += OnEditorPropertyChanged;
@@ -850,12 +856,38 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         _settings.Update(_settings.Current with { Editor = Editor.ToSettings() });
     }
 
+    /// <summary>Persist any pending (debounced) Layout/Diagram change immediately — BOTH chrome
+    /// sections in one atomic write. Called by the coalescing timer and by Dispose() (the close
+    /// path), so a settings-page slider burst lands as a single settings.json save.</summary>
+    public void FlushLayoutSettings()
+    {
+        _layoutSaveTimer.Stop();
+        if (!_layoutDirty)
+            return;
+        _layoutDirty = false;
+        _settings.Update(_settings.Current with
+        {
+            Layout = Layout.ToSettings(),
+            Diagram = Diagrams.ToSettings(),
+        });
+    }
+
+    // Test seam (InternalsVisibleTo Tittle.Tests): headless tests shrink the coalescing window so
+    // the DispatcherTimer fires on the next RunJobs() pump instead of waiting out the 400 ms.
+    internal TimeSpan LayoutSaveDebounce
+    {
+        get => _layoutSaveTimer.Interval;
+        set => _layoutSaveTimer.Interval = value;
+    }
+
     // Named subscription handlers — kept as methods (not lambdas) so Dispose() can detach them and
     // free this VM, which would otherwise be rooted by the shared Editor/Layout/watcher singletons.
     private void OnWatcherChanged(string path, DocumentChangeKind kind) =>
         Dispatcher.UIThread.Post(() => HandleDocumentChanged(path, kind));
 
     private void OnEditorSaveTimerTick(object? sender, EventArgs e) => FlushEditorSettings();
+
+    private void OnLayoutSaveTimerTick(object? sender, EventArgs e) => FlushLayoutSettings();
 
     private void OnEditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
@@ -903,9 +935,13 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
+    // Layout/Diagram share ONE chrome timer+dirty flow: either section's burst restarts it and the
+    // tick flush writes both snapshots together (see FlushLayoutSettings).
     private void OnLayoutPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        _settings.Update(_settings.Current with { Layout = Layout.ToSettings() });
+        _layoutDirty = true;
+        _layoutSaveTimer.Stop();
+        _layoutSaveTimer.Start();
         if (e.PropertyName == nameof(LayoutOptions.FontFamily))
             ApplyPreviewFont();
         if (e.PropertyName == nameof(LayoutOptions.AccentColor))
@@ -930,8 +966,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private void OnDiagramsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) =>
-        _settings.Update(_settings.Current with { Diagram = Diagrams.ToSettings() });
+    private void OnDiagramsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        _layoutDirty = true;
+        _layoutSaveTimer.Stop();
+        _layoutSaveTimer.Start();
+    }
 
     private void OnTabsCollectionChanged(object? sender,
         System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -951,7 +991,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         RefreshRecentItems();
     }
 
-    /// <summary>Detach every subscription this VM made and stop the editor-save timer (flushing any
+    /// <summary>Detach every subscription this VM made and stop the save timers (flushing any
     /// pending change first so no setting is lost). <see cref="Editor"/>/<see cref="Layout"/> and the
     /// injected <c>_watcher</c> are SHARED singletons — we only detach our handlers from them, never
     /// dispose them (the watcher is a DI singleton disposed at app shutdown in App.axaml.cs). Called by
@@ -966,6 +1006,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         FlushEditorSettings();
         _editorSaveTimer.Tick -= OnEditorSaveTimerTick;
         _editorSaveTimer.Stop();
+
+        // Land any debounced Layout/Diagram change, then stop the chrome timer.
+        FlushLayoutSettings();
+        _layoutSaveTimer.Tick -= OnLayoutSaveTimerTick;
+        _layoutSaveTimer.Stop();
 
         Editor.PropertyChanged -= OnEditorPropertyChanged;
         Layout.PropertyChanged -= OnLayoutPropertyChanged;

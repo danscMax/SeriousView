@@ -712,6 +712,67 @@ public class MainWindowViewModelTests
         Assert.NotEqual(defaultFont, settings.Current.Editor.FontSize);
     }
 
+    // --- Debounced Layout/Diagram persistence: a settings-slider burst = ONE settings.json write ---
+
+    [AvaloniaFact]
+    public void LayoutChange_DoesNotPersistImmediately()
+    {
+        // The «Чтение» sliders emit a PropertyChanged per drag tick; each used to rewrite
+        // settings.json synchronously. The change must ride the debounce timer instead.
+        var settings = Holder();
+        var vm = CreateVm(settings: settings);
+
+        Assert.Null(settings.Current.Layout); // nothing persisted yet (defaults)
+        vm.Layout.LineSpacing = 17;
+
+        Assert.Null(settings.Current.Layout); // debounced — NOT written synchronously
+    }
+
+    [AvaloniaFact]
+    public void LayoutChange_PersistsAfterDebounceElapses()
+    {
+        var settings = Holder();
+        var vm = CreateVm(settings: settings);
+        vm.LayoutSaveDebounce = TimeSpan.Zero; // test seam: due immediately
+
+        vm.Layout.LineSpacing = 17;
+        Assert.Null(settings.Current.Layout); // still riding the timer
+
+        Dispatcher.UIThread.RunJobs(); // pumps the due zero-interval save timer → Tick → flush
+        Assert.Equal(17, settings.Current.Layout!.LineSpacing);
+    }
+
+    [AvaloniaFact]
+    public void FlushLayoutSettings_PersistsBothSections_WithoutWaiting()
+    {
+        // Layout and Diagram share one chrome timer+dirty flow: flushing after dirtying only
+        // Diagram still snapshots BOTH sections in the single atomic Update.
+        var settings = Holder();
+        var vm = CreateVm(settings: settings);
+
+        vm.Diagrams.Enabled = true; // dirties only the Diagram section
+        vm.FlushLayoutSettings();
+
+        Assert.True(settings.Current.Diagram!.Enabled);
+        Assert.Equal(vm.Diagrams.KrokiUrl, settings.Current.Diagram.KrokiUrl);
+        Assert.Equal(vm.Layout.LineSpacing, settings.Current.Layout!.LineSpacing);
+    }
+
+    [AvaloniaFact]
+    public void Dispose_FlushesPendingLayoutChange_LikeTheClosePathDoes()
+    {
+        // MainWindow.OnClosed → vm.Dispose() is the close path's last chance to land a debounced
+        // slider burst (SaveOnClose runs earlier with its own layout snapshot).
+        var settings = Holder();
+        var vm = CreateVm(settings: settings);
+        vm.Layout.HeadingScale = 1.4;
+        Assert.Null(settings.Current.Layout);
+
+        vm.Dispose();
+
+        Assert.Equal(1.4, settings.Current.Layout!.HeadingScale);
+    }
+
     [AvaloniaFact]
     public void Startup_Session_MissingFiles_SurfaceOneSummaryError()
     {
