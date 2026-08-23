@@ -67,6 +67,67 @@ public class DelimitedTableTests
         Assert.True(table.Truncated);
     }
 
+    [Fact]
+    public void Parse_ExactlyMaxRowsDataRows_IsNotTruncated()
+    {
+        var text = "h\n" + string.Join("\n", Enumerable.Range(1, DelimitedTable.MaxRows));
+
+        var table = DelimitedTable.Parse(text, ',');
+
+        Assert.NotNull(table);
+        Assert.Equal(DelimitedTable.MaxRows, table!.Rows.Count);
+        Assert.Equal(DelimitedTable.MaxRows.ToString(), table.Rows[^1][0]);
+        Assert.False(table.Truncated);
+    }
+
+    [Fact]
+    public void Parse_MaxRowsPlus5DataRows_IsTruncated_KeepsFirstMaxRowsIntact()
+    {
+        var text = "h\n" + string.Join("\n", Enumerable.Range(1, DelimitedTable.MaxRows + 5));
+
+        var table = DelimitedTable.Parse(text, ',');
+
+        Assert.NotNull(table);
+        Assert.True(table!.Truncated);
+        Assert.Equal(DelimitedTable.MaxRows, table.Rows.Count);
+        Assert.Equal("1", table.Rows[0][0]);
+    }
+
+    [Fact]
+    public void Parse_BlankLinesNearCap_AreDropped_DoNotConsumeBudgetOrFlipTruncation()
+    {
+        // MaxRows - 5 data rows, ten bare blank lines right at the cap, then 5 more data rows:
+        // the blanks are dropped, so the total stays exactly MaxRows and truncation must NOT fire.
+        var text = "h\n"
+            + string.Join("\n", Enumerable.Range(1, DelimitedTable.MaxRows - 5))
+            + "\n\n\n\n\n\n\n\n\n\n"
+            + string.Join("\n", new[] { "v1", "v2", "v3", "v4", "v5" });
+
+        var table = DelimitedTable.Parse(text, ',');
+
+        Assert.NotNull(table);
+        Assert.False(table!.Truncated);
+        Assert.Equal(DelimitedTable.MaxRows, table.Rows.Count);
+        Assert.Equal("v5", table.Rows[^1][0]);
+    }
+
+    [Fact]
+    public void Parse_QuotedEmptyRowAtCapBoundary_CountsAsGenuineRecord()
+    {
+        // An explicit quoted "" value is a real record: (MaxRows - 1) ordinary rows + "" + one
+        // more row = MaxRows + 1 data rows, i.e. over the cap.
+        var text = "h\n"
+            + string.Join("\n", Enumerable.Range(1, DelimitedTable.MaxRows - 1))
+            + "\n\"\"\nextra";
+
+        var table = DelimitedTable.Parse(text, ',');
+
+        Assert.NotNull(table);
+        Assert.True(table!.Truncated);
+        Assert.Equal(DelimitedTable.MaxRows, table.Rows.Count);
+        Assert.Equal("", table.Rows[^1][0]);
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("   \n  ")]

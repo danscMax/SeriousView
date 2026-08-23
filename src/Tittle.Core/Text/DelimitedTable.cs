@@ -22,7 +22,9 @@ public sealed class DelimitedTable
         if (string.IsNullOrWhiteSpace(text))
             return null;
 
-        var records = SplitRecords(LineEndings.NormalizeToLf(text), delimiter);
+        // Cap = header + MaxRows data rows + 1 overflow record: enough to keep Rows intact AND
+        // prove Truncated truthfully, without materializing every record of a huge file.
+        var records = SplitRecords(LineEndings.NormalizeToLf(text), delimiter, MaxRows + 1);
         if (records.Count == 0)
             return null;
 
@@ -47,8 +49,13 @@ public sealed class DelimitedTable
         return new DelimitedTable { Header = header, Rows = rows, Truncated = truncated };
     }
 
-    /// <summary>Single character walk honoring quotes; a record ends at an unquoted newline.</summary>
-    private static List<string[]> SplitRecords(string text, char delimiter)
+    /// <summary>
+    /// Single character walk honoring quotes; a record ends at an unquoted newline. At most
+    /// <paramref name="maxRecords"/> records are materialized — once more genuine records are
+    /// proven to exist, the walk keeps running but stops appending (the caller only needs the
+    /// leading records plus the overflow fact).
+    /// </summary>
+    private static List<string[]> SplitRecords(string text, char delimiter, int maxRecords)
     {
         var records = new List<string[]>();
         var fields = new List<string>();
@@ -69,7 +76,9 @@ public sealed class DelimitedTable
             EndField(); // always appends, so fields is never empty below
             // Drop a bare blank line (a single, empty, unquoted field), but keep a genuine record:
             // any multi-field row, a non-empty value, or an explicit quoted "" empty value.
-            if (fields.Count > 1 || fields[0].Length > 0 || recordHasExplicitField)
+            // Past the caller's cap the record is no longer appended — the walk itself continues,
+            // so trailing blank lines stay dropped and Parse can still tell "at cap" from "over".
+            if ((fields.Count > 1 || fields[0].Length > 0 || recordHasExplicitField) && records.Count <= maxRecords)
                 records.Add(fields.ToArray());
             fields.Clear();
             recordHasExplicitField = false;
