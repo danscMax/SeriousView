@@ -29,7 +29,7 @@ jobs:
       # No lockfiles (RID-native packages don't play with RestorePackagesWithLockFile), so cache the
       # global package folder keyed on the single CPM manifest instead of setup-dotnet's lockfile cache.
       - name: Cache NuGet
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('Directory.Packages.props') }}
@@ -84,7 +84,7 @@ jobs:
         uses: actions/setup-dotnet@v5  # SDK band comes from global.json
 
       - name: Cache NuGet
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('Directory.Packages.props') }}
